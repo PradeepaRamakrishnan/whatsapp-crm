@@ -9,26 +9,23 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { CheckCircle2, EllipsisIcon, FunnelX, Settings2 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { EllipsisIcon, FunnelX, Settings2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import { DataGridTable } from '@/components/ui/data-grid-table';
 import { type Filter, type FilterFieldConfig, Filters } from '@/components/ui/filters';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { type BorrowerData, borrowersData } from '../lib/borrower-data';
 
-interface BorrowersTableInCampaignProps {
-  campaignId: number;
+interface FileRecordsTableProps {
+  fileId: string;
 }
 
-export function BorrowersTableInCampaign({
-  campaignId: _campaignId,
-}: BorrowersTableInCampaignProps) {
+export function FileRecordsTable({ fileId: _fileId }: FileRecordsTableProps) {
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -40,9 +37,9 @@ export function BorrowersTableInCampaign({
 
   const columns = [
     columnHelper.accessor('name', {
-      header: ({ column }) => <DataGridColumnHeader title="Name" column={column} />,
+      header: ({ column }) => <DataGridColumnHeader title="Customer Name" column={column} />,
       cell: ({ getValue }) => <div className="font-medium">{String(getValue() || '')}</div>,
-      size: 180,
+      size: 200,
       enableSorting: true,
       enableHiding: true,
       enableResizing: true,
@@ -51,14 +48,14 @@ export function BorrowersTableInCampaign({
     columnHelper.accessor('email', {
       header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
       cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
-      size: 220,
+      size: 240,
       enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
     }),
     columnHelper.accessor('phone', {
-      header: ({ column }) => <DataGridColumnHeader title="Phone" column={column} />,
+      header: ({ column }) => <DataGridColumnHeader title="Mobile No." column={column} />,
       cell: ({ getValue }) => (
         <div className="text-sm text-muted-foreground">{String(getValue() || '')}</div>
       ),
@@ -69,7 +66,7 @@ export function BorrowersTableInCampaign({
       enablePinning: true,
     }),
     columnHelper.accessor('loanAmount', {
-      header: ({ column }) => <DataGridColumnHeader title="Amount" column={column} />,
+      header: ({ column }) => <DataGridColumnHeader title="Settlement Amount" column={column} />,
       cell: ({ getValue }) => (
         <div className="font-medium">₹{getValue().toLocaleString('en-IN')}</div>
       ),
@@ -85,65 +82,40 @@ export function BorrowersTableInCampaign({
         return value >= min && value <= max;
       },
     }),
-    columnHelper.accessor('installments', {
-      header: ({ column }) => <DataGridColumnHeader title="Installments" column={column} />,
-      cell: ({ getValue }) => <div className="font-medium">{getValue()} months</div>,
-      size: 130,
+    columnHelper.accessor('branch', {
+      header: ({ column }) => <DataGridColumnHeader title="Branch" column={column} />,
+      cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
+      size: 160,
       enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
     }),
-    columnHelper.display({
-      id: 'email-status',
-      header: () => <div className="text-center">Email</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          {row.original.contactStatus.email ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          ) : (
-            <div className="h-4 w-4" />
-          )}
-        </div>
-      ),
-      size: 80,
-      enableSorting: false,
+    columnHelper.accessor('state', {
+      header: ({ column }) => <DataGridColumnHeader title="State" column={column} />,
+      cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
+      size: 140,
+      enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
     }),
-    columnHelper.display({
-      id: 'sms-status',
-      header: () => <div className="text-center">SMS</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          {row.original.contactStatus.sms ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          ) : (
-            <div className="h-4 w-4" />
-          )}
-        </div>
+    columnHelper.accessor('primaryCardNumber', {
+      header: ({ column }) => <DataGridColumnHeader title="Card Number" column={column} />,
+      cell: ({ getValue }) => (
+        <div className="text-sm font-mono text-muted-foreground">{String(getValue() || '')}</div>
       ),
-      size: 80,
-      enableSorting: false,
+      size: 180,
+      enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
     }),
-    columnHelper.display({
-      id: 'whatsapp-status',
-      header: () => <div className="text-center">WhatsApp</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          {row.original.contactStatus.whatsapp ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          ) : (
-            <div className="h-4 w-4" />
-          )}
-        </div>
-      ),
-      size: 100,
-      enableSorting: false,
+    columnHelper.accessor('monthOfSettlement', {
+      header: ({ column }) => <DataGridColumnHeader title="Settlement Month" column={column} />,
+      cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
+      size: 150,
+      enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
@@ -170,7 +142,7 @@ export function BorrowersTableInCampaign({
     () => [
       {
         key: 'name',
-        label: 'Name',
+        label: 'Customer Name',
         type: 'text',
         placeholder: 'Filter by name...',
       },
@@ -181,23 +153,22 @@ export function BorrowersTableInCampaign({
         placeholder: 'Filter by email...',
       },
       {
-        key: 'loanType',
-        label: 'Loan Type',
-        type: 'select',
-        placeholder: 'Filter by loan type...',
-        options: [
-          { label: 'Personal Loan', value: 'Personal Loan' },
-          { label: 'Business Loan', value: 'Business Loan' },
-          { label: 'Home Loan', value: 'Home Loan' },
-        ],
-        searchable: true,
-        className: 'w-[160px]',
+        key: 'branch',
+        label: 'Branch',
+        type: 'text',
+        placeholder: 'Filter by branch...',
+      },
+      {
+        key: 'state',
+        label: 'State',
+        type: 'text',
+        placeholder: 'Filter by state...',
       },
       {
         key: 'loanAmount',
-        label: 'Loan Amount',
+        label: 'Settlement Amount',
         type: 'number',
-        placeholder: 'Filter by loan amount...',
+        placeholder: 'Filter by amount...',
       },
     ],
     [],
@@ -215,86 +186,59 @@ export function BorrowersTableInCampaign({
       if (!values || values.length === 0) return false;
       if (values.every((value) => typeof value === 'string' && value.trim() === '')) return false;
       if (values.every((value) => value === null || value === undefined)) return false;
-      if (values.every((value) => Array.isArray(value) && value.length === 0)) return false;
       return true;
     });
 
-    activeFilters.forEach((filter) => {
-      const { field, operator, values } = filter;
-      filtered = filtered.filter((item) => {
-        const fieldValue = item[field as keyof BorrowerData];
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter((row) => {
+        return activeFilters.every((filter) => {
+          const { field, operator, values } = filter;
+          const cellValue = row[field as keyof BorrowerData];
 
-        switch (operator) {
-          case 'is':
-            return values.some((value) => String(value) === String(fieldValue));
-          case 'is_not':
-            return !values.some((value) => String(value) === String(fieldValue));
-          case 'contains':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().includes(String(value).toLowerCase()),
-            );
-          case 'not_contains':
-            return !values.some((value) =>
-              String(fieldValue).toLowerCase().includes(String(value).toLowerCase()),
-            );
-          case 'starts_with':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().startsWith(String(value).toLowerCase()),
-            );
-          case 'ends_with':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().endsWith(String(value).toLowerCase()),
-            );
-          case 'equals':
-            return String(fieldValue) === String(values[0]);
-          case 'not_equals':
-            return String(fieldValue) !== String(values[0]);
-          case 'greater_than':
-            return Number(fieldValue) > Number(values[0]);
-          case 'less_than':
-            return Number(fieldValue) < Number(values[0]);
-          case 'greater_than_or_equal':
-            return Number(fieldValue) >= Number(values[0]);
-          case 'less_than_or_equal':
-            return Number(fieldValue) <= Number(values[0]);
-          case 'between':
-            if (values.length >= 2) {
-              const min = Number(values[0]);
-              const max = Number(values[1]);
-              return Number(fieldValue) >= min && Number(fieldValue) <= max;
-            }
-            return true;
-          case 'not_between':
-            if (values.length >= 2) {
-              const min = Number(values[0]);
-              const max = Number(values[1]);
-              return Number(fieldValue) < min || Number(fieldValue) > max;
-            }
-            return true;
-          case 'empty':
-            return (
-              fieldValue === null || fieldValue === undefined || String(fieldValue).trim() === ''
-            );
-          case 'not_empty':
-            return (
-              fieldValue !== null && fieldValue !== undefined && String(fieldValue).trim() !== ''
-            );
-          default:
-            return true;
-        }
+          // Handle empty operators
+          if (operator === 'empty') {
+            return !cellValue || cellValue === '';
+          }
+          if (operator === 'not_empty') {
+            return cellValue && cellValue !== '';
+          }
+
+          // Handle other operators
+          if (!values || values.length === 0) return true;
+
+          const filterValue = values[0];
+          if (filterValue === null || filterValue === undefined) return true;
+
+          switch (operator) {
+            case 'equals':
+              return String(cellValue).toLowerCase() === String(filterValue).toLowerCase();
+            case 'not_equals':
+              return String(cellValue).toLowerCase() !== String(filterValue).toLowerCase();
+            case 'contains':
+              return String(cellValue).toLowerCase().includes(String(filterValue).toLowerCase());
+            case 'not_contains':
+              return !String(cellValue).toLowerCase().includes(String(filterValue).toLowerCase());
+            case 'starts_with':
+              return String(cellValue).toLowerCase().startsWith(String(filterValue).toLowerCase());
+            case 'ends_with':
+              return String(cellValue).toLowerCase().endsWith(String(filterValue).toLowerCase());
+            case 'greater_than':
+              return Number(cellValue) > Number(filterValue);
+            case 'less_than':
+              return Number(cellValue) < Number(filterValue);
+            case 'greater_than_or_equal':
+              return Number(cellValue) >= Number(filterValue);
+            case 'less_than_or_equal':
+              return Number(cellValue) <= Number(filterValue);
+            default:
+              return true;
+          }
+        });
       });
-    });
+    }
 
     return filtered;
   }, [filters]);
-
-  const handleFiltersChange = useCallback((filters: Filter[]) => {
-    setFilters(filters);
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  }, []);
 
   const table = useReactTable({
     columns,
@@ -312,6 +256,10 @@ export function BorrowersTableInCampaign({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleFiltersChange = (newFilters: Filter[]) => {
+    setFilters(newFilters);
+  };
 
   return (
     <DataGrid
@@ -333,9 +281,9 @@ export function BorrowersTableInCampaign({
             className="h-8 w-full sm:w-60"
             value={(table.getState().globalFilter ?? '') as string}
             onChange={(e) => table.setGlobalFilter(e.target.value)}
-            placeholder="Search borrowers..."
+            placeholder="Search records..."
             type="text"
-            aria-label="Search borrowers"
+            aria-label="Search records"
           />
 
           <DataGridColumnVisibility
@@ -370,7 +318,6 @@ export function BorrowersTableInCampaign({
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </DataGridContainer>
-        <DataGridPagination />
       </div>
     </DataGrid>
   );

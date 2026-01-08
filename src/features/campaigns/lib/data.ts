@@ -57,7 +57,7 @@ export const campaignsData: CampaignData[] = [
   {
     id: 6,
     name: 'Second Chance Campaign',
-    status: 'Scheduled',
+    status: 'Draft',
     responseRate: 0,
     createdDate: '2024-01-20',
     scheduledDate: '2024-02-01',
@@ -102,7 +102,7 @@ export const campaignsData: CampaignData[] = [
   {
     id: 11,
     name: 'Pending Validation Reminder',
-    status: 'Scheduled',
+    status: 'Draft',
     responseRate: 0,
     createdDate: '2024-01-25',
     scheduledDate: '2024-02-10',

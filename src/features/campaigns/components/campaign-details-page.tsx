@@ -1,13 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import {
   Activity,
   AlertCircle,
   Calendar,
   CheckCircle2,
   Clock,
-  Copy,
   Download,
   Edit,
   FileText,
@@ -22,6 +20,7 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +52,7 @@ interface CampaignDetailsPageProps {
 }
 
 export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('contacts');
 
   const campaign = useMemo(() => {
     return campaignsData.find((c) => c.id === campaignId);
@@ -135,10 +134,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                <span>{metrics.totalContacts.toLocaleString()} contacts</span>
-              </div>
-              <div className="flex items-center gap-1.5">
                 <Target className="h-4 w-4" />
                 <span>ID: #{campaign.id}</span>
               </div>
@@ -147,10 +142,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
-            <Button variant="default" size="sm">
-              <Edit className="h-4 w-4" />
-              Edit
-            </Button>
             {campaign.status === 'Active' ? (
               <Button variant="outline" size="sm">
                 <Pause className="h-4 w-4" />
@@ -163,73 +154,65 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </Button>
             )}
             <Button variant="outline" size="sm">
-              <Copy className="h-4 w-4" />
-              Clone
-            </Button>
-            <Button variant="outline" size="sm">
               <Download className="h-4 w-4" />
-              Export
+              Report
             </Button>
           </div>
         </div>
 
         {/* Quick Stats Bar */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Response Rate</p>
-                  <p className="text-2xl font-bold">{metrics.responseRate}%</p>
-                </div>
-                <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-950">
-                  <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
+                <Users className="h-4 w-4 text-blue-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.totalContacts.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Campaign database</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-emerald-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Conversion</p>
-                  <p className="text-2xl font-bold">{metrics.conversionRate}%</p>
-                </div>
-                <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-950">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Interested</CardTitle>
+              <div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-950/30">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.interested.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                {interestedPercentage.toFixed(1)}% conversion
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Total Disbursed</p>
-                  <p className="text-2xl font-bold">
-                    ₹{(metrics.disbursedAmount / 10000000).toFixed(1)}Cr
-                  </p>
-                </div>
-                <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-950">
-                  <IndianRupee className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-950/30">
+                <TrendingUp className="h-4 w-4 text-purple-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.responseRate}%</div>
+              <p className="text-xs text-muted-foreground">Overall engagement</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Avg Response</p>
-                  <p className="text-2xl font-bold">{metrics.avgResponseTime}</p>
-                </div>
-                <div className="rounded-full bg-orange-100 p-3 dark:bg-orange-950">
-                  <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Qualified</CardTitle>
+              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-950/30">
+                <Target className="h-4 w-4 text-orange-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.qualified.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Ready for processing</p>
             </CardContent>
           </Card>
         </div>
@@ -237,16 +220,20 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="borrowers">Borrowers</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="mt-6 space-y-6">
+        {/* Contacts Tab */}
+        <TabsContent value="contacts" className="mt-6">
+          <BorrowersTableInCampaign campaignId={campaignId} />
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="mt-6 space-y-6">
           {/* Lead Funnel */}
           <Card>
             <CardHeader>
@@ -560,123 +547,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           </div>
         </TabsContent>
 
-        {/* Performance Tab */}
-        <TabsContent value="performance" className="mt-6 space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-l-4 border-l-blue-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Open Rate</p>
-                    <p className="text-2xl font-bold">65.4%</p>
-                    <p className="text-xs text-muted-foreground">1,530 opens</p>
-                  </div>
-                  <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-950">
-                    <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Click Rate</p>
-                    <p className="text-2xl font-bold">{metrics.responseRate}%</p>
-                    <p className="text-xs text-muted-foreground">{metrics.interested} clicks</p>
-                  </div>
-                  <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-950">
-                    <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-purple-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Conversion Rate</p>
-                    <p className="text-2xl font-bold">{metrics.conversionRate}%</p>
-                    <p className="text-xs text-muted-foreground">{metrics.disbursed} converted</p>
-                  </div>
-                  <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-950">
-                    <CheckCircle2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-orange-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Bounce Rate</p>
-                    <p className="text-2xl font-bold">8.7%</p>
-                    <p className="text-xs text-muted-foreground">204 bounced</p>
-                  </div>
-                  <div className="rounded-full bg-orange-100 p-3 dark:bg-orange-950">
-                    <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Targets vs Actuals</CardTitle>
-              <CardDescription>Compare your campaign goals with actual performance</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Response Target</span>
-                    <span className="font-medium">50% Target | {metrics.responseRate}% Actual</span>
-                  </div>
-                  <Progress value={metrics.responseRate} max={50} className="h-3" />
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    +{metrics.responseRate - 50}% above target
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Conversion Target</span>
-                    <span className="font-medium">
-                      10% Target | {metrics.conversionRate}% Actual
-                    </span>
-                  </div>
-                  <Progress value={metrics.conversionRate} max={10} className="h-3" />
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    +{metrics.conversionRate - 10}% above target
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Disbursement Target</span>
-                    <span className="font-medium">
-                      ₹10Cr Target | ₹{(metrics.disbursedAmount / 10000000).toFixed(1)}Cr Actual
-                    </span>
-                  </div>
-                  <Progress value={(metrics.disbursedAmount / 100000000) * 100} className="h-3" />
-                  <p className="text-xs text-orange-600 dark:text-orange-400">
-                    -{(100000000 - metrics.disbursedAmount) / 10000000}Cr below target
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Borrowers Tab */}
-        <TabsContent value="borrowers" className="mt-6">
-          <BorrowersTableInCampaign campaignId={campaignId} />
-        </TabsContent>
-
         {/* Timeline Tab */}
         <TabsContent value="timeline" className="mt-6">
           <Card>
@@ -744,87 +614,159 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
         {/* Details Tab */}
         <TabsContent value="details" className="mt-6 space-y-6">
+          {/* Campaign Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Campaign Information</CardTitle>
-              <CardDescription>Complete details about this campaign</CardDescription>
+              <CardTitle>Campaign Summary</CardTitle>
+              <CardDescription>Basic campaign information</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Campaign Name</p>
-                    <p className="mt-1 text-lg font-semibold">{campaign.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Bank/Source</p>
-                    <p className="mt-1 text-lg font-semibold">{campaign.bankName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Campaign Owner</p>
-                    <p className="mt-1 text-lg font-semibold">Rahul Sharma</p>
-                    <p className="text-xs text-muted-foreground">Campaign Manager</p>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Campaign Name</dt>
+                    <dd className="text-sm font-medium">{campaign.name}</dd>
                   </div>
                 </div>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Priority</dt>
+                    <dd className="text-sm font-medium capitalize">Medium</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Description</dt>
+                    <dd className="text-sm font-medium">
+                      Re-engagement campaign for previously rejected borrowers
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
 
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Status</p>
-                    <div className="mt-1">
-                      <Badge
-                        className={cn('border', getStatusColor(campaign.status))}
-                        variant="secondary"
-                      >
-                        {campaign.status}
+          {/* Records Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Records Summary</CardTitle>
+              <CardDescription>Selected borrower information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Selected File</dt>
+                    <dd className="text-sm font-medium">ICICI_Borrowers_Jan_2024.csv</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Total Records</dt>
+                    <dd className="text-sm font-medium">
+                      {metrics.totalContacts.toLocaleString()}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Template Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Summary</CardTitle>
+              <CardDescription>Communication templates used</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {/* Email Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">Email Template</div>
+                    <div className="text-sm font-medium mt-0.5">ICICI Settlement Offer</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        ICICI
                       </Badge>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Created Date</p>
-                    <p className="mt-1 text-lg font-semibold">
-                      {new Date(campaign.createdDate).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
+                </div>
+
+                {/* SMS Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">SMS Template</div>
+                    <div className="text-sm font-medium mt-0.5">SMS Reminder</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        All Banks
+                      </Badge>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Scheduled Date</p>
-                    <p className="mt-1 text-lg font-semibold">
-                      {new Date(campaign.scheduledDate).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
+                </div>
+
+                {/* WhatsApp Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      WhatsApp Template
+                    </div>
+                    <div className="text-sm font-medium mt-0.5">WhatsApp Follow-up</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        IndusInd
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Channel Timing */}
           <Card>
             <CardHeader>
-              <CardTitle>Campaign Objectives</CardTitle>
-              <CardDescription>Goals and targets for this campaign</CardDescription>
+              <CardTitle>Channel Timing</CardTitle>
+              <CardDescription>Message scheduling configuration</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-lg border p-4">
-                  <Target className="mb-2 h-5 w-5 text-muted-foreground" />
-                  <p className="text-sm font-medium text-muted-foreground">Response Target</p>
-                  <p className="mt-1 text-2xl font-bold">50%</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">Email</span>
+                  <Badge variant="secondary" className="text-xs">
+                    Start
+                  </Badge>
                 </div>
-                <div className="rounded-lg border p-4">
-                  <TrendingUp className="mb-2 h-5 w-5 text-muted-foreground" />
-                  <p className="text-sm font-medium text-muted-foreground">Conversion Target</p>
-                  <p className="mt-1 text-2xl font-bold">10%</p>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2 dark:bg-green-950/30">
+                  <MessageSquare className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium">SMS</span>
+                  <Badge variant="outline" className="text-xs">
+                    30 min
+                  </Badge>
                 </div>
-                <div className="rounded-lg border p-4">
-                  <IndianRupee className="mb-2 h-5 w-5 text-muted-foreground" />
-                  <p className="text-sm font-medium text-muted-foreground">Disbursement Target</p>
-                  <p className="mt-1 text-2xl font-bold">₹10 Cr</p>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
+                  <Send className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-medium">WhatsApp</span>
+                  <Badge variant="outline" className="text-xs">
+                    60 min
+                  </Badge>
+                </div>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
+                  <Phone className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium">Call</span>
                 </div>
               </div>
             </CardContent>

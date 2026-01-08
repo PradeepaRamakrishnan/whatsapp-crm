@@ -28,8 +28,6 @@ const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'active':
       return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'scheduled':
-      return 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
     case 'completed':
       return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
     case 'draft':
@@ -114,26 +112,6 @@ export function CampaignsTable() {
       enableResizing: true,
       enablePinning: true,
     }),
-    columnHelper.accessor('scheduledDate', {
-      header: ({ column }) => <DataGridColumnHeader title="Scheduled" column={column} />,
-      cell: ({ getValue }) => {
-        const date = new Date(getValue());
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </div>
-        );
-      },
-      size: 120,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
-    }),
     columnHelper.display({
       id: 'actions',
       header: () => <div className="text-right">Actions</div>,
@@ -170,7 +148,6 @@ export function CampaignsTable() {
         placeholder: 'Filter by status...',
         options: [
           { label: 'Active', value: 'Active' },
-          { label: 'Scheduled', value: 'Scheduled' },
           { label: 'Completed', value: 'Completed' },
           { label: 'Draft', value: 'Draft' },
         ],

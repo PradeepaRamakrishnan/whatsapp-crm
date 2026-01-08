@@ -17,17 +17,21 @@ export const dashboardData = {
   ],
   workflows: [
     {
-      name: 'Campaigns',
-      url: '/campaigns/list',
+      name: 'Campaigns Orchestration',
+      url: '/campaigns/files',
       icon: Workflow,
       items: [
         {
-          title: 'Campaign List',
-          url: '/campaigns/list',
+          title: 'File Management',
+          url: '/campaigns/files',
         },
         {
-          title: 'Active Campaigns',
-          url: '/campaigns/active',
+          title: 'Campaigns Templates',
+          url: '/campaigns/templates',
+        },
+        {
+          title: 'All Campaigns',
+          url: '/campaigns/list',
         },
       ],
     },

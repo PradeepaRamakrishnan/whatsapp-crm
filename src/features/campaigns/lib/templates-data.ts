@@ -1,0 +1,147 @@
+import type { TemplateData } from '../types/template.types';
+
+export const mockTemplates: TemplateData[] = [
+  {
+    id: '1',
+    title: 'ICICI Settlement Offer',
+    channel: 'email',
+    status: 'approved',
+    bankTag: 'ICICI',
+    typeTag: 'Bank-specific',
+    content:
+      'Dear {{customer_name}}, We have an exclusive settlement offer for your outstanding amount of ₹{{outstanding_amount}}...',
+    modifiedDate: '2024-01-15',
+    modifiedBy: 'John Doe',
+  },
+  {
+    id: '2',
+    title: 'SMS Reminder',
+    channel: 'sms',
+    status: 'approved',
+    bankTag: 'All Banks',
+    typeTag: 'General',
+    content:
+      'Hi {{customer_name}}, Your settlement offer expires today. Call us at 1800-XXX-XXXX to proceed.',
+    modifiedDate: '2024-01-14',
+    modifiedBy: 'Jane Smith',
+  },
+  {
+    id: '3',
+    title: 'WhatsApp Follow-up',
+    channel: 'whatsapp',
+    status: 'pending',
+    bankTag: 'IndusInd',
+    typeTag: 'Follow-up',
+    content:
+      "Hello {{customer_name}}! 👋 We noticed you haven't responded to our settlement offer. This is a limited-time opportunity...",
+    modifiedDate: '2024-01-13',
+    modifiedBy: 'Mike Johnson',
+  },
+  {
+    id: '4',
+    title: 'HDFC Payment Reminder',
+    channel: 'email',
+    status: 'approved',
+    bankTag: 'HDFC',
+    typeTag: 'Reminder',
+    content:
+      'Dear {{customer_name}}, This is a friendly reminder about your upcoming payment of ₹{{payment_amount}} due on {{due_date}}...',
+    modifiedDate: '2024-01-12',
+    modifiedBy: 'Sarah Williams',
+  },
+  {
+    id: '5',
+    title: 'Axis EMI Offer',
+    channel: 'sms',
+    status: 'approved',
+    bankTag: 'Axis',
+    typeTag: 'Settlement',
+    content:
+      'Hi {{customer_name}}, Special EMI offer available! Convert ₹{{amount}} to easy installments. Call 1800-XXX-XXXX',
+    modifiedDate: '2024-01-11',
+    modifiedBy: 'David Brown',
+  },
+  {
+    id: '6',
+    title: 'General Welcome Email',
+    channel: 'email',
+    status: 'approved',
+    bankTag: 'All Banks',
+    typeTag: 'General',
+    content:
+      'Welcome {{customer_name}}! We are here to help you settle your outstanding dues with flexible payment options...',
+    modifiedDate: '2024-01-10',
+    modifiedBy: 'Emily Davis',
+  },
+  {
+    id: '7',
+    title: 'WhatsApp Payment Confirmation',
+    channel: 'whatsapp',
+    status: 'approved',
+    typeTag: 'General',
+    content:
+      '✅ Payment Received! Thank you {{customer_name}} for your payment of ₹{{amount}}. Reference: {{ref_number}}',
+    modifiedDate: '2024-01-09',
+    modifiedBy: 'Robert Taylor',
+  },
+  {
+    id: '8',
+    title: 'ICICI Final Notice',
+    channel: 'email',
+    status: 'draft',
+    bankTag: 'ICICI',
+    typeTag: 'Reminder',
+    content:
+      'URGENT: Dear {{customer_name}}, This is your final notice regarding the outstanding amount of ₹{{amount}}...',
+    modifiedDate: '2024-01-08',
+    modifiedBy: 'Lisa Anderson',
+  },
+  {
+    id: '9',
+    title: 'Settlement Success SMS',
+    channel: 'sms',
+    status: 'approved',
+    bankTag: 'All Banks',
+    typeTag: 'General',
+    content:
+      'Congratulations {{customer_name}}! Your settlement has been processed successfully. Amount: ₹{{amount}}',
+    modifiedDate: '2024-01-07',
+    modifiedBy: 'Michael Clark',
+  },
+  {
+    id: '10',
+    title: 'IndusInd Follow-up Email',
+    channel: 'email',
+    status: 'pending',
+    bankTag: 'IndusInd',
+    typeTag: 'Follow-up',
+    content:
+      'Dear {{customer_name}}, We wanted to follow up on our recent settlement proposal. Our records show...',
+    modifiedDate: '2024-01-06',
+    modifiedBy: 'Jennifer Martinez',
+  },
+  {
+    id: '11',
+    title: 'WhatsApp Offer Alert',
+    channel: 'whatsapp',
+    status: 'approved',
+    bankTag: 'HDFC',
+    typeTag: 'Settlement',
+    content:
+      '🎉 Special Offer for {{customer_name}}! Settle your HDFC dues with 40% discount. Valid till {{expiry_date}}',
+    modifiedDate: '2024-01-05',
+    modifiedBy: 'Christopher Lee',
+  },
+  {
+    id: '12',
+    title: 'Axis Verification SMS',
+    channel: 'sms',
+    status: 'approved',
+    bankTag: 'Axis',
+    typeTag: 'General',
+    content:
+      'Dear {{customer_name}}, Please verify your mobile number by replying YES to this message.',
+    modifiedDate: '2024-01-04',
+    modifiedBy: 'Amanda White',
+  },
+];
