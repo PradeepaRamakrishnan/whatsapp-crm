@@ -1,4 +1,20 @@
-import { CSSProperties, useId } from 'react';
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  type UniqueIdentifier,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { type Cell, flexRender, type HeaderGroup, type Row } from '@tanstack/react-table';
+import { GripHorizontal } from 'lucide-react';
+import { type CSSProperties, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDataGrid } from '@/components/ui/data-grid';
 import {
@@ -15,22 +31,6 @@ import {
   DataGridTableHeadRowCellResize,
   DataGridTableRowSpacer,
 } from '@/components/ui/data-grid-table';
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  UniqueIdentifier,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Cell, flexRender, HeaderGroup, Row } from '@tanstack/react-table';
-import { GripHorizontal } from 'lucide-react';
 
 function DataGridTableDndRowHandle({ rowId }: { rowId: string }) {
   const { attributes, listeners } = useSortable({
@@ -38,7 +38,7 @@ function DataGridTableDndRowHandle({ rowId }: { rowId: string }) {
   });
 
   return (
-    <Button variant="dim" size="sm" className="size-7" {...attributes} {...listeners}>
+    <Button variant="ghost" size="sm" className="size-7" {...attributes} {...listeners}>
       <GripHorizontal />
     </Button>
   );
@@ -79,7 +79,11 @@ function DataGridTableDndRows<TData>({
   const { table, isLoading, props } = useDataGrid();
   const pagination = table.getState().pagination;
 
-  const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
+  const sensors = useSensors(
+    useSensor(MouseSensor, {}),
+    useSensor(TouchSensor, {}),
+    useSensor(KeyboardSensor, {}),
+  );
 
   return (
     <DndContext
@@ -100,7 +104,9 @@ function DataGridTableDndRows<TData>({
 
                     return (
                       <DataGridTableHeadRowCell header={header} key={index}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                         {props.tableLayout?.columnsResizable && column.getCanResize() && (
                           <DataGridTableHeadRowCellResize header={header} />
                         )}
@@ -112,7 +118,9 @@ function DataGridTableDndRows<TData>({
             })}
           </DataGridTableHead>
 
-          {(props.tableLayout?.stripped || !props.tableLayout?.rowBorder) && <DataGridTableRowSpacer />}
+          {(props.tableLayout?.stripped || !props.tableLayout?.rowBorder) && (
+            <DataGridTableRowSpacer />
+          )}
 
           <DataGridTableBody>
             {props.loadingMode === 'skeleton' && isLoading && pagination?.pageSize ? (

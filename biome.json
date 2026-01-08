@@ -37,7 +37,21 @@
         "useExhaustiveDependencies": "error"
       },
       "style": {
-        "useNamingConvention": "error"
+        "useNamingConvention": {
+          "level": "error",
+          "options": {
+            "strictCase": false,
+            "requireAscii": false,
+            "conventions": [
+              {
+                "selector": {
+                  "kind": "objectLiteralProperty"
+                },
+                "formats": ["camelCase", "PascalCase", "CONSTANT_CASE", "snake_case"]
+              }
+            ]
+          }
+        }
       },
       "complexity": {
         "useArrowFunction": "error"

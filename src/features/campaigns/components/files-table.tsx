@@ -115,7 +115,7 @@ export function FilesTable() {
     columnHelper.display({
       id: 'actions',
       header: 'Actions',
-      cell: ({ row }) => (
+      cell: () => (
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Trash2 className="h-4 w-4 text-destructive" />

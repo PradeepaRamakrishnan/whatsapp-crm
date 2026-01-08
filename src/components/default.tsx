@@ -1,19 +1,19 @@
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
-import { DataGridTable } from '@/components/ui/data-grid-table';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
-  ColumnDef,
+  type ColumnDef,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  SortingState,
+  type PaginationState,
+  type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
+import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+import { DataGridTable } from '@/components/ui/data-grid-table';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface IData {
   id: string;

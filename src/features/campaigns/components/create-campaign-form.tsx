@@ -3,7 +3,6 @@
 import { useForm } from '@tanstack/react-form';
 import {
   ArrowRight,
-  Calendar,
   Check,
   Clock,
   FileSpreadsheet,
@@ -21,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -29,12 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockTemplates } from '../lib/templates-data';
-import type { TemplateChannel } from '../types/template.types';
 import { RecordSelectionTable } from './record-selection-table';
 
-type CampaignStatus = 'Draft' | 'Scheduled' | 'Active';
 type CampaignPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 const steps = [

@@ -42,9 +42,9 @@ export function CreateTemplateForm() {
       bank: '',
       content: '',
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async () => {
       // TODO: integrate API
-      console.log('Template submitted:', value);
+
       router.push('/campaigns/templates');
     },
   });
