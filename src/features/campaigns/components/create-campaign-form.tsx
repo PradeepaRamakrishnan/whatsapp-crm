@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Calendar,
   Check,
+  ChevronDown,
+  ChevronUp,
   Clock,
   FileSpreadsheet,
   FileText,
@@ -59,11 +61,24 @@ export function CreateCampaignForm() {
   const [emailTemplate, setEmailTemplate] = useState<string>('');
   const [smsTemplate, setSmsTemplate] = useState<string>('');
   const [whatsappTemplate, setWhatsappTemplate] = useState<string>('');
+  const [channelOrder, setChannelOrder] = useState<('email' | 'sms' | 'whatsapp')[]>([
+    'email',
+    'sms',
+    'whatsapp',
+  ]);
   const [smsDelay, setSmsDelay] = useState<string>('30');
   const [whatsappDelay, setWhatsappDelay] = useState<string>('60');
   const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
   const [scheduledDate, setScheduledDate] = useState<string>('');
   const [scheduledTime, setScheduledTime] = useState<string>('');
+
+  const swapChannels = (index1: number, index2: number) => {
+    // Email is always first (index 0), only allow swapping SMS and WhatsApp
+    if (index1 === 0 || index2 === 0) return;
+    const newOrder = [...channelOrder];
+    [newOrder[index1], newOrder[index2]] = [newOrder[index2], newOrder[index1]];
+    setChannelOrder(newOrder);
+  };
 
   const form = useForm({
     defaultValues: {
@@ -680,81 +695,99 @@ export function CreateCampaignForm() {
                 <Card className="border-2">
                   <CardContent className="p-6">
                     <div className="flex flex-wrap items-center gap-4">
-                      {/* Email (Start) - if enabled */}
-                      {emailEnabled && (
-                        <>
-                          <div className="flex items-center gap-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/30">
-                            <Mail className="h-5 w-5 text-blue-600" />
-                            <div>
-                              <div className="font-semibold text-sm">Email</div>
-                              <div className="text-xs text-muted-foreground">(Start)</div>
-                            </div>
-                          </div>
-                          {(smsEnabled || whatsappEnabled) && (
-                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </>
-                      )}
+                      {channelOrder.map((channel, index) => {
+                        const isFirst = index === 0;
+                        const isLast = index === channelOrder.length - 1;
+                        const channelConfig = {
+                          email: {
+                            icon: Mail,
+                            label: 'Email',
+                            colors:
+                              'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
+                            iconColor: 'text-blue-600',
+                          },
+                          sms: {
+                            icon: MessageSquare,
+                            label: 'SMS',
+                            colors:
+                              'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30',
+                            iconColor: 'text-green-600',
+                            delay: smsDelay,
+                            setDelay: setSmsDelay,
+                          },
+                          whatsapp: {
+                            icon: Send,
+                            label: 'WhatsApp',
+                            colors:
+                              'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30',
+                            iconColor: 'text-emerald-600',
+                            delay: whatsappDelay,
+                            setDelay: setWhatsappDelay,
+                          },
+                        };
 
-                      {/* SMS with delay input - if enabled */}
-                      {smsEnabled && (
-                        <>
-                          <div className="flex items-center gap-3 rounded-lg border-2 border-green-200 bg-green-50 px-4 py-3 dark:border-green-800 dark:bg-green-950/30">
-                            <MessageSquare className="h-5 w-5 text-green-600" />
-                            <div>
-                              <div className="font-semibold text-sm">SMS</div>
-                              {!emailEnabled && (
-                                <div className="text-xs text-muted-foreground">(Start)</div>
+                        const config = channelConfig[channel];
+                        const Icon = config.icon;
+
+                        return (
+                          <>
+                            <div
+                              key={channel}
+                              className={`flex items-center gap-3 rounded-lg border-2 px-4 py-3 ${config.colors}`}
+                            >
+                              <Icon className={`h-5 w-5 ${config.iconColor}`} />
+                              <div>
+                                <div className="font-semibold text-sm">{config.label}</div>
+                                {isFirst && (
+                                  <div className="text-xs text-muted-foreground">(Start)</div>
+                                )}
+                              </div>
+                              {/* Only show swap buttons for SMS and WhatsApp (not Email) */}
+                              {!isFirst && (
+                                <div className="flex flex-col gap-1 ml-2">
+                                  {index > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => swapChannels(index, index - 1)}
+                                      className="hover:bg-black/5 dark:hover:bg-white/5 rounded p-0.5"
+                                    >
+                                      <ChevronUp className="h-3 w-3" />
+                                    </button>
+                                  )}
+                                  {!isLast && (
+                                    <button
+                                      type="button"
+                                      onClick={() => swapChannels(index, index + 1)}
+                                      className="hover:bg-black/5 dark:hover:bg-white/5 rounded p-0.5"
+                                    >
+                                      <ChevronDown className="h-3 w-3" />
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
-                          </div>
 
-                          {emailEnabled && (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={smsDelay}
-                                onChange={(e) => setSmsDelay(e.target.value)}
-                                className="h-10 w-20 text-center"
-                              />
-                              <span className="text-sm text-muted-foreground">min</span>
-                            </div>
-                          )}
-                          {whatsappEnabled && (
-                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </>
-                      )}
+                            {!isFirst && 'delay' in config && (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={config.delay}
+                                  onChange={(e) => config.setDelay?.(e.target.value)}
+                                  className="h-10 w-20 text-center"
+                                />
+                                <span className="text-sm text-muted-foreground">min</span>
+                              </div>
+                            )}
 
-                      {/* WhatsApp with delay input - if enabled */}
-                      {whatsappEnabled && (
-                        <>
-                          <div className="flex items-center gap-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950/30">
-                            <Send className="h-5 w-5 text-emerald-600" />
-                            <div>
-                              <div className="font-semibold text-sm">WhatsApp</div>
-                              {!emailEnabled && !smsEnabled && (
-                                <div className="text-xs text-muted-foreground">(Start)</div>
-                              )}
-                            </div>
-                          </div>
+                            {index < channelOrder.length - 1 && (
+                              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </>
+                        );
+                      })}
 
-                          {(emailEnabled || smsEnabled) && (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={whatsappDelay}
-                                onChange={(e) => setWhatsappDelay(e.target.value)}
-                                className="h-10 w-20 text-center"
-                              />
-                              <span className="text-sm text-muted-foreground">min</span>
-                            </div>
-                          )}
-                          <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                        </>
-                      )}
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
 
                       {/* Call Follow-up */}
                       <div className="flex items-center gap-3 rounded-lg border-2 border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-800 dark:bg-purple-950/30">
