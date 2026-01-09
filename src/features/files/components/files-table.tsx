@@ -26,12 +26,10 @@ import { type FileData, filesData } from '../lib/files-data';
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'submitted':
+    case 'new':
       return 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
     case 'reviewed':
       return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'rejected':
-      return 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300';
     default:
       return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
   }
@@ -149,8 +147,8 @@ export function FilesTable() {
       label: 'Status',
       type: 'select',
       options: [
-        { label: 'Valid', value: 'valid' },
-        { label: 'Invalid', value: 'invalid' },
+        { label: 'New', value: 'new' },
+        { label: 'Reviewed', value: 'reviewed' },
       ],
     },
   ];

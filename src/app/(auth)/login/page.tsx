@@ -20,14 +20,16 @@ export default function LoginPage() {
           {/* Tagline */}
           <div className="space-y-4">
             <h2 className="text-4xl font-bold leading-tight">
-              Streamline Your
+              Rebuild Credit,
               <br />
-              Financial Operations
+              Regain Credibility
             </h2>
-            <p className="text-lg text-zinc-400">
-              Powerful CRM solution built for modern fintech teams. Manage clients, track
-              transactions, and grow your business.
+            <p className="text-lg text-zinc-300">
+              Restoring Dignity, Rebuilding Trust, Reimagining Life
             </p>
+            <div className="inline-block rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 shadow-lg shadow-orange-500/50">
+              <p className="text-xl font-bold text-white">@ Zero Cost</p>
+            </div>
           </div>
 
           {/* Feature List */}
@@ -50,9 +52,9 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Real-time Analytics</h3>
+                <h3 className="font-semibold">Credit Restoration Programs</h3>
                 <p className="text-sm text-zinc-400">
-                  Monitor your business metrics with live dashboards
+                  Comprehensive solutions to rebuild your credit score
                 </p>
               </div>
             </div>
@@ -75,9 +77,9 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Secure & Compliant</h3>
+                <h3 className="font-semibold">Expert Financial Guidance</h3>
                 <p className="text-sm text-zinc-400">
-                  Bank-grade security with full regulatory compliance
+                  Professional support to help you regain credibility
                 </p>
               </div>
             </div>
@@ -100,9 +102,9 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Automated Workflows</h3>
+                <h3 className="font-semibold">Transparent Process</h3>
                 <p className="text-sm text-zinc-400">
-                  Save time with intelligent automation and integrations
+                  Track your progress with complete transparency
                 </p>
               </div>
             </div>
@@ -115,11 +117,12 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-6">
           {/* Logo */}
           <div className="flex items-center justify-center mb-2">
-            <div className="relative w-32 h-32">
+            <div className="relative w-72">
               <Image
                 src="/assets/images/samatvalogo.png"
-                alt="Samatva CRM Logo"
-                fill
+                alt="Samatva Awareness Logo"
+                width={288}
+                height={80}
                 className="object-contain"
               />
             </div>

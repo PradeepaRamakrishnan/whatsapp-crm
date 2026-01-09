@@ -1,128 +1,93 @@
 'use client';
 
 import {
-  Calendar,
   CheckCircle2,
-  ChevronRight,
   Clock,
+  CreditCard,
   DollarSign,
   Mail,
   MessageSquare,
   Phone,
   User,
 } from 'lucide-react';
-import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type { BorrowerData } from '../lib/borrower-data';
-import { ResponseConversationView } from './response-conversation-view';
+import { ContactConversation } from './contact-conversation';
 
 interface ContactDetailsPageProps {
   contact: BorrowerData;
 }
 
 export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
-  // const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'details' | 'responses'>('details');
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
-      {/* Header and Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
-            <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{contact.name}</h1>
-            <p className="text-sm text-muted-foreground">{contact.loanType}</p>
-          </div>
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
+          <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         </div>
-
-        <div className="flex bg-muted p-1 rounded-lg">
-          <Button
-            variant={activeTab === 'details' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('details')}
-            className="rounded-md px-4"
-          >
-            Profile Info
-          </Button>
-          <Button
-            variant={activeTab === 'responses' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('responses')}
-            className="rounded-md px-4"
-          >
-            Response Queue
-            <Badge className="ml-2 bg-primary text-primary-foreground h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
-              2
-            </Badge>
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{contact.name}</h1>
         </div>
       </div>
 
-      {activeTab === 'details' ? (
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Loan Amount</CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-600">
-                  ₹{contact.loanAmount.toLocaleString('en-IN')}
-                </div>
-                <p className="text-xs text-muted-foreground">Primary loan</p>
-              </CardContent>
-            </Card>
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Settlement Amount</CardTitle>
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">
+              ₹{contact.loanAmount.toLocaleString('en-IN')}
+            </div>
+            <p className="text-xs text-muted-foreground">Primary loan</p>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Installments</CardTitle>
-                <Calendar className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{contact.installments}</div>
-                <p className="text-xs text-muted-foreground">Total EMI count</p>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{contact.settlementCount}</div>
+            <p className="text-xs text-muted-foreground">Previous settlements</p>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{contact.settlementCount}</div>
-                <p className="text-xs text-muted-foreground">Previous settlements</p>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">DND Status</CardTitle>
+            <Phone className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div
+              className={cn(
+                'text-2xl font-bold',
+                contact.dndStatus ? 'text-red-600' : 'text-emerald-600',
+              )}
+            >
+              {contact.dndStatus ? 'Active' : 'Inactive'}
+            </div>
+            <p className="text-xs text-muted-foreground">Do Not Disturb</p>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">DND Status</CardTitle>
-                <Phone className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div
-                  className={cn(
-                    'text-2xl font-bold',
-                    contact.dndStatus ? 'text-red-600' : 'text-emerald-600',
-                  )}
-                >
-                  {contact.dndStatus ? 'Active' : 'Inactive'}
-                </div>
-                <p className="text-xs text-muted-foreground">Do Not Disturb</p>
-              </CardContent>
-            </Card>
-          </div>
+      {/* Main Tabs */}
+      <Tabs defaultValue="details" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="conversation">Conversation</TabsTrigger>
+        </TabsList>
 
+        {/* Details Tab */}
+        <TabsContent value="details" className="mt-6">
           {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Contact Information */}
@@ -144,6 +109,16 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground">Phone Number</dt>
                     <dd className="text-sm font-medium mt-2">{contact.phone}</dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">Assigned to</dt>
+                    <dd className="flex items-center gap-2 mt-2">
+                      <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="text-sm font-medium">Rahul Kumar</span>
+                    </dd>
                   </div>
 
                   <div>
@@ -215,111 +190,92 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
               </CardContent>
             </Card>
 
-            {/* Loan Details */}
+            {/* Card & Banking Details */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Loan Information
+                  <CreditCard className="h-5 w-5" />
+                  Card & Banking Details
                 </CardTitle>
-                <CardDescription>Loan and payment details</CardDescription>
+                <CardDescription>Bank account and card information</CardDescription>
               </CardHeader>
               <CardContent>
                 <dl className="space-y-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">Loan Type</dt>
-                      <dd className="text-sm font-medium mt-2">{contact.loanType}</dd>
-                    </div>
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">
+                      Primary Card Number
+                    </dt>
+                    <dd className="text-sm font-medium mt-2 font-mono text-muted-foreground">
+                      ****{contact.primaryCardNumber.slice(-4)}
+                    </dd>
                   </div>
 
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Application Date
-                      </dt>
-                      <dd className="text-sm font-medium mt-2">
-                        {new Date(contact.applicationDate).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </dd>
-                    </div>
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">Branch</dt>
+                    <dd className="text-sm font-medium mt-2">{contact.branch}</dd>
                   </div>
 
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">Financial Year</dt>
-                      <dd className="text-sm font-medium mt-2">{contact.fy}</dd>
-                    </div>
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">Linked Loan</dt>
+                    <dd className="text-sm font-medium mt-2">{contact.linkedLoan}</dd>
                   </div>
 
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Month of Settlement
-                      </dt>
-                      <dd className="text-sm font-medium mt-2">{contact.monthOfSettlement}</dd>
-                    </div>
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">State</dt>
+                    <dd className="text-sm font-medium mt-2">{contact.state}</dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">Profession</dt>
+                    <dd className="text-sm font-medium mt-2">{contact.profession}</dd>
                   </div>
                 </dl>
               </CardContent>
             </Card>
 
-            {/* Response Queue Mini-Card */}
-            <Card className="lg:col-span-2 shadow-lg border-2 border-primary/10">
-              <CardHeader className="bg-primary/5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    <CardTitle>Recent Responses</CardTitle>
-                  </div>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setActiveTab('responses')}
-                    className="text-primary font-bold"
-                  >
-                    View Full Conversation Queue <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
+            {/* Financial Metrics */}
+            {/* <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Financial Metrics
+                </CardTitle>
+                <CardDescription>Account balance and transaction details</CardDescription>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="p-4 space-y-4">
-                  {/** biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                  {/** biome-ignore lint/a11y/noStaticElementInteractions: <explanation> */}
-                  <div
-                    className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => setActiveTab('responses')}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                        JD
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-bold text-sm">John Doe</h4>
-                        <span className="text-[10px] text-muted-foreground">2 hours ago</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-1 italic">
-                        "I am interested in settling my loan. Please call me."
-                      </p>
-                    </div>
-                    <Badge variant="destructive">Urgent</Badge>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <p className="text-xs text-muted-foreground">POS Amount</p>
+                    <p className="text-2xl font-bold mt-2">
+                      ₹
+                      {contact.posW.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <p className="text-xs text-muted-foreground">Total Amount</p>
+                    <p className="text-2xl font-bold mt-2">
+                      ₹
+                      {contact.totalW.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
-        </div>
-      ) : (
-        /* The Premium Response Conversation View */
-        <div className="animate-in fade-in zoom-in duration-300">
-          <ResponseConversationView contact={contact} />
-        </div>
-      )}
+        </TabsContent>
+
+        {/* Conversation Tab */}
+        <TabsContent value="conversation" className="mt-6">
+          <ContactConversation contact={contact} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
