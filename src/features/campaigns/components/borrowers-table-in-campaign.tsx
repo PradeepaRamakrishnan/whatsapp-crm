@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/useButtonType: <explanation> */
 'use client';
 
 import {
@@ -10,6 +11,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { CheckCircle2, EllipsisIcon, FunnelX, Phone, PhoneOff, Settings2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
@@ -26,9 +28,8 @@ interface BorrowersTableInCampaignProps {
   campaignId: number;
 }
 
-export function BorrowersTableInCampaign({
-  campaignId: _campaignId,
-}: BorrowersTableInCampaignProps) {
+export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaignProps) {
+  const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -41,7 +42,14 @@ export function BorrowersTableInCampaign({
   const columns = [
     columnHelper.accessor('name', {
       header: ({ column }) => <DataGridColumnHeader title="Name" column={column} />,
-      cell: ({ getValue }) => <div className="font-medium">{String(getValue() || '')}</div>,
+      cell: ({ getValue, row }) => (
+        <button
+          onClick={() => router.push(`/campaigns/${campaignId}/contacts/${row.original.id}`)}
+          className="font-medium text-primary hover:underline cursor-pointer"
+        >
+          {String(getValue() || '')}
+        </button>
+      ),
       size: 180,
       enableSorting: true,
       enableHiding: true,

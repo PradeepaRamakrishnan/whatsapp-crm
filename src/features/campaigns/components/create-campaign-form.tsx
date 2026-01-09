@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import {
   ArrowRight,
+  Calendar,
   Check,
   Clock,
   FileSpreadsheet,
@@ -27,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { mockTemplates } from '../lib/templates-data';
 import { RecordSelectionTable } from './record-selection-table';
 
@@ -51,11 +53,17 @@ export function CreateCampaignForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [selectedFile, setSelectedFile] = useState<string>('');
+  const [emailEnabled, setEmailEnabled] = useState<boolean>(true);
+  const [smsEnabled, setSmsEnabled] = useState<boolean>(true);
+  const [whatsappEnabled, setWhatsappEnabled] = useState<boolean>(true);
   const [emailTemplate, setEmailTemplate] = useState<string>('');
   const [smsTemplate, setSmsTemplate] = useState<string>('');
   const [whatsappTemplate, setWhatsappTemplate] = useState<string>('');
   const [smsDelay, setSmsDelay] = useState<string>('30');
   const [whatsappDelay, setWhatsappDelay] = useState<string>('60');
+  const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
+  const [scheduledDate, setScheduledDate] = useState<string>('');
+  const [scheduledTime, setScheduledTime] = useState<string>('');
 
   const form = useForm({
     defaultValues: {
@@ -82,7 +90,12 @@ export function CreateCampaignForm() {
   const selectedWhatsappData = mockTemplates.find((t) => t.id === whatsappTemplate);
   const selectedFileData = mockFiles.find((f) => f.id === selectedFile);
 
-  const allTemplatesSelected = emailTemplate && smsTemplate && whatsappTemplate;
+  const allRequiredTemplatesSelected =
+    (!emailEnabled || emailTemplate) &&
+    (!smsEnabled || smsTemplate) &&
+    (!whatsappEnabled || whatsappTemplate);
+
+  const atLeastOneChannelEnabled = emailEnabled || smsEnabled || whatsappEnabled;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-8 p-6">
@@ -172,6 +185,11 @@ export function CreateCampaignForm() {
               } else if (step === 3) {
                 setStep(4);
               } else if (step === 4) {
+                // Validate schedule fields if schedule mode is selected
+                if (scheduleMode === 'schedule' && (!scheduledDate || !scheduledTime)) {
+                  // Show validation error - fields are required
+                  return;
+                }
                 setStep(5);
               } else {
                 form.handleSubmit();
@@ -301,7 +319,9 @@ export function CreateCampaignForm() {
                               {mockFiles.map((file) => (
                                 <SelectItem key={file.id} value={file.id}>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium">{file.name}</span>
+                                    <span className="font-medium">
+                                      {file.name.replace(/\.[^/.]+$/, '')}
+                                    </span>
                                     <span className="text-xs text-muted-foreground">
                                       ({file.records.toLocaleString()} records)
                                     </span>
@@ -338,24 +358,54 @@ export function CreateCampaignForm() {
                 <div>
                   <h3 className="text-lg font-semibold">Select Templates</h3>
                   <p className="text-sm text-muted-foreground">
-                    Choose one template from each category for your campaign
+                    Enable channels and choose templates for your campaign
                   </p>
                 </div>
 
+                {!atLeastOneChannelEnabled && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                    <div className="flex gap-3">
+                      <div className="rounded-full bg-amber-500 p-1 h-5 w-5 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-900 dark:text-amber-200 mb-1">
+                          No channels enabled
+                        </p>
+                        <p className="text-amber-800 dark:text-amber-300">
+                          Please enable at least one communication channel to continue with your
+                          campaign.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Email Templates */}
                 <Card className="border-blue-200 bg-linear-to-br from-blue-50 to-blue-100/50 dark:border-blue-800 dark:from-blue-950/30 dark:to-blue-900/20">
-                  <div className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-lg bg-blue-600 p-2.5">
-                        <Mail className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">Email Template</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            Required
-                          </Badge>
+                  <div className={emailEnabled ? 'p-6' : 'p-4'}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-blue-600 p-2.5 shrink-0">
+                          <Mail className="h-5 w-5 text-white" />
                         </div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-semibold">Email Template</h4>
+                          {emailEnabled && (
+                            <Badge variant="secondary" className="text-xs">
+                              Enabled
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Enable Channel</span>
+                        <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+                      </div>
+                    </div>
+
+                    {emailEnabled && (
+                      <div className="mt-4 space-y-4">
                         <Select value={emailTemplate} onValueChange={setEmailTemplate}>
                           <SelectTrigger className="h-11 bg-background">
                             <SelectValue placeholder="Select email template..." />
@@ -382,35 +432,61 @@ export function CreateCampaignForm() {
                           </SelectContent>
                         </Select>
                         {selectedEmailData && (
-                          <div className="rounded-md border bg-background p-3">
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {selectedEmailData.content}
-                            </p>
-                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Modified: {selectedEmailData.modifiedDate}</span>
-                              <span>By: {selectedEmailData.modifiedBy}</span>
+                          <div className="rounded-lg border bg-background p-5 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3 pb-3 border-b">
+                              <Mail className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-semibold">Email Preview</span>
+                            </div>
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Subject:</p>
+                                <p className="text-sm font-medium">{selectedEmailData.title}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-2">Content:</p>
+                                <div className="rounded-md bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                                  {selectedEmailData.content}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 pt-2 text-xs text-muted-foreground border-t">
+                                <span>Modified: {selectedEmailData.modifiedDate}</span>
+                                <span>•</span>
+                                <span>By: {selectedEmailData.modifiedBy}</span>
+                                <span>•</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {selectedEmailData.bankTag}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </Card>
 
                 {/* SMS Templates */}
                 <Card className="border-green-200 bg-linear-to-br from-green-50 to-green-100/50 dark:border-green-800 dark:from-green-950/30 dark:to-green-900/20">
-                  <div className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-lg bg-green-600 p-2.5">
-                        <MessageSquare className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">SMS Template</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            Required
-                          </Badge>
+                  <div className={smsEnabled ? 'p-6' : 'p-4'}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-green-600 p-2.5 shrink-0">
+                          <MessageSquare className="h-5 w-5 text-white" />
                         </div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-semibold">SMS Template</h4>
+                          {smsEnabled && (
+                            <Badge variant="secondary" className="text-xs">
+                              Enabled
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} />
+                    </div>
+
+                    {smsEnabled && (
+                      <div className="mt-4 space-y-4">
                         <Select value={smsTemplate} onValueChange={setSmsTemplate}>
                           <SelectTrigger className="h-11 bg-background">
                             <SelectValue placeholder="Select SMS template..." />
@@ -437,35 +513,41 @@ export function CreateCampaignForm() {
                           </SelectContent>
                         </Select>
                         {selectedSmsData && (
-                          <div className="rounded-md border bg-background p-3">
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {selectedSmsData.content}
-                            </p>
-                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="rounded-md border bg-background p-4">
+                            <p className="text-sm leading-relaxed">{selectedSmsData.content}</p>
+                            <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
                               <span>Modified: {selectedSmsData.modifiedDate}</span>
                               <span>By: {selectedSmsData.modifiedBy}</span>
                             </div>
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </Card>
 
                 {/* WhatsApp Templates */}
                 <Card className="border-emerald-200 bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:border-emerald-800 dark:from-emerald-950/30 dark:to-emerald-900/20">
-                  <div className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-lg bg-emerald-600 p-2.5">
-                        <Send className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">WhatsApp Template</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            Required
-                          </Badge>
+                  <div className={whatsappEnabled ? 'p-6' : 'p-4'}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-emerald-600 p-2.5 shrink-0">
+                          <Send className="h-5 w-5 text-white" />
                         </div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-semibold">WhatsApp Template</h4>
+                          {whatsappEnabled && (
+                            <Badge variant="secondary" className="text-xs">
+                              Enabled
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Switch checked={whatsappEnabled} onCheckedChange={setWhatsappEnabled} />
+                    </div>
+
+                    {whatsappEnabled && (
+                      <div className="mt-4 space-y-4">
                         <Select value={whatsappTemplate} onValueChange={setWhatsappTemplate}>
                           <SelectTrigger className="h-11 bg-background">
                             <SelectValue placeholder="Select WhatsApp template..." />
@@ -492,18 +574,18 @@ export function CreateCampaignForm() {
                           </SelectContent>
                         </Select>
                         {selectedWhatsappData && (
-                          <div className="rounded-md border bg-background p-3">
-                            <p className="text-xs text-muted-foreground line-clamp-2">
+                          <div className="rounded-md border bg-background p-4">
+                            <p className="text-sm leading-relaxed">
                               {selectedWhatsappData.content}
                             </p>
-                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                            <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
                               <span>Modified: {selectedWhatsappData.modifiedDate}</span>
                               <span>By: {selectedWhatsappData.modifiedBy}</span>
                             </div>
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </Card>
               </div>
@@ -520,74 +602,159 @@ export function CreateCampaignForm() {
                   <div>
                     <h3 className="text-lg font-semibold">Channel Timing Settings</h3>
                     <p className="text-sm text-muted-foreground">
-                      Set delays between message channels
+                      Set delays between enabled communication channels
                     </p>
                   </div>
                 </div>
+
+                {/* Send Now or Schedule */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Campaign Schedule</CardTitle>
+                    <CardDescription>Choose when to send the campaign</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Toggle between Send Now and Schedule */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setScheduleMode('now')}
+                        className={`flex items-center justify-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                          scheduleMode === 'now'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                            : 'border-border hover:border-blue-300 dark:hover:border-blue-800'
+                        }`}
+                      >
+                        <Send className="h-5 w-5" />
+                        <div className="text-left">
+                          <div className="font-semibold text-sm">Send Now</div>
+                          <div className="text-xs text-muted-foreground">Start immediately</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setScheduleMode('schedule')}
+                        className={`flex items-center justify-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                          scheduleMode === 'schedule'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                            : 'border-border hover:border-blue-300 dark:hover:border-blue-800'
+                        }`}
+                      >
+                        <Clock className="h-5 w-5" />
+                        <div className="text-left">
+                          <div className="font-semibold text-sm">Schedule</div>
+                          <div className="text-xs text-muted-foreground">Set date & time</div>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Date and Time Picker - shown when Schedule is selected */}
+                    {scheduleMode === 'schedule' && (
+                      <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                        <Field>
+                          <FieldLabel>Date</FieldLabel>
+                          <Input
+                            type="date"
+                            value={scheduledDate}
+                            onChange={(e) => setScheduledDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            required
+                          />
+                        </Field>
+                        <Field>
+                          <FieldLabel>Time</FieldLabel>
+                          <Input
+                            type="time"
+                            value={scheduledTime}
+                            onChange={(e) => setScheduledTime(e.target.value)}
+                            required
+                          />
+                        </Field>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* Timing Flow */}
                 <Card className="border-2">
                   <CardContent className="p-6">
                     <div className="flex flex-wrap items-center gap-4">
-                      {/* Email (Start) */}
-                      <div className="flex items-center gap-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/30">
-                        <Mail className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <div className="font-semibold text-sm">Email</div>
-                          <div className="text-xs text-muted-foreground">(Start)</div>
-                        </div>
-                      </div>
-
-                      {/* Arrow */}
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
-
-                      {/* SMS with delay input */}
-                      <div className="flex items-center gap-3 rounded-lg border-2 border-green-200 bg-green-50 px-4 py-3 dark:border-green-800 dark:bg-green-950/30">
-                        <MessageSquare className="h-5 w-5 text-green-600" />
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <div className="font-semibold text-sm">SMS</div>
+                      {/* Email (Start) - if enabled */}
+                      {emailEnabled && (
+                        <>
+                          <div className="flex items-center gap-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/30">
+                            <Mail className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <div className="font-semibold text-sm">Email</div>
+                              <div className="text-xs text-muted-foreground">(Start)</div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                          {(smsEnabled || whatsappEnabled) && (
+                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </>
+                      )}
 
-                      {/* Delay input for SMS */}
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={smsDelay}
-                          onChange={(e) => setSmsDelay(e.target.value)}
-                          className="h-10 w-20 text-center"
-                        />
-                        <span className="text-sm text-muted-foreground">min</span>
-                      </div>
+                      {/* SMS with delay input - if enabled */}
+                      {smsEnabled && (
+                        <>
+                          <div className="flex items-center gap-3 rounded-lg border-2 border-green-200 bg-green-50 px-4 py-3 dark:border-green-800 dark:bg-green-950/30">
+                            <MessageSquare className="h-5 w-5 text-green-600" />
+                            <div>
+                              <div className="font-semibold text-sm">SMS</div>
+                              {!emailEnabled && (
+                                <div className="text-xs text-muted-foreground">(Start)</div>
+                              )}
+                            </div>
+                          </div>
 
-                      {/* Arrow */}
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                          {emailEnabled && (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={smsDelay}
+                                onChange={(e) => setSmsDelay(e.target.value)}
+                                className="h-10 w-20 text-center"
+                              />
+                              <span className="text-sm text-muted-foreground">min</span>
+                            </div>
+                          )}
+                          {whatsappEnabled && (
+                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </>
+                      )}
 
-                      {/* WhatsApp with delay input */}
-                      <div className="flex items-center gap-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950/30">
-                        <Send className="h-5 w-5 text-emerald-600" />
-                        <div>
-                          <div className="font-semibold text-sm">WhatsApp</div>
-                        </div>
-                      </div>
+                      {/* WhatsApp with delay input - if enabled */}
+                      {whatsappEnabled && (
+                        <>
+                          <div className="flex items-center gap-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950/30">
+                            <Send className="h-5 w-5 text-emerald-600" />
+                            <div>
+                              <div className="font-semibold text-sm">WhatsApp</div>
+                              {!emailEnabled && !smsEnabled && (
+                                <div className="text-xs text-muted-foreground">(Start)</div>
+                              )}
+                            </div>
+                          </div>
 
-                      {/* Delay input for WhatsApp */}
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={whatsappDelay}
-                          onChange={(e) => setWhatsappDelay(e.target.value)}
-                          className="h-10 w-20 text-center"
-                        />
-                        <span className="text-sm text-muted-foreground">min</span>
-                      </div>
-
-                      {/* Arrow */}
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                          {(emailEnabled || smsEnabled) && (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={whatsappDelay}
+                                onChange={(e) => setWhatsappDelay(e.target.value)}
+                                className="h-10 w-20 text-center"
+                              />
+                              <span className="text-sm text-muted-foreground">min</span>
+                            </div>
+                          )}
+                          <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                        </>
+                      )}
 
                       {/* Call Follow-up */}
                       <div className="flex items-center gap-3 rounded-lg border-2 border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-800 dark:bg-purple-950/30">
@@ -610,12 +777,28 @@ export function CreateCampaignForm() {
                       <div className="text-sm text-muted-foreground">
                         <p className="font-medium text-foreground mb-1">How it works:</p>
                         <ul className="space-y-1 text-xs">
-                          <li>• Campaign starts with Email communication</li>
-                          <li>• After {smsDelay} minutes, SMS will be sent to recipients</li>
+                          {emailEnabled && <li>• Campaign starts with Email communication</li>}
+                          {!emailEnabled && smsEnabled && (
+                            <li>• Campaign starts with SMS communication</li>
+                          )}
+                          {!emailEnabled && !smsEnabled && whatsappEnabled && (
+                            <li>• Campaign starts with WhatsApp communication</li>
+                          )}
+                          {emailEnabled && smsEnabled && (
+                            <li>• After {smsDelay} minutes, SMS will be sent to recipients</li>
+                          )}
+                          {smsEnabled && whatsappEnabled && (
+                            <li>
+                              • After {whatsappDelay} minutes from {emailEnabled ? 'SMS' : 'start'},
+                              WhatsApp message will be sent
+                            </li>
+                          )}
+                          {emailEnabled && !smsEnabled && whatsappEnabled && (
+                            <li>• After {whatsappDelay} minutes, WhatsApp message will be sent</li>
+                          )}
                           <li>
-                            • After {whatsappDelay} minutes from SMS, WhatsApp message will be sent
+                            • Call follow-up will be scheduled after all automated communications
                           </li>
-                          <li>• Call follow-up will be scheduled after WhatsApp communication</li>
                         </ul>
                       </div>
                     </div>
@@ -666,7 +849,7 @@ export function CreateCampaignForm() {
                       <div className="flex-1">
                         <dt className="text-xs font-medium text-muted-foreground">Selected File</dt>
                         <dd className="text-sm font-medium">
-                          {selectedFileData?.name || 'Not selected'}
+                          {selectedFileData?.name.replace(/\.[^/.]+$/, '') || 'Not selected'}
                         </dd>
                       </div>
                     </div>
@@ -687,95 +870,186 @@ export function CreateCampaignForm() {
                   <h3 className="mb-4 text-lg font-semibold">Template Summary</h3>
                   <div className="space-y-3">
                     {/* Email Template */}
-                    <div className="flex items-start gap-3 rounded-lg border p-3">
-                      <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          Email Template
-                        </div>
-                        <div className="text-sm font-medium mt-0.5">
-                          {selectedEmailData?.title || 'Not selected'}
-                        </div>
-                        {selectedEmailData && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {selectedEmailData.bankTag}
-                            </Badge>
+                    {emailEnabled && (
+                      <div className="flex items-start gap-3 rounded-lg border p-3">
+                        <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            Email Template
                           </div>
-                        )}
+                          <div className="text-sm font-medium mt-0.5">
+                            {selectedEmailData?.title || 'Not selected'}
+                          </div>
+                          {selectedEmailData && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {selectedEmailData.bankTag}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* SMS Template */}
-                    <div className="flex items-start gap-3 rounded-lg border p-3">
-                      <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          SMS Template
-                        </div>
-                        <div className="text-sm font-medium mt-0.5">
-                          {selectedSmsData?.title || 'Not selected'}
-                        </div>
-                        {selectedSmsData && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {selectedSmsData.bankTag}
-                            </Badge>
+                    {smsEnabled && (
+                      <div className="flex items-start gap-3 rounded-lg border p-3">
+                        <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            SMS Template
                           </div>
-                        )}
+                          <div className="text-sm font-medium mt-0.5">
+                            {selectedSmsData?.title || 'Not selected'}
+                          </div>
+                          {selectedSmsData && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {selectedSmsData.bankTag}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* WhatsApp Template */}
-                    <div className="flex items-start gap-3 rounded-lg border p-3">
-                      <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          WhatsApp Template
-                        </div>
-                        <div className="text-sm font-medium mt-0.5">
-                          {selectedWhatsappData?.title || 'Not selected'}
-                        </div>
-                        {selectedWhatsappData && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {selectedWhatsappData.bankTag}
-                            </Badge>
+                    {whatsappEnabled && (
+                      <div className="flex items-start gap-3 rounded-lg border p-3">
+                        <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            WhatsApp Template
                           </div>
-                        )}
+                          <div className="text-sm font-medium mt-0.5">
+                            {selectedWhatsappData?.title || 'Not selected'}
+                          </div>
+                          {selectedWhatsappData && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {selectedWhatsappData.bankTag}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Schedule Summary */}
+                <div className="rounded-lg border bg-muted/30 p-6">
+                  <h3 className="mb-4 text-lg font-semibold">Campaign Schedule</h3>
+                  <dl className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex items-start gap-3">
+                      <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <dt className="text-xs font-medium text-muted-foreground">Start Mode</dt>
+                        <dd className="text-sm font-medium capitalize">
+                          {scheduleMode === 'now' ? 'Send Now (Immediately)' : 'Scheduled'}
+                        </dd>
                       </div>
                     </div>
-                  </div>
+                    {scheduleMode === 'schedule' && (
+                      <>
+                        <div className="flex items-start gap-3">
+                          <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <dt className="text-xs font-medium text-muted-foreground">
+                              Scheduled Date
+                            </dt>
+                            <dd className="text-sm font-medium">
+                              {scheduledDate
+                                ? new Date(scheduledDate).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })
+                                : 'Not set'}
+                            </dd>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <dt className="text-xs font-medium text-muted-foreground">
+                              Scheduled Time
+                            </dt>
+                            <dd className="text-sm font-medium">
+                              {scheduledTime
+                                ? new Date(`2000-01-01T${scheduledTime}`).toLocaleTimeString(
+                                    'en-IN',
+                                    {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: true,
+                                    },
+                                  )
+                                : 'Not set'}
+                            </dd>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </dl>
                 </div>
 
                 {/* Channel Timing Summary */}
                 <div className="rounded-lg border bg-muted/30 p-6">
                   <h3 className="mb-4 text-lg font-semibold">Channel Timing</h3>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
-                      <Mail className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium">Email</span>
-                      <Badge variant="secondary" className="text-xs">
-                        Start
-                      </Badge>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2 dark:bg-green-950/30">
-                      <MessageSquare className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">SMS</span>
-                      <Badge variant="outline" className="text-xs">
-                        {smsDelay} min
-                      </Badge>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
-                      <Send className="h-4 w-4 text-emerald-600" />
-                      <span className="text-sm font-medium">WhatsApp</span>
-                      <Badge variant="outline" className="text-xs">
-                        {whatsappDelay} min
-                      </Badge>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    {emailEnabled && (
+                      <>
+                        <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium">Email</span>
+                          <Badge variant="secondary" className="text-xs">
+                            Start
+                          </Badge>
+                        </div>
+                        {(smsEnabled || whatsappEnabled) && (
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </>
+                    )}
+                    {smsEnabled && (
+                      <>
+                        <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2 dark:bg-green-950/30">
+                          <MessageSquare className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium">SMS</span>
+                          {emailEnabled ? (
+                            <Badge variant="outline" className="text-xs">
+                              {smsDelay} min
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">
+                              Start
+                            </Badge>
+                          )}
+                        </div>
+                        {whatsappEnabled && (
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </>
+                    )}
+                    {whatsappEnabled && (
+                      <>
+                        <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
+                          <Send className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm font-medium">WhatsApp</span>
+                          {emailEnabled || smsEnabled ? (
+                            <Badge variant="outline" className="text-xs">
+                              {whatsappDelay} min
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">
+                              Start
+                            </Badge>
+                          )}
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </>
+                    )}
                     <div className="flex items-center gap-2 rounded-lg border bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
                       <Phone className="h-4 w-4 text-purple-600" />
                       <span className="text-sm font-medium">Call</span>
@@ -808,7 +1082,10 @@ export function CreateCampaignForm() {
                 <Button
                   type="submit"
                   className="min-w-35"
-                  disabled={(step === 2 && !selectedFile) || (step === 3 && !allTemplatesSelected)}
+                  disabled={
+                    (step === 2 && !selectedFile) ||
+                    (step === 3 && (!allRequiredTemplatesSelected || !atLeastOneChannelEnabled))
+                  }
                 >
                   {step === 1 && 'Continue'}
                   {step === 2 && 'Continue to Templates'}
