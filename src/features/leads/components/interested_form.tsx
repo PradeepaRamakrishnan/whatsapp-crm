@@ -2,8 +2,9 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
+// import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { interestedSchema, otpSchema } from '../lib/validation';
@@ -24,8 +25,6 @@ export const InterestedForm = () => {
       dob_day: '',
       dob_month: '',
       dob_year: '',
-      consentCollection: false,
-      consentProcessing: false,
     },
     onSubmit: async ({ value }) => {
       // console.log('OTP requested');
@@ -259,42 +258,21 @@ export const InterestedForm = () => {
           </div>
         </div>
 
-        {/* Consent Checkboxes */}
-        <div className="space-y-4">
-          <mobileForm.Field name="consentCollection">
-            {(field) => (
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id={field.name}
-                  checked={field.state.value}
-                  onCheckedChange={(checked) => field.handleChange(checked === true)}
-                  className="mt-1"
-                />
-                <label htmlFor={field.name} className=" leading-relaxed cursor-pointer">
-                  I hereby consent to collection and processing of my data for availing this credit
-                  card and relevant services in the manner described in the{' '}
-                  <span className="font-semibold">Privacy Policy</span>
-                </label>
-              </div>
-            )}
-          </mobileForm.Field>
-
-          <mobileForm.Field name="consentProcessing">
-            {(field) => (
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id={field.name}
-                  checked={field.state.value}
-                  onCheckedChange={(checked) => field.handleChange(checked === true)}
-                  className="mt-1"
-                />
-                <label htmlFor={field.name} className="leading-relaxed cursor-pointer">
-                  I hereby consent to processing of my Data for sending me personalized offers on
-                  other products and services
-                </label>
-              </div>
-            )}
-          </mobileForm.Field>
+        {/* Consent Text */}
+        <div className="space-y-3 text-sm text-gray-600">
+          <p className="leading-relaxed">
+            By continuing the application process, I hereby agree/authorise the following
+          </p>
+          <ol className="list-decimal list-inside space-y-2 pl-2">
+            <li className="leading-relaxed">
+              Samatva Awareness{' '}
+              <span className="text-orange-600 underline ">Terms & Conditions</span> and{' '}
+              <span className="text-orange-600 underline ">Privacy Policy</span>
+            </li>
+            <li className="leading-relaxed">
+              I Allow Samatva Awareness and its lending partners to access my credit information
+            </li>
+          </ol>
         </div>
 
         <Button type="submit" className="w-full">

@@ -1,10 +1,10 @@
 'use client';
 
-import { CheckCircle2, Clock, Mail, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, Clock, CreditCard, Mail, MessageSquare } from 'lucide-react';
+// import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponseConversationView } from '@/features/campaigns/components/response-conversation-view';
+// import { ResponseConversationView } from '@/features/campaigns/components/response-conversation-view';
 import type { BorrowerData } from '../lib/data';
 
 interface ContactDetailsPageProps {
@@ -13,7 +13,7 @@ interface ContactDetailsPageProps {
 
 export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
   // const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab] = useState<'details' | 'responses'>('details');
+  // const [activeTab] = useState<'details' | 'responses'>('details');
 
   return (
     <div className="flex flex-1 flex-col gap-6 pt-4 min-w-0">
@@ -52,102 +52,138 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
         </div>
       </div> */}
 
-      {activeTab === 'details' ? (
-        <div className="space-y-6">
-          {/* Main Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Contact Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Contact Information
-                </CardTitle>
-                <CardDescription>Primary contact details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <dl className="space-y-6">
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground">Email Address</dt>
-                    <dd className="text-sm font-medium mt-2">{contact.email}</dd>
-                  </div>
+      <div className="space-y-6">
+        {/* Main Content Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+              <CardDescription>Primary contact details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-6">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Email Address</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.email}</dd>
+                </div>
 
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground">Phone Number</dt>
-                    <dd className="text-sm font-medium mt-2">{contact.phone}</dd>
-                  </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Phone Number</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.phone}</dd>
+                </div>
 
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground mb-3">
-                      Campaign Communications
-                    </dt>
-                    <dd className="space-y-3">
-                      {/* Email Status */}
-                      <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                        <div className="rounded-full bg-emerald-100 dark:bg-emerald-950 p-1.5 mt-0.5">
-                          <Mail className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">Email</p>
-                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900 border text-xs">
-                              <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
-                              Sent
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
-                        </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground mb-3">
+                    Campaign Communications
+                  </dt>
+                  <dd className="space-y-3">
+                    {/* Email Status */}
+                    <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="rounded-full bg-emerald-100 dark:bg-emerald-950 p-1.5 mt-0.5">
+                        <Mail className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-
-                      {/* SMS Status */}
-                      <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                        <div className="rounded-full bg-blue-100 dark:bg-blue-950 p-1.5 mt-0.5">
-                          <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Email</p>
+                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900 border text-xs">
+                            <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                            Sent
+                          </Badge>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">SMS</p>
-                            <Badge
-                              variant="outline"
-                              className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 text-xs"
-                            >
-                              <Clock className="h-2.5 w-2.5 mr-1" />
-                              Waiting to send
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Scheduled for tomorrow
-                          </p>
-                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
                       </div>
+                    </div>
 
-                      {/* WhatsApp Status */}
-                      <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                        <div className="rounded-full bg-green-100 dark:bg-green-950 p-1.5 mt-0.5">
-                          <MessageSquare className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">WhatsApp</p>
-                            <Badge
-                              variant="outline"
-                              className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 text-xs"
-                            >
-                              <Clock className="h-2.5 w-2.5 mr-1" />
-                              Waiting to send
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">Scheduled for 2 days</p>
-                        </div>
+                    {/* SMS Status */}
+                    <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="rounded-full bg-blue-100 dark:bg-blue-950 p-1.5 mt-0.5">
+                        <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       </div>
-                    </dd>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">SMS</p>
+                          <Badge
+                            variant="outline"
+                            className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 text-xs"
+                          >
+                            <Clock className="h-2.5 w-2.5 mr-1" />
+                            Waiting to send
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Scheduled for tomorrow</p>
+                      </div>
+                    </div>
 
-            {/* Loan Details */}
-            {/* <Card>
+                    {/* WhatsApp Status */}
+                    <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="rounded-full bg-green-100 dark:bg-green-950 p-1.5 mt-0.5">
+                        <MessageSquare className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">WhatsApp</p>
+                          <Badge
+                            variant="outline"
+                            className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 text-xs"
+                          >
+                            <Clock className="h-2.5 w-2.5 mr-1" />
+                            Waiting to send
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Scheduled for 2 days</p>
+                      </div>
+                    </div>
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Card & Banking Details
+              </CardTitle>
+              <CardDescription>Bank account and card information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-6">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Primary Card Number</dt>
+                  <dd className="text-sm font-medium mt-2 font-mono text-muted-foreground">
+                    ****{contact.primaryCardNumber.slice(-4)}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Branch</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.branch}</dd>
+                </div>
+
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Linked Loan</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.linkedLoan}</dd>
+                </div>
+
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">State</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.state}</dd>
+                </div>
+
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Profession</dt>
+                  <dd className="text-sm font-medium mt-2">{contact.profession}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Loan Details */}
+          {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
@@ -194,8 +230,8 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
               </CardContent>
             </Card> */}
 
-            {/* Response Queue Mini-Card */}
-            {/* <Card className="lg:col-span-2 shadow-lg border-2 border-primary/10">
+          {/* Response Queue Mini-Card */}
+          {/* <Card className="lg:col-span-2 shadow-lg border-2 border-primary/10">
               <CardHeader className="bg-primary/5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -225,14 +261,8 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                 </div>
               </CardContent>
             </Card> */}
-          </div>
         </div>
-      ) : (
-        /* The Premium Response Conversation View */
-        <div className="animate-in fade-in zoom-in duration-300">
-          <ResponseConversationView contact={contact} />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

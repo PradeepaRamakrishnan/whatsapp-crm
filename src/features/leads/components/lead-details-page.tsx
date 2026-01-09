@@ -4,8 +4,10 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle2,
+  DollarSign,
   Eye,
   FileText,
+  Phone,
   Plus,
   Trash2,
   Upload,
@@ -27,6 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ContactConversation } from '@/features/campaigns/components/contact-conversation';
 import { cn } from '@/lib/utils';
 import { borrowersData, type Document as LeadDocument } from '../lib/data';
 import { ContactDetailsPage } from './contact-detail';
@@ -168,6 +171,50 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Settlement Amount</CardTitle>
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">
+              ₹{lead.loanAmount.toLocaleString('en-IN')}
+            </div>
+            <p className="text-xs text-muted-foreground">Primary loan</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{lead.settlementCount}</div>
+            <p className="text-xs text-muted-foreground">Previous settlements</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">DND Status</CardTitle>
+            <Phone className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div
+              className={cn(
+                'text-2xl font-bold',
+                lead.dndStatus ? 'text-red-600' : 'text-emerald-600',
+              )}
+            >
+              {lead.dndStatus ? 'Active' : 'Inactive'}
+            </div>
+            <p className="text-xs text-muted-foreground">Do Not Disturb</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Tabs Section */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="inline-flex h-11 items-center justify-start gap-1 rounded-lg bg-slate-100 dark:bg-slate-800/50 p-1 w-auto">
@@ -183,12 +230,12 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
           >
             Documents
           </TabsTrigger>
-          {/* <TabsTrigger
-            value="documents"
+          <TabsTrigger
+            value="conversation"
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
           >
             Conversation
-          </TabsTrigger> */}
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -299,6 +346,10 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="conversation" className="mt-6">
+          <ContactConversation contact={lead} />
         </TabsContent>
       </Tabs>
 

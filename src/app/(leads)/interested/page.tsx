@@ -31,16 +31,16 @@ const InterestedPage = () => {
 
           {/* Tagline */}
           <div className="space-y-6">
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <h2 className="text-5xl font-extrabold leading-tight text-slate-900 dark:text-slate-100">
                 Instant Loans.
               </h2>
-              <h2 className="text-6xl font-extrabold leading-tight">
+              {/* <h2 className="text-6xl font-extrabold leading-tight">
                 <span className="bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                   Zero Hassle.
                 </span>
-              </h2>
-            </div> */}
+              </h2> */}
+            </div>
 
             <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md">
               Get access to quick credit solutions tailored for your financial needs. Secure,
