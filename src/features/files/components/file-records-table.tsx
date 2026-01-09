@@ -19,7 +19,7 @@ import { DataGridTable } from '@/components/ui/data-grid-table';
 import { type Filter, type FilterFieldConfig, Filters } from '@/components/ui/filters';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { type BorrowerData, borrowersData } from '../lib/borrower-data';
+import { type BorrowerData, borrowersData } from '@/features/campaigns/lib/borrower-data';
 
 interface FileRecordsTableProps {
   fileId: string;
@@ -81,6 +81,15 @@ export function FileRecordsTable({ fileId: _fileId }: FileRecordsTableProps) {
         const value = Number(row.getValue(columnId));
         return value >= min && value <= max;
       },
+    }),
+    columnHelper.accessor('settlementCount', {
+      header: ({ column }) => <DataGridColumnHeader title="Settlement Count" column={column} />,
+      cell: ({ getValue }) => <div className="text-sm font-medium">{getValue()}</div>,
+      size: 130,
+      enableSorting: true,
+      enableHiding: true,
+      enableResizing: true,
+      enablePinning: true,
     }),
     columnHelper.accessor('branch', {
       header: ({ column }) => <DataGridColumnHeader title="Branch" column={column} />,

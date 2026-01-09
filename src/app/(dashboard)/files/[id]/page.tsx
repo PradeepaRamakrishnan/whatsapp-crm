@@ -1,4 +1,4 @@
-import { FileDetailsPage } from '@/features/campaigns/components/file-details-page';
+import { FileDetailsPage } from '@/features/files/components/file-details-page';
 
 export const metadata = {
   title: 'File Details',

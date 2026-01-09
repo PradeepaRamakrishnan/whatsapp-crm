@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
-  SidebarGroupLabel,
+  // SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -31,7 +31,7 @@ export function NavWorkflows({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Workflows</SidebarGroupLabel>
+      {/* <SidebarGroupLabel>Modules</SidebarGroupLabel> */}
       <SidebarMenu>
         {workflows.map((workflow) => {
           const isActive =

@@ -15,7 +15,7 @@ export function FilesList() {
           <h1 className="text-3xl font-bold tracking-tight">File Management</h1>
           <p className="text-muted-foreground">Manage and view all uploaded borrower files</p>
         </div>
-        <Button onClick={() => router.push('/campaigns/files/upload')}>
+        <Button onClick={() => router.push('/files/upload')}>
           <Plus className="mr-2 h-4 w-4" />
           Create File
         </Button>

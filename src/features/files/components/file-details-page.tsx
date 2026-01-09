@@ -29,7 +29,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/campaigns/files">
+          <Link href="/files/list">
             <ArrowLeft className="h-4 w-4" />
             Back to Files
           </Link>
@@ -39,23 +39,16 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
   }
 
   const statusColor =
-    file.status === 'valid'
+    file.status === 'reviewed'
       ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
-      : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300';
+      : file.status === 'rejected'
+        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300'
+        : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300';
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
       {/* Header Section */}
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/campaigns/files">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-        </div>
-
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
@@ -83,7 +76,6 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
             </div>
           </div>
         </div>
-
         {/* Stats Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

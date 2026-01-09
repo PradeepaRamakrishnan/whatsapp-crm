@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, UserCheck, Workflow } from 'lucide-react';
+import { Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -10,28 +10,39 @@ export const dashboardData = {
   navMain: [
     {
       title: 'Overview',
-      url: '/overview',
+      url: '/dashboard',
       icon: LayoutDashboard,
       isActive: true,
     },
   ],
   workflows: [
     {
-      name: 'Campaigns Orchestration',
-      url: '/campaigns/files',
-      icon: Workflow,
+      name: 'Files',
+      url: '/files/list',
+      icon: FileText,
       items: [
         {
           title: 'File Management',
-          url: '/campaigns/files',
+          url: '/files/list',
         },
         {
-          title: 'Campaigns Templates',
-          url: '/campaigns/templates',
+          title: 'Review Files',
+          url: '/files/review',
         },
+      ],
+    },
+    {
+      name: 'Campaigns',
+      url: '/campaigns/list',
+      icon: Briefcase,
+      items: [
         {
           title: 'All Campaigns',
           url: '/campaigns/list',
+        },
+        {
+          title: 'Archived',
+          url: '/campaigns/archived',
         },
       ],
     },
@@ -55,6 +66,25 @@ export const dashboardData = {
         {
           title: 'Ready for Disbursal',
           url: '/leads/ready-for-disbursal',
+        },
+      ],
+    },
+    {
+      name: 'Settings',
+      url: '/settings/financial-institutions',
+      icon: Settings,
+      items: [
+        {
+          title: 'Financial Institutions',
+          url: '/settings/financial-institutions',
+        },
+        {
+          title: 'Campaign Templates',
+          url: '/settings/campaign-templates',
+        },
+        {
+          title: 'NBFC',
+          url: '/settings/nbfc',
         },
       ],
     },

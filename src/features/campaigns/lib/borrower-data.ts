@@ -24,6 +24,8 @@ export type BorrowerData = {
   totalW: number;
   profession: string;
   linkedLoan: string;
+  settlementCount: number;
+  dndStatus: boolean;
 };
 
 // Borrower data from ICICI Data CSV
@@ -47,6 +49,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 17700.64,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 2,
@@ -67,6 +71,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 21406.31,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 5,
+    dndStatus: true,
   },
   {
     id: 3,
@@ -87,6 +93,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 44112.69,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 3,
+    dndStatus: false,
   },
   {
     id: 4,
@@ -107,6 +115,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 20789.09,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 5,
@@ -127,6 +137,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 8248.73,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 6,
@@ -147,6 +159,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 8814.35,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 7,
@@ -167,6 +181,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 61785.69,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 8,
@@ -187,6 +203,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 51654.1,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 9,
@@ -207,6 +225,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 8281.32,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 10,
@@ -227,6 +247,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 211506.68,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 11,
@@ -247,6 +269,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 17594.11,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 12,
@@ -267,6 +291,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 101194.86,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 13,
@@ -287,6 +313,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 18719.48,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 14,
@@ -307,6 +335,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 13340.12,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 15,
@@ -327,6 +357,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 15620.42,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 16,
@@ -347,6 +379,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 7717.56,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 17,
@@ -367,6 +401,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 19505.95,
     profession: 'SL',
     linkedLoan: 'More than 1',
+    settlementCount: 2,
+    dndStatus: false,
   },
   {
     id: 18,
@@ -387,6 +423,8 @@ export const borrowersData: BorrowerData[] = [
     totalW: 97600.97,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
   {
     id: 19,
@@ -407,5 +445,7 @@ export const borrowersData: BorrowerData[] = [
     totalW: 61415.24,
     profession: 'SL',
     linkedLoan: 'Unique',
+    settlementCount: 5,
+    dndStatus: false,
   },
 ];

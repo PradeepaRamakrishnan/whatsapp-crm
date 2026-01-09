@@ -76,6 +76,26 @@ export function CampaignsTable() {
       enableResizing: true,
       enablePinning: true,
     }),
+    columnHelper.accessor('bankName', {
+      header: ({ column }) => <DataGridColumnHeader title="Bank Name" column={column} />,
+      cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
+      size: 180,
+      enableSorting: true,
+      enableHiding: true,
+      enableResizing: true,
+      enablePinning: true,
+    }),
+    columnHelper.accessor('borrowerCount', {
+      header: ({ column }) => <DataGridColumnHeader title="No. of Borrowers" column={column} />,
+      cell: ({ getValue }) => (
+        <div className="text-sm font-medium">{getValue().toLocaleString('en-IN')}</div>
+      ),
+      size: 150,
+      enableSorting: true,
+      enableHiding: true,
+      enableResizing: true,
+      enablePinning: true,
+    }),
     columnHelper.accessor('status', {
       header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
       cell: ({ getValue }) => {
