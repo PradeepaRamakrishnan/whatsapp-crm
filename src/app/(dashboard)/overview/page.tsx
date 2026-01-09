@@ -2,8 +2,8 @@
 
 import { Send, Target, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
 import {
-  Bar,
-  BarChart,
+  // Bar,
+  // BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -37,14 +37,14 @@ const campaignTypeData = [
 ];
 
 // Mock data for conversion funnel
-const conversionData = [
-  { stage: 'Total Borrowers', count: 15420 },
-  { stage: 'Eligible Pool', count: 12336 },
-  { stage: 'Campaigns Sent', count: 6002 },
-  { stage: 'Leads Generated', count: 2401 },
-  { stage: 'Qualified', count: 1201 },
-  { stage: 'Ready for Disbursal', count: 720 },
-];
+// const conversionData = [
+//   { stage: 'Total Borrowers', count: 15420 },
+//   { stage: 'Eligible Pool', count: 12336 },
+//   { stage: 'Campaigns Sent', count: 6002 },
+//   { stage: 'Leads Generated', count: 2401 },
+//   { stage: 'Qualified', count: 1201 },
+//   { stage: 'Ready for Disbursal', count: 720 },
+// ];
 
 const OverviewPage = () => {
   const stats = [
@@ -199,7 +199,7 @@ const OverviewPage = () => {
       </div>
 
       {/* Conversion Funnel */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Conversion Funnel</CardTitle>
           <CardDescription>Borrower journey through campaign stages</CardDescription>
@@ -225,7 +225,7 @@ const OverviewPage = () => {
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Recent Activity Table */}
       <Card>

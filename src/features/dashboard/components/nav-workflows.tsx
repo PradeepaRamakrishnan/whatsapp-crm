@@ -31,7 +31,7 @@ export function NavWorkflows({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Workflows</SidebarGroupLabel>
+      <SidebarGroupLabel>Modules</SidebarGroupLabel>
       <SidebarMenu>
         {workflows.map((workflow) => {
           const isActive =

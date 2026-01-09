@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboardData } from '../lib/dashboard-data';
 import { NavMain } from './nav-main';
-import { NavSecondary } from './nav-secondary';
+// import { NavSecondary } from './nav-secondary';
 import { NavUser } from './nav-user';
 import { NavWorkflows } from './nav-workflows';
 import { SidebarLogo } from './sidebar-logo';
@@ -24,7 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={dashboardData.navMain} />
         <NavWorkflows workflows={dashboardData.workflows} />
-        <NavSecondary items={dashboardData.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={dashboardData.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={dashboardData.user} />

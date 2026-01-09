@@ -6,29 +6,17 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left Side - Fintech Visual */}
-      <div className="relative hidden lg:flex items-center justify-center bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-12">
-        {/* Abstract Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 -right-1/4 w-1/2 h-1/2 bg-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-1/4 left-1/3 w-1/2 h-1/2 bg-cyan-500/10 rounded-full blur-3xl" />
-        </div>
+      <div
+        className="relative hidden lg:flex items-center justify-center p-12 bg-cover bg-center"
+        style={{
+          backgroundImage: 'url(/assets/images/login-bg.jpg)',
+        }}
+      >
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
 
         {/* Content */}
         <div className="relative z-10 max-w-md space-y-8 text-white">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12">
-              <Image
-                src="/assets/images/samatvalogo.png"
-                alt="Samatva CRM Logo"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <h1 className="text-3xl font-bold">Samatva CRM</h1>
-          </div>
-
           {/* Tagline */}
           <div className="space-y-4">
             <h2 className="text-4xl font-bold leading-tight">
@@ -124,10 +112,10 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div className="flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="relative w-10 h-10">
+        <div className="w-full max-w-md space-y-6">
+          {/* Logo */}
+          <div className="flex items-center justify-center mb-2">
+            <div className="relative w-32 h-32">
               <Image
                 src="/assets/images/samatvalogo.png"
                 alt="Samatva CRM Logo"
@@ -135,11 +123,10 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-            <h1 className="text-2xl font-bold">Samatva CRM</h1>
           </div>
 
           {/* Form Header */}
-          <div className="space-y-2 text-center lg:text-left">
+          <div className="space-y-2 text-center">
             <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
             <p className="text-muted-foreground">Enter your credentials to access your account</p>
           </div>
