@@ -5,10 +5,8 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle2,
-  Clock,
   Download,
   FileText,
-  IndianRupee,
   Mail,
   MessageSquare,
   Pause,
@@ -23,7 +21,6 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { campaignsData } from '../lib/data';
@@ -51,7 +48,7 @@ interface CampaignDetailsPageProps {
 }
 
 export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
-  const [activeTab, setActiveTab] = useState('contacts');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const campaign = useMemo(() => {
     return campaignsData.find((c) => c.id === campaignId);
@@ -103,10 +100,10 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
     );
   }
 
-  const contactedPercentage = (metrics.contacted / metrics.totalContacts) * 100;
+  // const contactedPercentage = (metrics.contacted / metrics.totalContacts) * 100;
   const interestedPercentage = (metrics.interested / metrics.contacted) * 100;
-  const qualifiedPercentage = (metrics.qualified / metrics.interested) * 100;
-  const disbursedPercentage = (metrics.disbursed / metrics.qualified) * 100;
+  // const qualifiedPercentage = (metrics.qualified / metrics.interested) * 100;
+  // const disbursedPercentage = (metrics.disbursed / metrics.qualified) * 100;
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
@@ -219,22 +216,181 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
         </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          {/* Campaign Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaign Summary</CardTitle>
+              <CardDescription>Basic campaign information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Campaign Name</dt>
+                    <dd className="text-sm font-medium">{campaign.name}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Priority</dt>
+                    <dd className="text-sm font-medium capitalize">Medium</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Description</dt>
+                    <dd className="text-sm font-medium">
+                      Re-engagement campaign for previously rejected borrowers
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Records Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Records Summary</CardTitle>
+              <CardDescription>Selected borrower information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Selected File</dt>
+                    <dd className="text-sm font-medium">ICICI_Borrowers_Jan_2024.csv</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Total Records</dt>
+                    <dd className="text-sm font-medium">
+                      {metrics.totalContacts.toLocaleString()}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Template Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Summary</CardTitle>
+              <CardDescription>Communication templates used</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {/* Email Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">Email Template</div>
+                    <div className="text-sm font-medium mt-0.5">ICICI Settlement Offer</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        ICICI
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SMS Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">SMS Template</div>
+                    <div className="text-sm font-medium mt-0.5">SMS Reminder</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        All Banks
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* WhatsApp Template */}
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      WhatsApp Template
+                    </div>
+                    <div className="text-sm font-medium mt-0.5">WhatsApp Follow-up</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        IndusInd
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Channel Timing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Channel Timing</CardTitle>
+              <CardDescription>Message scheduling configuration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">Email</span>
+                  <Badge variant="secondary" className="text-xs">
+                    Start
+                  </Badge>
+                </div>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2 dark:bg-green-950/30">
+                  <MessageSquare className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium">SMS</span>
+                  <Badge variant="outline" className="text-xs">
+                    30 min
+                  </Badge>
+                </div>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
+                  <Send className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-medium">WhatsApp</span>
+                  <Badge variant="outline" className="text-xs">
+                    60 min
+                  </Badge>
+                </div>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-2 rounded-lg border bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
+                  <Phone className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium">Call</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Contacts Tab */}
         <TabsContent value="contacts" className="mt-6">
           <BorrowersTableInCampaign campaignId={campaignId} />
         </TabsContent>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="mt-6 space-y-6">
-          {/* Lead Funnel */}
-          <Card>
+        {/* Timeline Tab */}
+        {/* <TabsContent value="timeline" className="mt-6"> */}
+        {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
@@ -246,7 +402,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                {/* Total Contacts */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -266,7 +421,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                   <Progress value={100} className="h-2" />
                 </div>
 
-                {/* Contacted */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -288,7 +442,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                   <Progress value={contactedPercentage} className="h-2" />
                 </div>
 
-                {/* Interested */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -313,7 +466,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                   />
                 </div>
 
-                {/* Qualified */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -338,7 +490,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                   />
                 </div>
 
-                {/* Disbursed */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -364,10 +515,9 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Contact Methods */}
+        {/* <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -479,7 +629,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </CardContent>
             </Card>
 
-            {/* Financial Summary */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -543,8 +692,8 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          </div> */}
+        {/* </TabsContent> */}
 
         {/* Timeline Tab */}
         <TabsContent value="timeline" className="mt-6">
