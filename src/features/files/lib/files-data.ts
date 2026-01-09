@@ -2,7 +2,7 @@ export type FileData = {
   id: string;
   fileName: string;
   bankName: string;
-  status: 'submitted' | 'reviewed' | 'rejected';
+  status: 'new' | 'reviewed';
   uploadedDate: string;
   totalRows: number;
 };
@@ -20,7 +20,7 @@ export const filesData: FileData[] = [
     id: '2',
     fileName: 'HDFC Customers Dec 2025',
     bankName: 'HDFC Bank',
-    status: 'rejected',
+    status: 'new',
     uploadedDate: '2026-01-06T14:20:00',
     totalRows: 856,
   },
@@ -36,7 +36,7 @@ export const filesData: FileData[] = [
     id: '4',
     fileName: 'Axis Bank Data',
     bankName: 'Axis Bank',
-    status: 'submitted',
+    status: 'new',
     uploadedDate: '2026-01-04T16:45:00',
     totalRows: 567,
   },
@@ -44,7 +44,7 @@ export const filesData: FileData[] = [
     id: '5',
     fileName: 'Kotak Borrowers',
     bankName: 'Kotak Mahindra Bank',
-    status: 'rejected',
+    status: 'new',
     uploadedDate: '2026-01-03T11:30:00',
     totalRows: 423,
   },

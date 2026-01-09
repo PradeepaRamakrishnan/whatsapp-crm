@@ -201,14 +201,27 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Qualified</CardTitle>
+              <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
               <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-950/30">
-                <Target className="h-4 w-4 text-orange-600" />
+                <Send className="h-4 w-4 text-orange-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics.qualified.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Ready for processing</p>
+              <div className="text-2xl font-bold">2659</div>
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Mail className="h-3 w-3" />
+                  <span>Email: 1189</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>SMS: 847</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>WhatsApp: 623</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
