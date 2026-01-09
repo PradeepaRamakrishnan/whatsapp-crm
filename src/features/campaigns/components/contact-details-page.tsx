@@ -1,14 +1,11 @@
 'use client';
 
 import {
-  Briefcase,
-  Calendar,
   CheckCircle2,
   Clock,
   CreditCard,
   DollarSign,
   Mail,
-  MapPin,
   MessageSquare,
   Phone,
   User,
@@ -34,12 +31,11 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{contact.name}</h1>
-          <p className="text-sm text-muted-foreground">{contact.loanType}</p>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Settlement Amount</CardTitle>
@@ -50,17 +46,6 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
               ₹{contact.loanAmount.toLocaleString('en-IN')}
             </div>
             <p className="text-xs text-muted-foreground">Primary loan</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Installments</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{contact.installments}</div>
-            <p className="text-xs text-muted-foreground">Total EMI count</p>
           </CardContent>
         </Card>
 
@@ -205,58 +190,6 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
               </CardContent>
             </Card>
 
-            {/* Loan Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Loan Information
-                </CardTitle>
-                <CardDescription>Loan and payment details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <dl className="space-y-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">Loan Type</dt>
-                      <dd className="text-sm font-medium mt-2">{contact.loanType}</dd>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Application Date
-                      </dt>
-                      <dd className="text-sm font-medium mt-2">
-                        {new Date(contact.applicationDate).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </dd>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">Financial Year</dt>
-                      <dd className="text-sm font-medium mt-2">{contact.fy}</dd>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Month of Settlement
-                      </dt>
-                      <dd className="text-sm font-medium mt-2">{contact.monthOfSettlement}</dd>
-                    </div>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
-
             {/* Card & Banking Details */}
             <Card>
               <CardHeader>
@@ -286,21 +219,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                     <dt className="text-xs font-medium text-muted-foreground">Linked Loan</dt>
                     <dd className="text-sm font-medium mt-2">{contact.linkedLoan}</dd>
                   </div>
-                </dl>
-              </CardContent>
-            </Card>
 
-            {/* Location & Professional Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Location & Profile
-                </CardTitle>
-                <CardDescription>Geographic and professional information</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <dl className="space-y-6">
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground">State</dt>
                     <dd className="text-sm font-medium mt-2">{contact.state}</dd>
@@ -315,7 +234,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
             </Card>
 
             {/* Financial Metrics */}
-            <Card className="lg:col-span-2">
+            {/* <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5" />
@@ -348,7 +267,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </TabsContent>
 
