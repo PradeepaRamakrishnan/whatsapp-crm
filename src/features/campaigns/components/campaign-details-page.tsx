@@ -228,7 +228,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
         {/* Contacts Tab */}
         <TabsContent value="contacts" className="mt-6">
-          <BorrowersTableInCampaign campaignId={campaignId} />
+          <BorrowersTableInCampaign chainId={campaignId} />
         </TabsContent>
 
         {/* Analytics Tab */}

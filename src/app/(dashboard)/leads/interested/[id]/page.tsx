@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
+import { borrowersData } from '@/features/campaigns/lib/borrower-data';
 import { LeadDetailsPage } from '@/features/leads/components/lead-details-page';
-import { interestedLeadsData } from '@/features/leads/lib/data';
 
 interface DetailPageProps {
   params: Promise<{ id: string }>;
@@ -8,7 +8,7 @@ interface DetailPageProps {
 
 export async function generateMetadata({ params }: DetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const lead = interestedLeadsData.find((l) => l.id === parseInt(id, 10));
+  const lead = borrowersData.find((l) => l.id === parseInt(id, 10));
 
   if (!lead) {
     return {

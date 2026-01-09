@@ -1,24 +1,11 @@
 'use client';
 
-import {
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  DollarSign,
-  Mail,
-  MessageSquare,
-  Phone,
-  User,
-} from 'lucide-react';
+import { CheckCircle2, Clock, Mail, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import type { BorrowerData } from '../lib/borrower-data';
-import { ResponseConversationView } from './response-conversation-view';
+import { ResponseConversationView } from '@/features/campaigns/components/response-conversation-view';
+import type { BorrowerData } from '../lib/data';
 
 interface ContactDetailsPageProps {
   contact: BorrowerData;
@@ -26,12 +13,12 @@ interface ContactDetailsPageProps {
 
 export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
   // const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'details' | 'responses'>('details');
+  const [activeTab] = useState<'details' | 'responses'>('details');
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
+    <div className="flex flex-1 flex-col gap-6 pt-4 min-w-0">
       {/* Header and Toggle */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
             <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -63,66 +50,10 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
             </Badge>
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {activeTab === 'details' ? (
         <div className="space-y-6">
-          {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Loan Amount</CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-600">
-                  ₹{contact.loanAmount.toLocaleString('en-IN')}
-                </div>
-                <p className="text-xs text-muted-foreground">Primary loan</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Installments</CardTitle>
-                <Calendar className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{contact.installments}</div>
-                <p className="text-xs text-muted-foreground">Total EMI count</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{contact.settlementCount}</div>
-                <p className="text-xs text-muted-foreground">Previous settlements</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">DND Status</CardTitle>
-                <Phone className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div
-                  className={cn(
-                    'text-2xl font-bold',
-                    contact.dndStatus ? 'text-red-600' : 'text-emerald-600',
-                  )}
-                >
-                  {contact.dndStatus ? 'Active' : 'Inactive'}
-                </div>
-                <p className="text-xs text-muted-foreground">Do Not Disturb</p>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Contact Information */}
@@ -216,7 +147,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
             </Card>
 
             {/* Loan Details */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
@@ -235,9 +166,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
 
                   <div className="flex items-start justify-between">
                     <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Application Date
-                      </dt>
+                      <dt className="text-xs font-medium text-muted-foreground">Application Date</dt>
                       <dd className="text-sm font-medium mt-2">
                         {new Date(contact.applicationDate).toLocaleDateString('en-IN', {
                           day: 'numeric',
@@ -257,61 +186,45 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
 
                   <div className="flex items-start justify-between">
                     <div>
-                      <dt className="text-xs font-medium text-muted-foreground">
-                        Month of Settlement
-                      </dt>
+                      <dt className="text-xs font-medium text-muted-foreground">Month of Settlement</dt>
                       <dd className="text-sm font-medium mt-2">{contact.monthOfSettlement}</dd>
                     </div>
                   </div>
                 </dl>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Response Queue Mini-Card */}
-            <Card className="lg:col-span-2 shadow-lg border-2 border-primary/10">
+            {/* <Card className="lg:col-span-2 shadow-lg border-2 border-primary/10">
               <CardHeader className="bg-primary/5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-primary" />
                     <CardTitle>Recent Responses</CardTitle>
                   </div>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setActiveTab('responses')}
-                    className="text-primary font-bold"
-                  >
+                  <Button variant="link" size="sm" onClick={() => setActiveTab('responses')} className="text-primary font-bold">
                     View Full Conversation Queue <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="p-4 space-y-4">
-                  {/** biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                  {/** biome-ignore lint/a11y/noStaticElementInteractions: <explanation> */}
-                  <div
-                    className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => setActiveTab('responses')}
-                  >
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setActiveTab('responses')}>
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                        JD
-                      </AvatarFallback>
+                      <AvatarFallback className="bg-emerald-100 text-emerald-700">JD</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-bold text-sm">John Doe</h4>
                         <span className="text-[10px] text-muted-foreground">2 hours ago</span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-1 italic">
-                        "I am interested in settling my loan. Please call me."
-                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-1 italic">"I am interested in settling my loan. Please call me."</p>
                     </div>
                     <Badge variant="destructive">Urgent</Badge>
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       ) : (

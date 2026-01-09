@@ -31,7 +31,7 @@ const InterestedPage = () => {
 
           {/* Tagline */}
           <div className="space-y-6">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <h2 className="text-5xl font-extrabold leading-tight text-slate-900 dark:text-slate-100">
                 Instant Loans.
               </h2>
@@ -40,7 +40,7 @@ const InterestedPage = () => {
                   Zero Hassle.
                 </span>
               </h2>
-            </div>
+            </div> */}
 
             <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md">
               Get access to quick credit solutions tailored for your financial needs. Secure,
@@ -66,7 +66,7 @@ const InterestedPage = () => {
         <div className="w-full max-w-xl flex flex-col items-center">
           {/* Mobile-only Logo & Illustration */}
           <div className="lg:hidden w-full flex flex-col items-center mb-10">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-3">
               <div className="relative w-48 h-24 ">
                 <Image
                   src="/assets/images/samatvalogo.png"
@@ -82,7 +82,7 @@ const InterestedPage = () => {
               </div> */}
             </div>
 
-            <div className="relative w-full h-56">
+            {/* <div className="relative w-full h-56">
               <Image
                 src="/assets/images/finance.png"
                 alt="Loan illustration"
@@ -90,7 +90,7 @@ const InterestedPage = () => {
                 priority
                 className="object-contain"
               />
-            </div>
+            </div> */}
           </div>
 
           <InterestedForm />

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const InterestedLeadsPage = () => {
-  return <InterestedLeadsList />;
+  return <InterestedLeadsList chainId={1} />;
 };
 
 export default InterestedLeadsPage;

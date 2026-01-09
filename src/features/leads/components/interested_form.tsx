@@ -13,6 +13,7 @@ import { interestedSchema, otpSchema } from '../lib/validation';
 type Step = 'mobile' | 'otp';
 
 export const InterestedForm = () => {
+  // const router = useRouter();
   const [step, setStep] = useState<Step>('mobile');
 
   // Form for Mobile Number
@@ -39,7 +40,8 @@ export const InterestedForm = () => {
     },
     onSubmit: async ({ value }) => {
       // console.log('Verifying OTP:', value.otp);
-      // Handle completion
+      // Navigate to the full details form
+      // router.push('/interested-form');
     },
   });
 
@@ -177,7 +179,7 @@ export const InterestedForm = () => {
 
           {/* Validate Using Section */}
           <div className=" p-5 rounded-xl border  space-y-4">
-            <h3 className=" font-bold text-lg">Validate using</h3>
+            <h3 className=" font-bold text-lg">Enter Details</h3>
 
             {/* Date of Birth Field */}
             <div className="space-y-2">
@@ -222,7 +224,7 @@ export const InterestedForm = () => {
             {/* OR Divider */}
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-orange-200"></div>
-              <span className="flex-shrink mx-4  font-bold text-sm">OR</span>
+              {/* <span className="flex-shrink mx-4  font-bold text-sm">OR</span> */}
               <div className="flex-grow border-t border-orange-200"></div>
             </div>
 

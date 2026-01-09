@@ -25,10 +25,11 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { type BorrowerData, borrowersData } from '../lib/borrower-data';
 
 interface BorrowersTableInCampaignProps {
-  campaignId: number;
+  chainId: number;
+  basePath?: string;
 }
 
-export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaignProps) {
+export function BorrowersTableInCampaign({ chainId, basePath }: BorrowersTableInCampaignProps) {
   const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -39,16 +40,16 @@ export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaig
 
   const columnHelper = createColumnHelper<BorrowerData>();
 
+  // Use either the provided basePath or the default campaign contacts path
+  const effectiveBasePath = basePath || `/campaigns/${chainId}/contacts`;
+
   const columns = [
     columnHelper.accessor('name', {
       header: ({ column }) => <DataGridColumnHeader title="Name" column={column} />,
-      cell: ({ getValue, row }) => (
-        <button
-          onClick={() => router.push(`/campaigns/${campaignId}/contacts/${row.original.id}`)}
-          className="font-medium text-primary hover:underline cursor-pointer"
-        >
+      cell: ({ getValue }) => (
+        <span className="font-medium text-primary hover:underline cursor-pointer">
           {String(getValue() || '')}
-        </button>
+        </span>
       ),
       size: 180,
       enableSorting: true,
@@ -178,7 +179,7 @@ export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaig
       header: () => <div className="text-right">Actions</div>,
       cell: () => (
         <div className="text-right">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
             <EllipsisIcon className="h-4 w-4" />
           </Button>
         </div>
@@ -342,6 +343,7 @@ export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaig
     <DataGrid
       table={table}
       recordCount={filteredData?.length || 0}
+      onRowClick={(row) => router.push(`${effectiveBasePath}/${row.id}`)}
       tableLayout={{
         rowBorder: true,
         headerBorder: true,
