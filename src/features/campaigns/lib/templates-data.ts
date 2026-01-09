@@ -9,7 +9,7 @@ export const mockTemplates: TemplateData[] = [
     bankTag: 'ICICI',
     typeTag: 'Bank-specific',
     content:
-      'Dear {{customer_name}}, We have an exclusive settlement offer for your outstanding amount of ₹{{outstanding_amount}}...',
+      'Dear {{customer_name}},\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\nAmount: ₹{{outstanding_amount}}\nOffer: ₹{{settlement_amount}} ({{discount_percentage}}% discount)\nValid Until: {{expiry_date}}\n\nExcepteur sint occaecat cupidatat non proident:\n• Sunt in culpa qui officia deserunt mollit anim\n• Id est laborum sed ut perspiciatis unde omnis\n• Iste natus error sit voluptatem accusantium\n• Doloremque laudantium totam rem aperiam\n\nEaque ipsa quae ab illo inventore veritatis:\nPhone: 1800-XXX-XXXX\nEmail: settlements@example.com\n\nSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa.\n\nBest regards,\nICICI Settlement Team',
     modifiedDate: '2024-01-15',
     modifiedBy: 'John Doe',
   },
