@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { FilesList } from '@/features/campaigns/components/files-list';
+import { FilesList } from '@/features/files/components/files-list';
 
 export const metadata: Metadata = {
   title: 'File Management',

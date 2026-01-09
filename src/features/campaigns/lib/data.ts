@@ -6,6 +6,7 @@ export interface CampaignData {
   createdDate: string;
   scheduledDate: string;
   bankName: string;
+  borrowerCount: number;
 }
 
 export const campaignsData: CampaignData[] = [
@@ -17,6 +18,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-10',
     scheduledDate: '2024-01-15',
     bankName: 'HDFC Bank',
+    borrowerCount: 1250,
   },
   {
     id: 2,
@@ -26,6 +28,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-12',
     scheduledDate: '2024-01-18',
     bankName: 'ICICI Bank',
+    borrowerCount: 856,
   },
   {
     id: 3,
@@ -35,6 +38,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-08',
     scheduledDate: '2024-01-12',
     bankName: 'SBI',
+    borrowerCount: 2340,
   },
   {
     id: 4,
@@ -44,6 +48,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-15',
     scheduledDate: '2024-01-20',
     bankName: 'Axis Bank',
+    borrowerCount: 567,
   },
   {
     id: 5,
@@ -53,6 +58,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-05',
     scheduledDate: '2024-01-10',
     bankName: 'HDFC Bank',
+    borrowerCount: 3200,
   },
   {
     id: 6,
@@ -62,6 +68,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-20',
     scheduledDate: '2024-02-01',
     bankName: 'Kotak Mahindra',
+    borrowerCount: 423,
   },
   {
     id: 7,
@@ -71,6 +78,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-22',
     scheduledDate: '2024-02-05',
     bankName: 'ICICI Bank',
+    borrowerCount: 1890,
   },
   {
     id: 8,
@@ -80,6 +88,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-18',
     scheduledDate: '2024-01-23',
     bankName: 'HDFC Bank',
+    borrowerCount: 2100,
   },
   {
     id: 9,
@@ -89,6 +98,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-08',
     scheduledDate: '2024-01-15',
     bankName: 'SBI',
+    borrowerCount: 980,
   },
   {
     id: 10,
@@ -98,6 +108,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2023-12-28',
     scheduledDate: '2024-01-01',
     bankName: 'Axis Bank',
+    borrowerCount: 1540,
   },
   {
     id: 11,
@@ -107,6 +118,7 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-25',
     scheduledDate: '2024-02-10',
     bankName: 'Kotak Mahindra',
+    borrowerCount: 750,
   },
   {
     id: 12,
@@ -116,5 +128,6 @@ export const campaignsData: CampaignData[] = [
     createdDate: '2024-01-19',
     scheduledDate: '2024-01-24',
     bankName: 'HDFC Bank',
+    borrowerCount: 1320,
   },
 ];

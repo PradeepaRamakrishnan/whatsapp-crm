@@ -9,7 +9,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { CheckCircle2, EllipsisIcon, FunnelX, Settings2 } from 'lucide-react';
+import { CheckCircle2, EllipsisIcon, FunnelX, Phone, PhoneOff, Settings2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
@@ -85,10 +85,10 @@ export function BorrowersTableInCampaign({
         return value >= min && value <= max;
       },
     }),
-    columnHelper.accessor('installments', {
-      header: ({ column }) => <DataGridColumnHeader title="Installments" column={column} />,
-      cell: ({ getValue }) => <div className="font-medium">{getValue()} months</div>,
-      size: 130,
+    columnHelper.accessor('settlementCount', {
+      header: ({ column }) => <DataGridColumnHeader title="Settlement Count" column={column} />,
+      cell: ({ getValue }) => <div className="font-medium">{getValue()}</div>,
+      size: 150,
       enableSorting: true,
       enableHiding: true,
       enableResizing: true,
@@ -117,7 +117,7 @@ export function BorrowersTableInCampaign({
       header: () => <div className="text-center">SMS</div>,
       cell: ({ row }) => (
         <div className="flex justify-center">
-          {row.original.contactStatus.sms ? (
+          {row.original.contactStatus.sms && !row.original.dndStatus ? (
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           ) : (
             <div className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function BorrowersTableInCampaign({
       header: () => <div className="text-center">WhatsApp</div>,
       cell: ({ row }) => (
         <div className="flex justify-center">
-          {row.original.contactStatus.whatsapp ? (
+          {row.original.contactStatus.whatsapp && !row.original.dndStatus ? (
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           ) : (
             <div className="h-4 w-4" />
@@ -144,6 +144,23 @@ export function BorrowersTableInCampaign({
       ),
       size: 100,
       enableSorting: false,
+      enableHiding: true,
+      enableResizing: true,
+      enablePinning: true,
+    }),
+    columnHelper.accessor('dndStatus', {
+      header: () => <div className="text-center">DND</div>,
+      cell: ({ getValue }) => (
+        <div className="flex justify-center">
+          {getValue() ? (
+            <PhoneOff className="h-4 w-4 text-red-600" />
+          ) : (
+            <Phone className="h-4 w-4 text-emerald-600" />
+          )}
+        </div>
+      ),
+      size: 80,
+      enableSorting: true,
       enableHiding: true,
       enableResizing: true,
       enablePinning: true,
