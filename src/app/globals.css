@@ -128,4 +128,18 @@
   .container {
     @apply mx-auto max-w-7xl px-6 py-4 sm:px-8 sm:py-4 lg:px-12 lg:py-4 xl:px-12 xl:py-4 2xl:px-14 2xl:py-4;
   }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }
