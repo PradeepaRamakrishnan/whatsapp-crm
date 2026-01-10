@@ -34,14 +34,14 @@ export function NavWorkflows({
       {/* <SidebarGroupLabel>Modules</SidebarGroupLabel> */}
       <SidebarMenu>
         {workflows.map((workflow) => {
-          const isActive =
-            workflow.url === pathname || workflow.items?.some((item) => item.url === pathname);
+          // const isActive =
+          //   workflow.url === pathname || workflow.items?.some((item) => item.url === pathname);
 
           return (
             <Collapsible
               key={workflow.name}
               asChild
-              defaultOpen={isActive}
+              defaultOpen={true}
               className="group/collapsible"
             >
               <SidebarMenuItem>

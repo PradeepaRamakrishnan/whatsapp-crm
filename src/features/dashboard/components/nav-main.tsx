@@ -52,12 +52,7 @@ export function NavMain({
 
           // If has subitems, render as collapsible
           return (
-            <Collapsible
-              key={item.title}
-              asChild
-              defaultOpen={item.url === pathname}
-              className="group/collapsible"
-            >
+            <Collapsible key={item.title} asChild defaultOpen={true} className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={item.title}>
