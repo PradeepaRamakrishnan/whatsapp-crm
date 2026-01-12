@@ -4,18 +4,20 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle2,
+  CreditCard,
   DollarSign,
   Eye,
+  FileCheck,
   FileText,
+  Image,
+  Info,
+  Link2,
   Phone,
-  Plus,
   Trash2,
   Upload,
-  //   Download,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -51,17 +53,114 @@ interface LeadDetailsPageProps {
   leadId: number;
 }
 
-const REQUIRED_DOCUMENTS = [
-  { id: 'aadhar_front', name: 'Aadhar Card (Front)', description: 'Clear photo of the front side' },
-  { id: 'aadhar_back', name: 'Aadhar Card (Back)', description: 'Clear photo of the back side' },
-  { id: 'pan_card', name: 'PAN Card', description: 'Clear photo of your PAN card' },
-  { id: 'salary_slip', name: 'Latest Salary Slip', description: 'Most recent month salary slip' },
+interface DocumentRequirement {
+  id: string;
+  name: string;
+  description: string;
+  instructions: string[];
+  formats: string;
+  maxSize: string;
+  icon?: React.ReactNode;
+}
+
+interface DocumentGroup {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  documents: DocumentRequirement[];
+}
+
+const DOCUMENT_GROUPS: DocumentGroup[] = [
   {
-    id: 'bank_statement',
-    name: 'Bank Statement',
-    description: 'Last 6 months bank statement (PDF)',
+    id: 'identity',
+    title: 'Identity Verification',
+    description: 'Government-issued identity documents for KYC compliance',
+    icon: <CreditCard className="h-5 w-5" />,
+    documents: [
+      {
+        id: 'aadhar',
+        name: 'Aadhar Card',
+        description: 'Upload both front and back side of your Aadhar card',
+        instructions: [
+          'Ensure all 12 digits are clearly visible and readable',
+          'No blur, glare, or shadows on the card',
+          'All four corners of the card should be visible',
+          'Text and photo should be sharp and legible',
+        ],
+        formats: 'JPG, PNG, or PDF',
+        maxSize: '5 MB per side',
+      },
+    ],
   },
-  { id: 'photo', name: 'Passport Size Photo', description: 'Recent color photograph' },
+  {
+    id: 'financial',
+    title: 'Financial Documents',
+    description: 'Documents to verify your financial status and income',
+    icon: <FileCheck className="h-5 w-5" />,
+    documents: [
+      {
+        id: 'pan_card',
+        name: 'PAN Card',
+        description: 'Permanent Account Number card issued by Income Tax Department',
+        instructions: [
+          'PAN number should be clearly visible',
+          'Name and date of birth must be legible',
+          'No lamination glare or reflections',
+          'Photograph should be clear',
+        ],
+        formats: 'JPG, PNG, or PDF',
+        maxSize: '5 MB',
+      },
+      {
+        id: 'salary_slip',
+        name: 'Latest Salary Slip',
+        description: "Most recent month's salary slip from your employer",
+        instructions: [
+          'Must be for the most recent month',
+          'Should include employer name and logo',
+          'Basic salary and deductions clearly mentioned',
+          'Employee ID and name should be visible',
+        ],
+        formats: 'PDF preferred, JPG/PNG accepted',
+        maxSize: '10 MB',
+      },
+      {
+        id: 'bank_statement',
+        name: 'Bank Statement',
+        description: 'Last 6 months transaction history from your primary bank account',
+        instructions: [
+          'Must cover the last 6 months period',
+          'Should be an official bank statement (not screenshots)',
+          'Account holder name must match applicant name',
+          'All pages should be included if multi-page document',
+        ],
+        formats: 'PDF format only',
+        maxSize: '15 MB',
+      },
+    ],
+  },
+  {
+    id: 'personal',
+    title: 'Personal Information',
+    description: 'Recent photograph for profile verification',
+    icon: <Image className="h-5 w-5" />,
+    documents: [
+      {
+        id: 'photo',
+        name: 'Passport Size Photo',
+        description: 'Recent color photograph with plain background',
+        instructions: [
+          'Taken within the last 6 months',
+          'Plain white or light-colored background',
+          'Face should be clearly visible, looking at camera',
+          'No sunglasses, hats, or heavy filters',
+        ],
+        formats: 'JPG or PNG',
+        maxSize: '2 MB',
+      },
+    ],
+  },
 ];
 
 export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
@@ -96,6 +195,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
+  const [draggedDocType, setDraggedDocType] = useState<string | null>(null);
 
   if (!lead) {
     return (
@@ -141,6 +241,31 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     setIsUploadModalOpen(false);
     setUploadFileName('');
     activeDocTypeRef.current = null;
+  };
+
+  const handleDragOver = (e: React.DragEvent, docType: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedDocType(docType);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedDocType(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, docType: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedDocType(null);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      activeDocTypeRef.current = docType;
+      setUploadFileName(file.name);
+      setIsUploadModalOpen(true);
+    }
   };
 
   return (
@@ -245,107 +370,415 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
 
         {/* Documents Tab */}
         <TabsContent value="documents" className="pt-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Required Documents</CardTitle>
-                  <CardDescription>
-                    Collect necessary documentation from the borrower
-                  </CardDescription>
+          <div className="space-y-6">
+            {/* Header */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Required Documents</CardTitle>
+                    <CardDescription className="mt-1.5">
+                      Collect necessary documentation from the borrower for KYC and verification
+                    </CardDescription>
+                  </div>
+                  <Button>
+                    <Link2 className="mr-2 h-4 w-4" />
+                    Send Secured Upload Link
+                  </Button>
                 </div>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Send Documents to Borrower
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                {REQUIRED_DOCUMENTS.map((docReq) => {
-                  const uploadedDoc = documents.find((d) => d.type === docReq.id);
+              </CardHeader>
+            </Card>
 
-                  return (
-                    <div
-                      key={docReq.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 gap-4"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            'p-2 rounded-lg mt-0.5',
-                            uploadedDoc
-                              ? 'bg-emerald-100 text-emerald-600'
-                              : 'bg-slate-200 text-slate-500',
-                          )}
-                        >
-                          <FileText className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 dark:text-slate-100">
-                            {docReq.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{docReq.description}</p>
-                          {uploadedDoc && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge
-                                variant="outline"
-                                className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] py-0"
-                              >
-                                <CheckCircle2 className="mr-1 h-3 w-3" />
-                                Uploaded
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {uploadedDoc.name} ({uploadedDoc.size})
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {uploadedDoc ? (
-                          <>
-                            <Button size="sm" variant="outline">
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() =>
-                                setDocuments(documents.filter((d) => d.id !== uploadedDoc.id))
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="bg-slate-900 text-white hover:bg-slate-800"
-                            onClick={() => handleFileUploadTrigger(docReq.id)}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload
-                          </Button>
-                        )}
-                      </div>
+            {/* Document Groups */}
+            {DOCUMENT_GROUPS.map((group) => (
+              <Card key={group.id} className="overflow-hidden">
+                <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
+                      {group.icon}
                     </div>
-                  );
-                })}
-              </div>
+                    <div>
+                      <CardTitle className="text-base">{group.title}</CardTitle>
+                      <CardDescription className="text-xs mt-0.5">
+                        {group.description}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    {group.documents.map((doc) => {
+                      // Special handling for Aadhar card
+                      if (doc.id === 'aadhar') {
+                        const frontDoc = documents.find((d) => d.type === 'aadhar_front');
+                        const backDoc = documents.find((d) => d.type === 'aadhar_back');
+                        const isDraggingFront = draggedDocType === 'aadhar_front';
+                        const isDraggingBack = draggedDocType === 'aadhar_back';
 
-              {/* Hidden file input for logic */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </CardContent>
-          </Card>
+                        return (
+                          <div key={doc.id} className="space-y-4">
+                            {/* Document Title and Description */}
+                            <div>
+                              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base">
+                                {doc.name}
+                              </h3>
+                              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                {doc.description}
+                              </p>
+                            </div>
+
+                            {/* Upload Requirements */}
+                            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
+                              <div className="flex items-start gap-2">
+                                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                <div className="space-y-2 flex-1">
+                                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                    Upload Requirements
+                                  </p>
+                                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                                    {doc.instructions.map((instruction) => (
+                                      <li key={instruction} className="flex items-start gap-2">
+                                        <span className="text-blue-600 dark:text-blue-400 mt-0.5">
+                                          •
+                                        </span>
+                                        <span>{instruction}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div className="flex items-center gap-4 pt-2 text-xs text-blue-700 dark:text-blue-300">
+                                    <span className="font-medium">Accepted: {doc.formats}</span>
+                                    <span className="text-blue-400 dark:text-blue-600">•</span>
+                                    <span className="font-medium">Max size: {doc.maxSize}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Side-by-side upload zones for Aadhar */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Front Side */}
+
+                              <button
+                                type="button"
+                                disabled={!!frontDoc}
+                                className={cn(
+                                  'relative rounded-xl border-2 transition-all duration-200 text-left',
+                                  frontDoc
+                                    ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20'
+                                    : isDraggingFront
+                                      ? 'border-orange-400 dark:border-orange-600 border-dashed bg-orange-50 dark:bg-orange-950/30'
+                                      : 'border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 hover:border-orange-300 dark:hover:border-orange-700 hover:bg-orange-50/30 dark:hover:bg-orange-950/10',
+                                )}
+                                onDragOver={(e) => !frontDoc && handleDragOver(e, 'aadhar_front')}
+                                onDragLeave={(e) => !frontDoc && handleDragLeave(e)}
+                                onDrop={(e) => !frontDoc && handleDrop(e, 'aadhar_front')}
+                                onClick={() => !frontDoc && handleFileUploadTrigger('aadhar_front')}
+                              >
+                                <div className="p-6 text-center">
+                                  <div
+                                    className={cn(
+                                      'mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3',
+                                      frontDoc
+                                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
+                                        : isDraggingFront
+                                          ? 'bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400'
+                                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+                                    )}
+                                  >
+                                    <CreditCard className="h-6 w-6" />
+                                  </div>
+                                  <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                                    Front Side
+                                  </h4>
+                                  {frontDoc ? (
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                                          Uploaded
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-slate-600 dark:text-slate-400 truncate px-4">
+                                        {frontDoc.name}
+                                      </p>
+                                      <div className="flex items-center justify-center gap-2 pt-2">
+                                        <Button size="sm" variant="outline">
+                                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                          View
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                          onClick={() =>
+                                            setDocuments(
+                                              documents.filter((d) => d.id !== frontDoc.id),
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                                        {isDraggingFront
+                                          ? 'Release to upload'
+                                          : 'Drag & drop or click to upload'}
+                                      </p>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-2"
+                                        onClick={() => handleFileUploadTrigger('aadhar_front')}
+                                      >
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Choose File
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+
+                              {/* Back Side */}
+
+                              <button
+                                type="button"
+                                disabled={!!backDoc}
+                                className={cn(
+                                  'relative rounded-xl border-2 transition-all duration-200 text-left',
+                                  backDoc
+                                    ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20'
+                                    : isDraggingBack
+                                      ? 'border-orange-400 dark:border-orange-600 border-dashed bg-orange-50 dark:bg-orange-950/30'
+                                      : 'border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 hover:border-orange-300 dark:hover:border-orange-700 hover:bg-orange-50/30 dark:hover:bg-orange-950/10',
+                                )}
+                                onDragOver={(e) => !backDoc && handleDragOver(e, 'aadhar_back')}
+                                onDragLeave={(e) => !backDoc && handleDragLeave(e)}
+                                onDrop={(e) => !backDoc && handleDrop(e, 'aadhar_back')}
+                                onClick={() => !backDoc && handleFileUploadTrigger('aadhar_back')}
+                              >
+                                <div className="p-6 text-center">
+                                  <div
+                                    className={cn(
+                                      'mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3',
+                                      backDoc
+                                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
+                                        : isDraggingBack
+                                          ? 'bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400'
+                                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+                                    )}
+                                  >
+                                    <CreditCard className="h-6 w-6" />
+                                  </div>
+                                  <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                                    Back Side
+                                  </h4>
+                                  {backDoc ? (
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                                          Uploaded
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-slate-600 dark:text-slate-400 truncate px-4">
+                                        {backDoc.name}
+                                      </p>
+                                      <div className="flex items-center justify-center gap-2 pt-2">
+                                        <Button size="sm" variant="outline">
+                                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                          View
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                          onClick={() =>
+                                            setDocuments(
+                                              documents.filter((d) => d.id !== backDoc.id),
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                                        {isDraggingBack
+                                          ? 'Release to upload'
+                                          : 'Drag & drop or click to upload'}
+                                      </p>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-2"
+                                        onClick={() => handleFileUploadTrigger('aadhar_back')}
+                                      >
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Choose File
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Regular document upload (single file)
+                      const uploadedDoc = documents.find((d) => d.type === doc.id);
+                      const isDragging = draggedDocType === doc.id;
+
+                      return (
+                        <div key={doc.id} className="space-y-4">
+                          {/* Document Title and Description */}
+                          <div>
+                            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base">
+                              {doc.name}
+                            </h3>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                              {doc.description}
+                            </p>
+                          </div>
+
+                          {/* Upload Requirements */}
+                          <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
+                            <div className="flex items-start gap-2">
+                              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                              <div className="space-y-2 flex-1">
+                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                  Upload Requirements
+                                </p>
+                                <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                                  {doc.instructions.map((instruction) => (
+                                    <li key={instruction} className="flex items-start gap-2">
+                                      <span className="text-blue-600 dark:text-blue-400 mt-0.5">
+                                        •
+                                      </span>
+                                      <span>{instruction}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <div className="flex items-center gap-4 pt-2 text-xs text-blue-700 dark:text-blue-300">
+                                  <span className="font-medium">Accepted: {doc.formats}</span>
+                                  <span className="text-blue-400 dark:text-blue-600">•</span>
+                                  <span className="font-medium">Max size: {doc.maxSize}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Upload Zone */}
+
+                          <button
+                            type="button"
+                            disabled={!!uploadedDoc}
+                            className={cn(
+                              'relative rounded-xl border-2 transition-all duration-200 text-left w-full',
+                              uploadedDoc
+                                ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20'
+                                : isDragging
+                                  ? 'border-orange-400 dark:border-orange-600 border-dashed bg-orange-50 dark:bg-orange-950/30'
+                                  : 'border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 hover:border-orange-300 dark:hover:border-orange-700 hover:bg-orange-50/30 dark:hover:bg-orange-950/10',
+                            )}
+                            onDragOver={(e) => !uploadedDoc && handleDragOver(e, doc.id)}
+                            onDragLeave={(e) => !uploadedDoc && handleDragLeave(e)}
+                            onDrop={(e) => !uploadedDoc && handleDrop(e, doc.id)}
+                            onClick={() => !uploadedDoc && handleFileUploadTrigger(doc.id)}
+                          >
+                            <div className="p-8 text-center">
+                              <div
+                                className={cn(
+                                  'mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4',
+                                  uploadedDoc
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
+                                    : isDragging
+                                      ? 'bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+                                )}
+                              >
+                                <FileText className="h-7 w-7" />
+                              </div>
+                              {uploadedDoc ? (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                    <span className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                                      Document Uploaded
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    {uploadedDoc.name}
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                                    {uploadedDoc.size} • Uploaded on{' '}
+                                    {new Date(uploadedDoc.uploadDate).toLocaleDateString('en-IN')}
+                                  </p>
+                                  <div className="flex items-center justify-center gap-3 pt-3">
+                                    <Button size="sm" variant="outline">
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View Document
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-destructive border-destructive/30 hover:bg-destructive hover:text-white"
+                                      onClick={() =>
+                                        setDocuments(
+                                          documents.filter((d) => d.id !== uploadedDoc.id),
+                                        )
+                                      }
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Remove
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  <div>
+                                    <p className="text-base font-medium text-slate-900 dark:text-slate-100 mb-1">
+                                      {isDragging
+                                        ? 'Release to upload file'
+                                        : 'Drop your file here'}
+                                    </p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                      or click the button below to browse
+                                    </p>
+                                  </div>
+                                  <Button
+                                    size="default"
+                                    onClick={() => handleFileUploadTrigger(doc.id)}
+                                  >
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Choose File to Upload
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileUpload}
+              accept="image/*,.pdf"
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="conversation" className="mt-6">
