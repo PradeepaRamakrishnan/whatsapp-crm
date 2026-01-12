@@ -211,8 +211,8 @@ export function ResponseConversationView({ contact }: { contact: BorrowerData })
           <TabsContent value="new" className="flex-1 overflow-y-auto mt-0">
             <div className="divide-y divide-border/50">
               {responses.map((resp) => (
-                // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
+                // biome-ignore lint/a11y/useKeyWithClickEvents: <>
+                // biome-ignore lint/a11y/noStaticElementInteractions: <>
                 <div
                   key={resp.id}
                   onClick={() => setSelectedResponseId(resp.id)}

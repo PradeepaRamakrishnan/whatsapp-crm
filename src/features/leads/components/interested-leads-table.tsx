@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/a11y/useButtonType: <explanation> */
+/** biome-ignore-all lint/a11y/useButtonType: <> */
 'use client';
 
 import {
