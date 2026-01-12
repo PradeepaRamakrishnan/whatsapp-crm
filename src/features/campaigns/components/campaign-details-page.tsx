@@ -21,6 +21,13 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { campaignsData } from '../lib/data';
@@ -47,12 +54,65 @@ interface CampaignDetailsPageProps {
   campaignId: number;
 }
 
+interface TemplatePreview {
+  type: 'email' | 'sms' | 'whatsapp';
+  name: string;
+  content: string;
+  bank: string;
+}
+
 export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplatePreview | null>(null);
 
   const campaign = useMemo(() => {
     return campaignsData.find((c) => c.id === campaignId);
   }, [campaignId]);
+
+  // Template data with preview content
+  const templates = {
+    email: {
+      type: 'email' as const,
+      name: 'ICICI Settlement Offer',
+      bank: 'ICICI',
+      content: `Subject: Special Settlement Offer - ICICI Bank Loan
+
+Dear [Borrower Name],
+
+We are reaching out with a special settlement offer for your ICICI Bank loan.
+
+Key Benefits:
+• Reduced settlement amount
+• Flexible payment options
+• Quick processing
+• No hidden charges
+
+Loan Details:
+Account Number: [Account Number]
+Outstanding Amount: ₹[Amount]
+Settlement Offer: ₹[Reduced Amount]
+
+This offer is valid until [Date]. Please contact us to discuss further.
+
+Best regards,
+Recovery Team
+ICICI Bank`,
+    },
+    sms: {
+      type: 'sms' as const,
+      name: 'SMS Reminder',
+      bank: 'All Banks',
+      content:
+        'Dear [Name], We have a special settlement offer for your loan. Outstanding: ₹[Amount]. Settle now at ₹[Offer]. Valid till [Date]. Call us at 1800-XXX-XXXX. -Team',
+    },
+    whatsapp: {
+      type: 'whatsapp' as const,
+      name: 'WhatsApp Follow-up',
+      bank: 'IndusInd',
+      content:
+        'Hello [Name] 👋\n\nThis is a follow-up regarding your IndusInd Bank loan settlement.\n\n📋 Loan Account: [Account No]\n💰 Outstanding: ₹[Amount]\n✨ Settlement Offer: ₹[Reduced Amount]\n📅 Valid Until: [Date]\n\nWe have prepared a customized settlement plan for you.\n\nWould you like to discuss this further?\n\nReply YES to connect with our team.\n\nThank you!',
+    },
+  };
 
   // Mock data for comprehensive metrics (in production, fetch from API)
   const metrics = {
@@ -80,7 +140,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
       { date: '2024-01-25', event: 'Campaign created', type: 'created' },
       { date: '2024-01-26', event: 'First batch sent (500 contacts)', type: 'sent' },
       { date: '2024-01-27', event: 'Response rate reached 10%', type: 'milestone' },
-      { date: '2024-01-28', event: '100 leads qualified', type: 'milestone' },
       { date: '2024-01-30', event: 'Campaign paused for review', type: 'paused' },
       { date: '2024-02-01', event: 'Campaign resumed', type: 'resumed' },
     ],
@@ -309,7 +368,11 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
             <CardContent>
               <div className="space-y-3">
                 {/* Email Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.email)}
+                >
                   <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">Email Template</div>
@@ -320,10 +383,14 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {/* SMS Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.sms)}
+                >
                   <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">SMS Template</div>
@@ -334,10 +401,14 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {/* WhatsApp Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.whatsapp)}
+                >
                   <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">
@@ -350,7 +421,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -847,7 +918,11 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
             <CardContent>
               <div className="space-y-3">
                 {/* Email Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.email)}
+                >
                   <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">Email Template</div>
@@ -858,10 +933,14 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {/* SMS Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.sms)}
+                >
                   <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">SMS Template</div>
@@ -872,10 +951,14 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {/* WhatsApp Template */}
-                <div className="flex items-start gap-3 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
+                  onClick={() => setSelectedTemplate(templates.whatsapp)}
+                >
                   <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-muted-foreground">
@@ -888,7 +971,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </Badge>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -934,6 +1017,41 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Template Preview Modal */}
+      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedTemplate?.type === 'email' && <Mail className="h-5 w-5 text-blue-600" />}
+              {selectedTemplate?.type === 'sms' && (
+                <MessageSquare className="h-5 w-5 text-green-600" />
+              )}
+              {selectedTemplate?.type === 'whatsapp' && (
+                <Send className="h-5 w-5 text-emerald-600" />
+              )}
+              <span>{selectedTemplate?.name}</span>
+            </DialogTitle>
+            <DialogDescription>Template preview for {selectedTemplate?.bank}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="text-xs font-medium text-muted-foreground mb-2 uppercase">
+                {selectedTemplate?.type} Content
+              </div>
+              <div className="text-sm whitespace-pre-wrap font-mono bg-background rounded p-3 border">
+                {selectedTemplate?.content}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{selectedTemplate?.bank}</Badge>
+              <Badge variant="outline" className="capitalize">
+                {selectedTemplate?.type}
+              </Badge>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
