@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 'use client';
 
 import {
@@ -458,9 +459,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Front Side */}
 
-                              <button
-                                type="button"
-                                disabled={!!frontDoc}
+                              <div
                                 className={cn(
                                   'relative rounded-xl border-2 transition-all duration-200 text-left',
                                   frontDoc
@@ -472,7 +471,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                 onDragOver={(e) => !frontDoc && handleDragOver(e, 'aadhar_front')}
                                 onDragLeave={(e) => !frontDoc && handleDragLeave(e)}
                                 onDrop={(e) => !frontDoc && handleDrop(e, 'aadhar_front')}
-                                onClick={() => !frontDoc && handleFileUploadTrigger('aadhar_front')}
                               >
                                 <div className="p-6 text-center">
                                   <div
@@ -539,13 +537,11 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                     </div>
                                   )}
                                 </div>
-                              </button>
+                              </div>
 
                               {/* Back Side */}
 
-                              <button
-                                type="button"
-                                disabled={!!backDoc}
+                              <div
                                 className={cn(
                                   'relative rounded-xl border-2 transition-all duration-200 text-left',
                                   backDoc
@@ -557,7 +553,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                 onDragOver={(e) => !backDoc && handleDragOver(e, 'aadhar_back')}
                                 onDragLeave={(e) => !backDoc && handleDragLeave(e)}
                                 onDrop={(e) => !backDoc && handleDrop(e, 'aadhar_back')}
-                                onClick={() => !backDoc && handleFileUploadTrigger('aadhar_back')}
                               >
                                 <div className="p-6 text-center">
                                   <div
@@ -624,7 +619,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                     </div>
                                   )}
                                 </div>
-                              </button>
+                              </div>
                             </div>
                           </div>
                         );
@@ -675,9 +670,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
 
                           {/* Upload Zone */}
 
-                          <button
-                            type="button"
-                            disabled={!!uploadedDoc}
+                          <div
                             className={cn(
                               'relative rounded-xl border-2 transition-all duration-200 text-left w-full',
                               uploadedDoc
@@ -689,7 +682,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                             onDragOver={(e) => !uploadedDoc && handleDragOver(e, doc.id)}
                             onDragLeave={(e) => !uploadedDoc && handleDragLeave(e)}
                             onDrop={(e) => !uploadedDoc && handleDrop(e, doc.id)}
-                            onClick={() => !uploadedDoc && handleFileUploadTrigger(doc.id)}
                           >
                             <div className="p-8 text-center">
                               <div
@@ -761,7 +753,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                 </div>
                               )}
                             </div>
-                          </button>
+                          </div>
                         </div>
                       );
                     })}
