@@ -8,6 +8,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/context';
 import { dashboardData } from '../lib/dashboard-data';
 import { NavMain } from './nav-main';
 // import { NavSecondary } from './nav-secondary';
@@ -16,6 +17,7 @@ import { NavWorkflows } from './nav-workflows';
 import { SidebarLogo } from './sidebar-logo';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -27,7 +29,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavSecondary items={dashboardData.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={dashboardData.user} />
+        <NavUser
+          user={{
+            firstName: user?.firstName || '',
+            lastName: user?.lastName || '',
+            email: user?.email || '',
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

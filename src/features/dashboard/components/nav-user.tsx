@@ -1,9 +1,9 @@
 'use client';
 
-import { BadgeCheck, Bell, Bot, ChevronsUpDown, LogOut } from 'lucide-react';
+import Avatar from 'boring-avatars';
+import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { Avatar } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,13 +24,14 @@ export function NavUser({
   user,
 }: {
   user: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    avatar: string;
   };
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const fullName = `${user.firstName} ${user.lastName}`;
 
   return (
     <SidebarMenu>
@@ -41,13 +42,16 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg bg-sidebar-accent">
-                {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                {/* <AvatarFallback className="rounded-lg">CN</AvatarFallback> */}
-                <Bot className="h-8 w-8" />
-              </Avatar>
+              <div className="h-8 w-8 rounded-lg overflow-hidden">
+                <Avatar
+                  size={32}
+                  name={fullName}
+                  variant="beam"
+                  colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                />
+              </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">{fullName}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -61,13 +65,16 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg bg-sidebar-accent">
-                  {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                  {/* <AvatarFallback className="rounded-lg">CN</AvatarFallback> */}
-                  <Bot className="h-8 w-8" />
-                </Avatar>
+                <div className="h-8 w-8 rounded-lg overflow-hidden">
+                  <Avatar
+                    size={32}
+                    name={fullName}
+                    variant="beam"
+                    colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                  />
+                </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate font-medium">{fullName}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>

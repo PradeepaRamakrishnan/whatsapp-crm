@@ -28,6 +28,8 @@
     "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-table": "latest",
     "@tanstack/zod-form-adapter": "^0.42.1",
+    "axios": "^1.13.2",
+    "boring-avatars": "^2.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -38,6 +40,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.6.0",
+    "sonner": "^2.0.7",
+    "swr": "^2.3.8",
     "tailwind-merge": "^3.4.0",
     "zod": "^3.25.76"
   },

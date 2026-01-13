@@ -1,7 +1,11 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface LoginCredentials {

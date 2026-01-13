@@ -2,15 +2,16 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { login } from '../lib/auth-actions';
+import { useAuth } from '@/context/auth-context';
 import { loginSchema } from '../lib/validation';
 
 export const LoginForm = () => {
   const router = useRouter();
-
+  const { login } = useAuth();
   const form = useForm({
     defaultValues: {
       email: '',
@@ -18,10 +19,20 @@ export const LoginForm = () => {
     },
     onSubmit: async ({ value }) => {
       try {
+        toast.loading('Logging in...', { id: 'login' });
         await login(value);
+        toast.success('Logged in successfully!', { id: 'login' });
         router.push('/dashboard');
       } catch (error) {
-        console.error('Login failed:', error);
+        if (error instanceof Error) {
+          toast.error(error.message, {
+            id: 'login',
+          });
+          return;
+        }
+        toast.error(`${error}`, {
+          id: 'login',
+        });
       }
     },
   });
@@ -31,6 +42,7 @@ export const LoginForm = () => {
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
+        return false;
       }}
       className="space-y-4"
     >
@@ -96,8 +108,8 @@ export const LoginForm = () => {
         )}
       </form.Field>
 
-      <Button type="submit" className="w-full">
-        Sign In
+      <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
+        {form.state.isSubmitting ? 'Signing in...' : 'Sign In'}
       </Button>
     </form>
   );

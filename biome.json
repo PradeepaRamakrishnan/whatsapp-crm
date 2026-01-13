@@ -76,5 +76,10 @@
       "trailingCommas": "all",
       "jsxQuoteStyle": "double"
     }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }
