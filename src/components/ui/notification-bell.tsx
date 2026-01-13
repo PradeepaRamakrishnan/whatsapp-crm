@@ -127,11 +127,11 @@ export function NotificationBell({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 top-full mt-2 w-[380px] animate-in fade-in-0 zoom-in-95"
+          className="absolute right-0 top-full mt-2 w-[380px] animate-in fade-in-0 zoom-in-95 z-50"
           role="menu"
           aria-orientation="vertical"
         >
-          <div className="rounded-lg border bg-popover text-popover-foreground shadow-md">
+          <div className="rounded-lg border bg-popover text-popover-foreground shadow-lg backdrop-blur-sm">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div>
