@@ -3,7 +3,7 @@ stages:
   - deploy
 
 variables:
-  APP_DIR: /home/frontend/samatva-crm
+  APP_DIR: /home/gitlab-runner/frontend/samatva-crm
 
 build:
   stage: build
