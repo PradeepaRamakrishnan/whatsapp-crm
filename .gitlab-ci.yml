@@ -1,0 +1,38 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  APP_DIR: /home/frontend/samatva-crm
+
+build:
+  stage: build
+  script:
+    - pnpm install
+    - pnpm run build
+  artifacts:
+    paths:
+      - .next/
+      - node_modules/
+      - package.json
+      - public/
+    expire_in: 30 min
+  only:
+    - main
+  tags:
+    - crm
+
+deploy:production:
+  stage: deploy
+  script:
+    - mkdir -p $APP_DIR
+    - cp -r .next node_modules package.json public $APP_DIR/
+    - cd $APP_DIR
+    - pm2 reload samatva-crm || pm2 start pnpm --name samatva-crm -- start
+    - pm2 save
+  only:
+    - main
+  tags:
+    - crm
+  needs:
+    - build
