@@ -41,9 +41,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
   const statusColor =
     file.status === 'reviewed'
       ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
-      : file.status === 'rejected'
-        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300'
-        : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300';
+      : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300';
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
