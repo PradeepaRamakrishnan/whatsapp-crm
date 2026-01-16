@@ -3,7 +3,7 @@ import axios, { AxiosError } from 'axios';
 import type { User } from '../types/auth.types';
 
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth`,
+  baseURL: `${process.env.NEXT_PUBLIC_AUTH_API_URL}`,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -34,7 +34,7 @@ export const authApi = {
     try {
       const response = await axios<User>({
         method: 'GET',
-        url: `${process.env.NEXT_PUBLIC_USERS_API_URL}/users/me`,
+        url: `${process.env.NEXT_PUBLIC_USERS_API_URL}/me`,
         withCredentials: true,
       });
       return response.data;

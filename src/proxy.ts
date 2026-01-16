@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
 
     const response = await axios<User>({
       method: 'GET',
-      url: `${url}/users/me`,
+      url: `${url}/me`,
       headers: {
         Cookie: request.headers.get('cookie') || '',
       },
