@@ -46,16 +46,31 @@ export const authApi = {
     }
   },
 
-  logout: async (): Promise<User> => {
+  changePassword: async (): Promise<unknown> => {
     try {
-      const response = await axiosClient<User>({
+      const response = await axiosClient({
+        method: 'PATCH',
+        url: `/change-password`,
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data?.message || 'Failed to change password');
+      }
+      throw error;
+    }
+  },
+
+  logout: async (): Promise<unknown> => {
+    try {
+      const response = await axiosClient({
         method: 'POST',
         url: `/logout`,
       });
       return response.data;
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch current user');
+        throw new Error(error.response?.data?.message || 'Failed to logout');
       }
       throw error;
     }
