@@ -1,4 +1,4 @@
-import { Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
+import { Bot, Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -9,10 +9,9 @@ export const dashboardData = {
 
   navMain: [
     {
-      title: 'Overview',
+      title: 'Dashboard',
       url: '/dashboard',
       icon: LayoutDashboard,
-      isActive: true,
     },
   ],
   workflows: [
@@ -26,8 +25,23 @@ export const dashboardData = {
           url: '/files/list',
         },
         {
-          title: 'Review Files',
-          url: '/files/review',
+          title: 'Pending Review',
+          url: '/files/pending',
+        },
+      ],
+    },
+    {
+      name: 'Agents',
+      url: '/agents/configuration',
+      icon: Bot,
+      items: [
+        {
+          title: 'Configuration',
+          url: '/agents/configuration',
+        },
+        {
+          title: 'Logs',
+          url: '/agents/logs',
         },
       ],
     },

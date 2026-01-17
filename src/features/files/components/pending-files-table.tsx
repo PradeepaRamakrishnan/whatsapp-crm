@@ -8,7 +8,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { CheckCircle, FunnelX, MoreVertical, Trash2 } from 'lucide-react';
+import { CheckCircle, MoreVertical, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import slugify from 'slugify';
@@ -24,8 +24,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { type Filter, type FilterFieldConfig, Filters } from '@/components/ui/filters';
-import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { getAllFiles } from '../services';
 import type { FileData, FileStatus, FilesResponse } from '../types/file.types';
@@ -36,7 +34,7 @@ const getStatusBadgeVariant = (status: FileStatus) => {
     queued: 'outline',
     processing: 'default',
     pending_review: 'outline',
-    reviewed: 'default', // Will add custom green styling
+    reviewed: 'default',
     archived: 'secondary',
     failed: 'destructive',
   };
@@ -67,28 +65,48 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
-export function FilesTable() {
+export function PendingFilesTable() {
   const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [filters, setFilters] = useState<Filter[]>([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
   // Fetch files data with React Query
   const { data: filesResponse } = useQuery<FilesResponse>({
     queryKey: ['files', { page: pagination.pageIndex + 1, limit: pagination.pageSize }],
-    queryFn: () => {
-      return getAllFiles(pagination.pageIndex + 1, pagination.pageSize);
-    },
+    queryFn: () => getAllFiles(pagination.pageIndex + 1, pagination.pageSize),
     placeholderData: (previousData) => previousData,
   });
 
   const files = filesResponse?.data || [];
-  const totalRecords = filesResponse?.meta.total || 0;
-  const totalPages = filesResponse?.meta.totalPages || 0;
+
+  // Filter only pending_review files
+  const pendingFiles = useMemo(() => {
+    return files.filter((file) => file.status === 'pending_review');
+  }, [files]);
+
+  // Apply global filter to pending files
+  const filteredData = useMemo(() => {
+    let filtered = [...pendingFiles];
+
+    if (globalFilter) {
+      filtered = filtered.filter((file) => {
+        const searchStr = globalFilter.toLowerCase();
+        return (
+          file.name.toLowerCase().includes(searchStr) ||
+          file.bankName.toLowerCase().includes(searchStr)
+        );
+      });
+    }
+
+    return filtered;
+  }, [pendingFiles, globalFilter]);
+
+  const totalRecords = filteredData.length;
+  const totalPages = Math.ceil(totalRecords / pagination.pageSize);
 
   const columnHelper = createColumnHelper<FileData>();
 
@@ -128,19 +146,8 @@ export function FilesTable() {
         header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
         cell: ({ getValue }) => {
           const status = getValue() as FileStatus;
-          const isReviewed = status === 'reviewed';
-          const isFailed = status === 'failed';
           return (
-            <Badge
-              variant={getStatusBadgeVariant(status)}
-              className={
-                isReviewed
-                  ? 'bg-green-600 hover:bg-green-700 text-white capitalize'
-                  : isFailed
-                    ? 'text-white capitalize'
-                    : 'capitalize'
-              }
-            >
+            <Badge variant={getStatusBadgeVariant(status)} className="capitalize">
               {getStatusLabel(status)}
             </Badge>
           );
@@ -191,7 +198,7 @@ export function FilesTable() {
                   }}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  {file.status === 'reviewed' ? 'Mark as Pending' : 'Mark as Reviewed'}
+                  Mark as Reviewed
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
@@ -216,129 +223,6 @@ export function FilesTable() {
     [columnHelper, router],
   );
 
-  const filterFields = useMemo<FilterFieldConfig[]>(
-    () => [
-      {
-        key: 'status',
-        label: 'Status',
-        type: 'select',
-        placeholder: 'Filter by status...',
-        options: [
-          { label: 'Uploaded', value: 'uploaded' },
-          { label: 'Queued', value: 'queued' },
-          { label: 'Processing', value: 'processing' },
-          { label: 'Pending Review', value: 'pending_review' },
-          { label: 'Reviewed', value: 'reviewed' },
-          { label: 'Archived', value: 'archived' },
-          { label: 'Failed', value: 'failed' },
-        ],
-        searchable: true,
-        className: 'w-[180px]',
-      },
-      {
-        key: 'bankName',
-        label: 'Bank Name',
-        type: 'text',
-        placeholder: 'Filter by bank name...',
-      },
-      {
-        key: 'name',
-        label: 'File Name',
-        type: 'text',
-        placeholder: 'Filter by file name...',
-      },
-    ],
-    [],
-  );
-
-  // Apply filters to data
-  const filteredData = useMemo(() => {
-    let filtered = [...files];
-
-    // Apply global filter
-    if (globalFilter) {
-      filtered = filtered.filter((file) => {
-        const searchStr = globalFilter.toLowerCase();
-        return (
-          file.name.toLowerCase().includes(searchStr) ||
-          file.bankName.toLowerCase().includes(searchStr) ||
-          file.status.toLowerCase().includes(searchStr)
-        );
-      });
-    }
-
-    // Filter out empty filters before applying
-    const activeFilters = filters.filter((filter) => {
-      const { operator, values } = filter;
-      // Empty and not_empty operators don't require values
-      if (operator === 'empty' || operator === 'not_empty') return true;
-      // Check if filter has meaningful values
-      if (!values || values.length === 0) return false;
-      // For text/string values, check if they're not empty strings
-      if (values.every((value) => typeof value === 'string' && value.trim() === '')) return false;
-      // For number values, check if they're not null/undefined
-      if (values.every((value) => value === null || value === undefined)) return false;
-      // For arrays, check if they're not empty
-      if (values.every((value) => Array.isArray(value) && value.length === 0)) return false;
-      return true;
-    });
-
-    activeFilters.forEach((filter) => {
-      const { field, operator, values } = filter;
-      filtered = filtered.filter((item) => {
-        const fieldValue = item[field as keyof FileData];
-
-        switch (operator) {
-          case 'is':
-            return values.some((value) => String(value) === String(fieldValue));
-          case 'is_not':
-            return !values.some((value) => String(value) === String(fieldValue));
-          case 'contains':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().includes(String(value).toLowerCase()),
-            );
-          case 'not_contains':
-            return !values.some((value) =>
-              String(fieldValue).toLowerCase().includes(String(value).toLowerCase()),
-            );
-          case 'starts_with':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().startsWith(String(value).toLowerCase()),
-            );
-          case 'ends_with':
-            return values.some((value) =>
-              String(fieldValue).toLowerCase().endsWith(String(value).toLowerCase()),
-            );
-          case 'equals':
-            return String(fieldValue) === String(values[0]);
-          case 'not_equals':
-            return String(fieldValue) !== String(values[0]);
-          case 'empty':
-            return (
-              fieldValue === null || fieldValue === undefined || String(fieldValue).trim() === ''
-            );
-          case 'not_empty':
-            return (
-              fieldValue !== null && fieldValue !== undefined && String(fieldValue).trim() !== ''
-            );
-          default:
-            return true;
-        }
-      });
-    });
-
-    return filtered;
-  }, [files, filters, globalFilter]);
-
-  const handleFiltersChange = useCallback((filters: Filter[]) => {
-    setFilters(filters);
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  }, []);
-
-  // Handle pagination change
   const handlePaginationChange = useCallback(
     (updater: PaginationState | ((old: PaginationState) => PaginationState)) => {
       setPagination(updater);
@@ -350,7 +234,7 @@ export function FilesTable() {
     columns,
     data: filteredData,
     pageCount: totalPages,
-    manualPagination: true,
+    manualPagination: false,
     state: {
       pagination,
       sorting,
@@ -382,32 +266,6 @@ export function FilesTable() {
       }}
     >
       <div className="w-full space-y-2.5">
-        <div className="flex items-center gap-3">
-          <Input
-            className="peer min-w-60 h-8"
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search files..."
-            type="text"
-            aria-label="Search files"
-          />
-        </div>
-
-        <div className="flex-1">
-          <Filters
-            filters={filters}
-            fields={filterFields}
-            variant="outline"
-            onChange={handleFiltersChange}
-          />
-        </div>
-
-        {filters.length > 0 && (
-          <Button variant="outline" size="sm" onClick={() => setFilters([])}>
-            <FunnelX /> Clear Filters
-          </Button>
-        )}
-
         <DataGridContainer>
           <ScrollArea>
             <DataGridTable />

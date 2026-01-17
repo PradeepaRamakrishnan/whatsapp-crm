@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   devIndicators: {
-    position: 'bottom-right',
+    position: 'top-right',
   },
 };
 

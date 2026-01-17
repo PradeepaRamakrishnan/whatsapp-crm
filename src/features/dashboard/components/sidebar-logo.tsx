@@ -26,7 +26,7 @@ export function SidebarLogo() {
           alt="Samatva CRM"
           width={144}
           height={48}
-          className="max-w-[144px] h-auto object-contain"
+          className="max-w-36 h-auto object-contain"
         />
       )}
     </div>

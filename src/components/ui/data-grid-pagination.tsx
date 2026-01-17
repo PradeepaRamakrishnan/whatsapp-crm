@@ -65,17 +65,23 @@ function DataGridPagination(props: DataGridPaginationProps) {
         .replace('{count}', recordCount.toString())
     : `${from} - ${to} of ${recordCount}`;
 
-  // Pagination limit logic
+  // Pagination limit logic - number of page buttons to show
   const paginationMoreLimit = mergedProps?.moreLimit || 5;
 
-  // Determine the start and end of the pagination group
-  const currentGroupStart = Math.floor(pageIndex / paginationMoreLimit) * paginationMoreLimit;
-  const currentGroupEnd = Math.min(currentGroupStart + paginationMoreLimit, pageCount);
+  // Calculate the range of pages to show, centered around current page
+  const halfLimit = Math.floor(paginationMoreLimit / 2);
+  let startPage = Math.max(0, pageIndex - halfLimit);
+  let endPage = Math.min(pageCount, startPage + paginationMoreLimit);
 
-  // Render page buttons based on the current group
+  // Adjust start if we're near the end
+  if (endPage - startPage < paginationMoreLimit) {
+    startPage = Math.max(0, endPage - paginationMoreLimit);
+  }
+
+  // Render page buttons centered around current page
   const renderPageButtons = () => {
     const buttons = [];
-    for (let i = currentGroupStart; i < currentGroupEnd; i++) {
+    for (let i = startPage; i < endPage; i++) {
       buttons.push(
         <Button
           key={i}
@@ -99,13 +105,13 @@ function DataGridPagination(props: DataGridPaginationProps) {
 
   // Render a "previous" ellipsis button if there are previous pages to show
   const renderEllipsisPrevButton = () => {
-    if (currentGroupStart > 0) {
+    if (startPage > 0) {
       return (
         <Button
           size="sm"
           className={btnBaseClasses}
           variant="ghost"
-          onClick={() => table.setPageIndex(currentGroupStart - 1)}
+          onClick={() => table.setPageIndex(startPage - 1)}
         >
           {mergedProps.ellipsisText}
         </Button>
@@ -116,13 +122,13 @@ function DataGridPagination(props: DataGridPaginationProps) {
 
   // Render a "next" ellipsis button if there are more pages to show after the current group
   const renderEllipsisNextButton = () => {
-    if (currentGroupEnd < pageCount) {
+    if (endPage < pageCount) {
       return (
         <Button
           className={btnBaseClasses}
           variant="ghost"
           size="sm"
-          onClick={() => table.setPageIndex(currentGroupEnd)}
+          onClick={() => table.setPageIndex(endPage)}
         >
           {mergedProps.ellipsisText}
         </Button>

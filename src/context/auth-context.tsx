@@ -1,7 +1,7 @@
 'use client';
 
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext } from 'react';
-import useSWR from 'swr';
 import { authApi } from '@/features/auth/services';
 import type { LoginCredentials, User } from '@/features/auth/types/auth.types';
 
@@ -15,18 +15,18 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const {
-    data: user,
-    isLoading,
-    mutate,
-  } = useSWR<User>('/api/users/me', authApi.getCurrentUser, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
+  const queryClient = useQueryClient();
+  const { data: user, isLoading } = useQuery<User>({
+    queryKey: ['users/me'],
+    queryFn: async () => {
+      const response = await authApi.getCurrentUser();
+      return response;
+    },
   });
 
   const login = async (credentials: LoginCredentials) => {
     await authApi.login(credentials.email, credentials.password);
-    mutate();
+    await queryClient.invalidateQueries({ queryKey: ['users/me'] });
   };
 
   const value: AuthContextType = {

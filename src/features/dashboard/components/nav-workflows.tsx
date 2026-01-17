@@ -2,6 +2,7 @@
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
@@ -28,6 +29,7 @@ export function NavWorkflows({
   }[];
 }) {
   const pathname = usePathname();
+  const [openWorkflow, setOpenWorkflow] = useState<string | null>(workflows[0]?.name || null);
 
   return (
     <SidebarGroup>
@@ -41,7 +43,10 @@ export function NavWorkflows({
             <Collapsible
               key={workflow.name}
               asChild
-              defaultOpen={true}
+              open={openWorkflow === workflow.name}
+              onOpenChange={(isOpen) => {
+                setOpenWorkflow(isOpen ? workflow.name : null);
+              }}
               className="group/collapsible"
             >
               <SidebarMenuItem>

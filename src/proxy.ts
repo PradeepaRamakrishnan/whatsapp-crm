@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { type NextRequest, NextResponse } from 'next/server';
 import type { User } from './features/auth/types/auth.types';
 
@@ -37,7 +37,11 @@ export async function proxy(request: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    console.error('Auth check failed:', error);
+    if (error instanceof AxiosError) {
+      console.error('Authentication error:', error.response?.data);
+    } else {
+      console.error('Authentication error:', error);
+    }
     if (pathname.startsWith('/login')) {
       return NextResponse.next();
     }

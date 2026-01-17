@@ -1,17 +1,16 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import type { Metadata } from 'next';
-import { FilesList } from '@/features/files/components/files-list';
+import { PendingFilesList } from '@/features/files/components/pending-files-list';
 import { getAllFiles } from '@/features/files/services';
 
 export const metadata: Metadata = {
-  title: 'File Management',
-  description: 'Manage and view all uploaded borrower files for your campaigns.',
+  title: 'Pending Review Files',
+  description: 'View all files pending review.',
 };
 
-const CampaignFilesPage = async () => {
+const PendingFilesPage = async () => {
   const queryClient = new QueryClient();
 
-  // Prefetch the files data on the server
   await queryClient.prefetchQuery({
     queryKey: ['files', { page: 1, limit: 10 }],
     queryFn: () => getAllFiles(1, 10),
@@ -19,9 +18,9 @@ const CampaignFilesPage = async () => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <FilesList />
+      <PendingFilesList />
     </HydrationBoundary>
   );
 };
 
-export default CampaignFilesPage;
+export default PendingFilesPage;
