@@ -1,280 +1,304 @@
+'use client';
+
 import { useQuery } from '@tanstack/react-query';
 import {
   type ColumnDef,
-  createColumnHelper,
+  flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
-  type PaginationState,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { CheckCircle, MoreVertical, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { MoreHorizontal } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import * as React from 'react';
 import slugify from 'slugify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
-import { DataGridTable } from '@/components/ui/data-grid-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { getAllFiles } from '../services';
 import type { FileData, FileStatus, FilesResponse } from '../types/file.types';
 
-const getStatusBadgeVariant = (status: FileStatus) => {
-  const variants: Record<FileStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-    uploaded: 'secondary',
-    queued: 'outline',
-    processing: 'default',
-    pending_review: 'outline',
-    reviewed: 'default',
-    archived: 'secondary',
-    failed: 'destructive',
-  };
-  return variants[status] || 'default';
-};
+dayjs.extend(utc);
 
-const getStatusLabel = (status: FileStatus) => {
-  const labels: Record<FileStatus, string> = {
-    uploaded: 'Uploaded',
-    queued: 'Queued',
-    processing: 'Processing',
-    pending_review: 'Pending Review',
-    reviewed: 'Reviewed',
-    archived: 'Archived',
-    failed: 'Failed',
-  };
-  return labels[status] || status;
-};
+const columns: ColumnDef<FileData>[] = [
+  {
+    accessorKey: 'name',
+    header: 'File Name',
+    cell: ({ row }) => (
+      <div className="font-medium max-w-75 truncate capitalize">{row.getValue('name')}</div>
+    ),
+  },
+  {
+    accessorKey: 'bankName',
+    header: 'Bank Name',
+    cell: ({ row }) => <div className="capitalize">{row.getValue('bankName')}</div>,
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status: FileStatus = row.getValue('status');
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-};
+      const statusStyles: Record<FileStatus, string> = {
+        uploaded: 'bg-sky-50 text-sky-700 border border-sky-200',
+        queued: 'bg-slate-50 text-slate-600 border border-slate-200',
+        processing: 'bg-violet-50 text-violet-700 border border-violet-200',
+        pending_review: 'bg-amber-50 text-amber-700 border border-amber-200',
+        reviewed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+        archived: 'bg-zinc-50 text-zinc-600 border border-zinc-200',
+        failed: 'bg-rose-50 text-rose-700 border border-rose-200',
+      };
+
+      const statusLabels: Record<FileStatus, string> = {
+        uploaded: 'Uploaded',
+        queued: 'Queued',
+        processing: 'Processing',
+        pending_review: 'New',
+        reviewed: 'Reviewed',
+        archived: 'Archived',
+        failed: 'Failed',
+      };
+
+      return (
+        <Badge
+          variant="outline"
+          className={`font-medium ${statusStyles[status] || 'bg-slate-50 text-slate-600 border-slate-200'}`}
+        >
+          {statusLabels[status] || status}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Uploaded At',
+    cell: ({ row }) => {
+      const date = row.getValue('createdAt');
+      if (!date) return <div>-</div>;
+      return (
+        <div className="text-sm font-normal">
+          {dayjs.utc(date as string).format('MMM DD, YYYY HH:mm a')}
+        </div>
+      );
+    },
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: () => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => null}>Mark as Reviewed</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => null}>Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
 
 export function PendingFilesTable() {
   const router = useRouter();
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const searchParams = useSearchParams();
 
-  // Fetch files data with React Query
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const page = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('pageSize')) || 10;
+
+  const updateParams = React.useCallback(
+    (updates: { page?: number; pageSize?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (updates.page !== undefined) {
+        params.set('page', String(updates.page));
+      }
+      if (updates.pageSize !== undefined) {
+        params.set('pageSize', String(updates.pageSize));
+      }
+      router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router],
+  );
+
   const { data: filesResponse } = useQuery<FilesResponse>({
-    queryKey: ['files', { page: pagination.pageIndex + 1, limit: pagination.pageSize }],
-    queryFn: () => getAllFiles(pagination.pageIndex + 1, pagination.pageSize),
+    queryKey: ['files', { page, limit: pageSize }],
+    queryFn: () => getAllFiles(page, pageSize),
     placeholderData: (previousData) => previousData,
   });
 
-  const files = filesResponse?.data || [];
-
   // Filter only pending_review files
-  const pendingFiles = useMemo(() => {
-    return files.filter((file) => file.status === 'pending_review');
-  }, [files]);
+  const files = React.useMemo(() => {
+    return (filesResponse?.data || []).filter((file) => file.status === 'pending_review');
+  }, [filesResponse?.data]);
 
-  // Apply global filter to pending files
-  const filteredData = useMemo(() => {
-    let filtered = [...pendingFiles];
-
-    if (globalFilter) {
-      filtered = filtered.filter((file) => {
-        const searchStr = globalFilter.toLowerCase();
-        return (
-          file.name.toLowerCase().includes(searchStr) ||
-          file.bankName.toLowerCase().includes(searchStr)
-        );
-      });
-    }
-
-    return filtered;
-  }, [pendingFiles, globalFilter]);
-
-  const totalRecords = filteredData.length;
-  const totalPages = Math.ceil(totalRecords / pagination.pageSize);
-
-  const columnHelper = createColumnHelper<FileData>();
-
-  // biome-ignore lint/suspicious/noExplicitAny: TanStack Table requires any for mixed column types
-  const columns = useMemo<ColumnDef<FileData, any>[]>(
-    () => [
-      columnHelper.accessor('name', {
-        id: 'name',
-        header: ({ column }) => <DataGridColumnHeader title="File Name" column={column} />,
-        cell: ({ getValue }) => (
-          <div className="font-medium max-w-75 truncate">{String(getValue() || '')}</div>
-        ),
-        meta: {
-          headerTitle: 'File Name',
-        },
-        size: 280,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('bankName', {
-        id: 'bankName',
-        header: ({ column }) => <DataGridColumnHeader title="Bank Name" column={column} />,
-        cell: ({ getValue }) => <div className="font-medium">{String(getValue() || '')}</div>,
-        meta: {
-          headerTitle: 'Bank Name',
-        },
-        size: 200,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('status', {
-        id: 'status',
-        header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
-        cell: ({ getValue }) => {
-          const status = getValue() as FileStatus;
-          return (
-            <Badge variant={getStatusBadgeVariant(status)} className="capitalize">
-              {getStatusLabel(status)}
-            </Badge>
-          );
-        },
-        meta: {
-          headerTitle: 'Status',
-        },
-        size: 150,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('createdAt', {
-        id: 'createdAt',
-        header: ({ column }) => <DataGridColumnHeader title="Uploaded At" column={column} />,
-        cell: ({ getValue }) => {
-          const date = getValue();
-          return <div className="text-sm">{date ? formatDate(String(date)) : '-'}</div>;
-        },
-        meta: {
-          headerTitle: 'Uploaded At',
-        },
-        size: 200,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: ({ column }) => <DataGridColumnHeader title="Actions" column={column} />,
-        cell: ({ row }) => {
-          const file = row.original;
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Open actions menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    const slug = slugify(file.name, { lower: true, strict: true });
-                    router.push(`/files/${slug}/${file.id}`);
-                  }}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Mark as Reviewed
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => {
-                    // TODO: Implement delete functionality
-                  }}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-        size: 120,
-        enableSorting: false,
-        enableHiding: false,
-        enableResizing: false,
-        enablePinning: true,
-      }),
-    ],
-    [columnHelper, router],
-  );
-
-  const handlePaginationChange = useCallback(
-    (updater: PaginationState | ((old: PaginationState) => PaginationState)) => {
-      setPagination(updater);
-    },
-    [],
-  );
+  const totalRecords = files.length;
+  const totalPages = Math.ceil(totalRecords / pageSize) || 1;
 
   const table = useReactTable({
+    data: files,
     columns,
-    data: filteredData,
     pageCount: totalPages,
-    manualPagination: false,
-    state: {
-      pagination,
-      sorting,
-      globalFilter,
-    },
-    enableSorting: true,
-    enableSortingRemoval: false,
-    onPaginationChange: handlePaginationChange,
+    manualPagination: true,
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize: pageSize,
+      },
+    },
   });
 
   return (
-    <DataGrid
-      table={table}
-      recordCount={totalRecords}
-      onRowClick={(file) => {
-        const slug = slugify(file.name, { lower: true, strict: true });
-        router.push(`/files/${slug}/${file.id}`);
-      }}
-      tableLayout={{
-        rowBorder: true,
-        headerBorder: true,
-        width: 'fixed',
-        columnsResizable: true,
-        columnsPinnable: true,
-      }}
-    >
-      <div className="w-full space-y-2.5">
-        <DataGridContainer>
-          <ScrollArea>
-            <DataGridTable />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </DataGridContainer>
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Filter names..."
+            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+            onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+            className="max-w-sm w-full"
+          />
+        </div>
 
-        <DataGridPagination />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
+            Rows per page
+          </label>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(val) => {
+              const v = Number(val) || 10;
+              updateParams({ pageSize: v, page: 1 });
+            }}
+          >
+            <SelectTrigger size="sm" className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </DataGrid>
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() =>
+                    router.push(`/files/${slugify(row.original.name)}/${row.original.id}`)
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No pending files.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          Showing {totalRecords > 0 ? (page - 1) * pageSize + 1 : 0} to{' '}
+          {Math.min(page * pageSize, totalRecords)} of {totalRecords} results
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

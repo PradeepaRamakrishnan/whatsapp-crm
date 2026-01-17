@@ -67,28 +67,31 @@ export const columns: ColumnDef<FileData>[] = [
       const status: FileStatus = row.getValue('status');
 
       const statusStyles: Record<FileStatus, string> = {
-        uploaded: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
-        queued: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
-        processing: 'bg-purple-100 text-purple-800 hover:bg-purple-100',
-        pending_review: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
-        reviewed: 'bg-green-100 text-green-800 hover:bg-green-100',
-        archived: 'bg-slate-100 text-slate-800 hover:bg-slate-100',
-        failed: 'bg-red-100 text-red-800 hover:bg-red-100',
+        uploaded: 'bg-sky-50 text-sky-700 border border-sky-200',
+        queued: 'bg-slate-50 text-slate-600 border border-slate-200',
+        processing: 'bg-violet-50 text-violet-700 border border-violet-200',
+        pending_review: 'bg-amber-50 text-amber-700 border border-amber-200',
+        reviewed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+        archived: 'bg-zinc-50 text-zinc-600 border border-zinc-200',
+        failed: 'bg-rose-50 text-rose-700 border border-rose-200',
       };
 
       const statusLabels: Record<FileStatus, string> = {
-        uploaded: 'UPLOADED',
-        queued: 'QUEUED',
-        processing: 'PROCESSING',
-        pending_review: 'NEW',
-        reviewed: 'REVIEWED',
-        archived: 'ARCHIVED',
-        failed: 'FAILED',
+        uploaded: 'Uploaded',
+        queued: 'Queued',
+        processing: 'Processing',
+        pending_review: 'New',
+        reviewed: 'Reviewed',
+        archived: 'Archived',
+        failed: 'Failed',
       };
 
       return (
-        <Badge className={statusStyles[status] || 'bg-gray-100 text-gray-800'}>
-          {statusLabels[status] || status.toUpperCase()}
+        <Badge
+          variant="outline"
+          className={`font-medium ${statusStyles[status] || 'bg-slate-50 text-slate-600 border-slate-200'}`}
+        >
+          {statusLabels[status] || status}
         </Badge>
       );
     },

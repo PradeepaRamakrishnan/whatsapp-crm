@@ -9,13 +9,14 @@ build:
   stage: build
   script:
     - cp $APP_DIR/.env.production .env.production
-    - pnpm install
+    - pnpm install --frozen-lockfile
     - pnpm run build
   artifacts:
     paths:
       - .next/
       - node_modules/
       - package.json
+      - pnpm-lock.yaml
       - public/
     expire_in: 30 min
   only:
@@ -27,7 +28,7 @@ deploy:production:
   stage: deploy
   script:
     - mkdir -p $APP_DIR
-    - cp -r .next node_modules package.json public $APP_DIR/
+    - cp -r .next node_modules package.json pnpm-lock.yaml public $APP_DIR/
     - cd $APP_DIR
     - pm2 reload samatva-crm || pm2 start pnpm --name samatva-crm -- start
     - pm2 save

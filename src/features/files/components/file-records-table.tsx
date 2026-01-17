@@ -1,27 +1,37 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
 'use client';
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   type ColumnDef,
-  createColumnHelper,
+  flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
-  type PaginationState,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { Pencil, Trash2 } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
-import { DataGridTable } from '@/components/ui/data-grid-table';
 import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { getFileById } from '../services';
 import type { FileRecord } from '../types/file.types';
 
@@ -29,241 +39,225 @@ interface FileRecordsTableProps {
   fileId: string;
 }
 
+const columns: ColumnDef<FileRecord>[] = [
+  {
+    accessorKey: 'customerName',
+    header: 'Customer Name',
+    cell: ({ row }) => <div className="font-medium">{row.getValue('customerName')}</div>,
+  },
+  {
+    accessorKey: 'emailId',
+    header: 'Email',
+    cell: ({ row }) => <div className="text-sm">{row.getValue('emailId')}</div>,
+  },
+  {
+    accessorKey: 'mobileNumber',
+    header: 'Mobile No.',
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">{row.getValue('mobileNumber')}</div>
+    ),
+  },
+  {
+    accessorKey: 'settlementAmount',
+    header: 'Settlement Amount',
+    cell: ({ row }) => {
+      const amount = row.getValue('settlementAmount') as number;
+      return <div className="font-medium">₹{Number(amount).toLocaleString('en-IN')}</div>;
+    },
+  },
+  {
+    id: 'actions',
+    header: () => <div className="text-right">Actions</div>,
+    cell: () => (
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  },
+];
+
 export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Get initial pagination from URL or use defaults
-  const initialPage = Number(searchParams.get('page')) || 1;
-  const initialLimit = Number(searchParams.get('limit')) || 10;
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: initialPage - 1,
-    pageSize: initialLimit,
-  });
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const page = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('pageSize')) || 10;
 
-  const handlePaginationChange = useCallback(
-    (updater: PaginationState | ((old: PaginationState) => PaginationState)) => {
-      const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
-
-      setPagination(newPagination);
-
-      // Sync URL for bookmarking/sharing (doesn't affect data fetching)
+  const updateParams = React.useCallback(
+    (updates: { page?: number; pageSize?: number }) => {
       const params = new URLSearchParams(searchParams.toString());
-      params.set('page', String(newPagination.pageIndex + 1));
-      params.set('limit', String(newPagination.pageSize));
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      if (updates.page !== undefined) {
+        params.set('page', String(updates.page));
+      }
+      if (updates.pageSize !== undefined) {
+        params.set('pageSize', String(updates.pageSize));
+      }
+      router.replace(`?${params.toString()}`);
     },
-    [pagination, pathname, router, searchParams],
+    [searchParams, router],
   );
 
-  const page = pagination.pageIndex + 1;
-  const limit = pagination.pageSize;
-
-  const {
-    data: fileData,
-    isLoading,
-    isFetching,
-  } = useQuery({
-    queryKey: ['file', fileId, { page, limit }],
-    queryFn: () => getFileById(fileId, page, limit),
-    placeholderData: keepPreviousData,
+  const { data: fileData, isLoading } = useQuery({
+    queryKey: ['file', fileId, { page, limit: pageSize }],
+    queryFn: () => getFileById(fileId, page, pageSize),
+    placeholderData: (previousData) => previousData,
   });
 
-  const isPageTransitioning = isFetching && fileData;
-
-  const records = useMemo(() => fileData?.contents.data || [], [fileData]);
+  const records = fileData?.contents.data || [];
   const totalRecords = fileData?.contents.meta.total || 0;
   const totalPages = fileData?.contents.meta.totalPages || 0;
 
-  const columnHelper = createColumnHelper<FileRecord>();
-
-  const columns = useMemo<ColumnDef<FileRecord, any>[]>(
-    () => [
-      columnHelper.accessor('customerName', {
-        id: 'customerName',
-        header: ({ column }) => <DataGridColumnHeader title="Customer Name" column={column} />,
-        cell: ({ getValue }) => <div className="font-medium">{String(getValue() || '')}</div>,
-        meta: {
-          headerTitle: 'Customer Name',
-        },
-        size: 200,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('emailId', {
-        id: 'emailId',
-        header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
-        cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
-        meta: {
-          headerTitle: 'Email',
-        },
-        size: 240,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('mobileNumber', {
-        id: 'mobileNumber',
-        header: ({ column }) => <DataGridColumnHeader title="Mobile No." column={column} />,
-        cell: ({ getValue }) => (
-          <div className="text-sm text-muted-foreground">{String(getValue() || '')}</div>
-        ),
-        meta: {
-          headerTitle: 'Mobile Number',
-        },
-        size: 150,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.accessor('settlementAmount', {
-        id: 'settlementAmount',
-        header: ({ column }) => <DataGridColumnHeader title="Settlement Amount" column={column} />,
-        cell: ({ getValue }) => (
-          <div className="font-medium">₹{Number(getValue()).toLocaleString('en-IN')}</div>
-        ),
-        meta: {
-          headerTitle: 'Settlement Amount',
-        },
-        size: 150,
-        enableSorting: true,
-        enableHiding: true,
-        enableResizing: true,
-        enablePinning: true,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ),
-        meta: {
-          headerTitle: 'Actions',
-        },
-        size: 120,
-        enableSorting: false,
-        enableHiding: false,
-        enableResizing: false,
-        enablePinning: true,
-      }),
-    ],
-    [columnHelper],
-  );
-
-  // Apply global filter (client-side for current page)
-  const filteredData = useMemo(() => {
-    let filtered = [...records];
-
-    if (globalFilter) {
-      filtered = filtered.filter((record) => {
-        const searchStr = globalFilter.toLowerCase();
-        return (
-          record.customerName.toLowerCase().includes(searchStr) ||
-          record.emailId.toLowerCase().includes(searchStr) ||
-          record.mobileNumber.toLowerCase().includes(searchStr)
-        );
-      });
-    }
-
-    return filtered;
-  }, [records, globalFilter]);
-
   const table = useReactTable({
+    data: records,
     columns,
-    data: filteredData,
-    pageCount: totalPages > 0 ? totalPages : -1,
-    rowCount: totalRecords,
+    pageCount: totalPages,
     manualPagination: true,
-    state: {
-      pagination,
-      sorting,
-      globalFilter,
-    },
-    enableSorting: true,
-    enableSortingRemoval: false,
-    onPaginationChange: handlePaginationChange,
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize: pageSize,
+      },
+    },
   });
 
   return (
-    <DataGrid
-      table={table}
-      recordCount={totalRecords}
-      tableLayout={{
-        rowBorder: true,
-        headerBorder: true,
-        width: 'fixed',
-        columnsResizable: true,
-        columnsPinnable: true,
-      }}
-    >
-      <div className="w-full space-y-2.5">
-        <div className="flex items-center gap-3">
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+        <div className="flex-1">
           <Input
-            className="h-8 w-full sm:w-60"
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder="Search records..."
-            type="text"
-            aria-label="Search records"
+            value={(table.getColumn('customerName')?.getFilterValue() as string) ?? ''}
+            onChange={(event) =>
+              table.getColumn('customerName')?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm w-full"
             disabled={isLoading}
           />
         </div>
 
-        <DataGridContainer>
-          <ScrollArea>
-            {isLoading && !fileData ? (
-              <div className="flex h-48 items-center justify-center">
-                <p className="text-sm text-muted-foreground">Loading records...</p>
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  'transition-opacity duration-200',
-                  isPageTransitioning && 'opacity-50 pointer-events-none',
-                )}
-              >
-                <DataGridTable />
-              </div>
-            )}
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </DataGridContainer>
-
-        <DataGridPagination />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
+            Rows per page
+          </label>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(val) => {
+              const v = Number(val) || 10;
+              updateParams({ pageSize: v, page: 1 });
+            }}
+          >
+            <SelectTrigger size="sm" className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </DataGrid>
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Loading records...
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of{' '}
+          {totalRecords} results
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
