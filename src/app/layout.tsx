@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
+import NextTopLoader from 'nextjs-toploader';
 import Providers from './providers';
 
 const poppins = Poppins({
@@ -73,7 +74,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${poppins.variable} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <NextTopLoader />
+          {children}
+        </Providers>
       </body>
     </html>
   );
