@@ -26,7 +26,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       persistOptions={{ persister: asyncStoragePersister }}
     >
       <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}
           <Toaster position="bottom-right" richColors={true} toastOptions={{ duration: 5000 }} />
         </ThemeProvider>
