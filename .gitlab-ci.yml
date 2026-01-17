@@ -8,6 +8,7 @@ variables:
 build:
   stage: build
   script:
+    - cp $APP_DIR/.env.production .env.production
     - pnpm install
     - pnpm run build
   artifacts:
