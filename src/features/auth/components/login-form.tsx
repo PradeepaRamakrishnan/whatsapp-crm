@@ -22,7 +22,8 @@ export const LoginForm = () => {
         toast.loading('Logging in...', { id: 'login' });
         await login(value);
         toast.success('Logged in successfully!', { id: 'login' });
-        router.push('/dashboard');
+
+        router.replace('/dashboard');
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error.message, {

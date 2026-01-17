@@ -1,8 +1,10 @@
 'use client';
 
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from 'boring-avatars';
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import {
   DropdownMenu,
@@ -19,6 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { logout } from '@/features/auth/services';
 
 export function NavUser({
   user,
@@ -31,7 +34,25 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const fullName = `${user.firstName} ${user.lastName}`;
+
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.clear();
+      toast.success('Logged out successfully');
+
+      router.replace('/login');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to logout');
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <SidebarMenu>
@@ -91,9 +112,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/login')}>
+            <DropdownMenuItem onClick={handleLogout} disabled={logoutMutation.isPending}>
               <LogOut />
-              Log out
+              {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

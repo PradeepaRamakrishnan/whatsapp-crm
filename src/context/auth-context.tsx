@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext } from 'react';
-import { authApi } from '@/features/auth/services';
+import { getCurrentUser, login as loginService } from '@/features/auth/services';
 import type { LoginCredentials, User } from '@/features/auth/types/auth.types';
 
 interface AuthContextType {
@@ -19,13 +19,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: user, isLoading } = useQuery<User>({
     queryKey: ['users/me'],
     queryFn: async () => {
-      const response = await authApi.getCurrentUser();
+      const response = await getCurrentUser();
       return response;
     },
   });
 
   const login = async (credentials: LoginCredentials) => {
-    await authApi.login(credentials.email, credentials.password);
+    await loginService(credentials.email, credentials.password);
     await queryClient.invalidateQueries({ queryKey: ['users/me'] });
   };
 
