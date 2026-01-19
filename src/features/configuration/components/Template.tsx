@@ -158,7 +158,7 @@ export default function TemplatesTab({
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Subject:</p>
                           <p className="text-sm font-medium">
-                            {selectedEmailData.content.subject || selectedEmailData.title}
+                            {selectedEmailData.content.subject || selectedEmailData.name}
                           </p>
                         </div>
                         <div>
