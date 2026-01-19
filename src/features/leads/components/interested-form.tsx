@@ -1,34 +1,58 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
+import dayjs from 'dayjs';
+import { CalendarIcon } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-// import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-// import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar } from '@/components/ui/calendar';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { interestedSchema, otpSchema } from '../lib/validation';
-
-// import { ChevronLeft } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import {
+  dateOfBirthValidator,
+  interestedSchema,
+  otpSchema,
+  panNumberValidator,
+  phoneNumberValidator,
+} from '../lib/validation';
 
 type Step = 'mobile' | 'otp';
 
 export const InterestedForm = () => {
-  // const router = useRouter();
-  const [step, setStep] = useState<Step>('mobile');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const isOtpStep = pathname?.includes('/otp');
+  const step: Step = isOtpStep ? 'otp' : 'mobile';
+  const mobileNumber = searchParams.get('mobile') || '';
 
   // Form for Mobile Number
   const mobileForm = useForm({
     defaultValues: {
       mobile: '',
       pan_number: '',
-      dob_day: '',
-      dob_month: '',
-      dob_year: '',
+      date_of_birth: undefined as Date | undefined,
     },
     onSubmit: async ({ value }) => {
-      // console.log('OTP requested');
-      setStep('otp');
+      // Validate the entire form
+      const result = interestedSchema.safeParse({
+        phone_number: value.mobile,
+        pan_number: value.pan_number || undefined,
+        date_of_birth: value.date_of_birth,
+      });
+
+      if (!result.success) {
+        // Validation failed - errors are already shown by field validators
+        return;
+      }
+
+      // Update URL to /interested/otp with mobile number
+      router.push(`/interested/otp?mobile=${value.mobile}`);
     },
   });
 
@@ -40,16 +64,19 @@ export const InterestedForm = () => {
     onSubmit: async ({ value }) => {
       // console.log('Verifying OTP:', value.otp);
       // Navigate to the full details form
-      // router.push('/interested-form');
+      router.push('/interested-form');
     },
   });
 
+  // Show OTP form if step is 'otp'
   if (step === 'otp') {
     return (
-      <div className="w-full max-w-md space-y-8">
-        <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Verify OTP</h2>
-          <p className="text-muted-foreground">Enter the 6-digit code sent to your mobile number</p>
+      <div className="w-full max-w-sm space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight">Verify OTP</h2>
+          <p className="text-xs text-muted-foreground">
+            Enter the 6-digit code sent to <span className="font-semibold">+91 {mobileNumber}</span>
+          </p>
         </div>
 
         <form
@@ -64,6 +91,10 @@ export const InterestedForm = () => {
             name="otp"
             validators={{
               onChange: ({ value }) => {
+                const result = otpSchema.shape.otp.safeParse(value);
+                return result.success ? undefined : result.error.errors[0].message;
+              },
+              onSubmit: ({ value }) => {
                 const result = otpSchema.shape.otp.safeParse(value);
                 return result.success ? undefined : result.error.errors[0].message;
               },
@@ -84,7 +115,7 @@ export const InterestedForm = () => {
                     field.handleChange(val);
                   }}
                   onBlur={field.handleBlur}
-                  className="text-center tracking-widest"
+                  className="text-center tracking-widest text-lg"
                 />
                 <FieldError>
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -105,16 +136,31 @@ export const InterestedForm = () => {
               Resend OTP
             </button>
           </p>
+
+          <div className="pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                router.push('/interested');
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to form
+            </button>
+          </div>
         </form>
       </div>
     );
   }
 
+  // Show mobile form by default
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Get Started</h2>
-        <p className="text-muted-foreground">Enter your details to check your eligibility</p>
+    <div className="w-full max-w-lg space-y-3">
+      <div className="space-y-1">
+        <h2 className="text-xl font-bold tracking-tight">Get Started</h2>
+        <p className="text-xs text-muted-foreground">
+          Enter your details to check your eligibility
+        </p>
       </div>
 
       <form
@@ -126,11 +172,16 @@ export const InterestedForm = () => {
         className="space-y-4"
       >
         <div className="space-y-4">
+          {/* Mobile Number Field */}
           <mobileForm.Field
             name="mobile"
             validators={{
               onChange: ({ value }) => {
-                const result = interestedSchema.shape.phone_number.safeParse(value);
+                const result = phoneNumberValidator.safeParse(value);
+                return result.success ? undefined : result.error.errors[0].message;
+              },
+              onSubmit: ({ value }) => {
+                const result = phoneNumberValidator.safeParse(value);
                 return result.success ? undefined : result.error.errors[0].message;
               },
             }}
@@ -162,47 +213,95 @@ export const InterestedForm = () => {
             )}
           </mobileForm.Field>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold">Verification Details</h3>
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">Verification Details</h3>
 
-            <div className="space-y-2">
-              <FieldLabel>Date of Birth</FieldLabel>
-              <div className="flex gap-2">
-                <mobileForm.Field name="dob_day">
-                  {(field) => (
-                    <Input
-                      placeholder="DD"
-                      maxLength={2}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="w-20 text-center"
-                    />
-                  )}
-                </mobileForm.Field>
-                <mobileForm.Field name="dob_month">
-                  {(field) => (
-                    <Input
-                      placeholder="MM"
-                      maxLength={2}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="w-20 text-center"
-                    />
-                  )}
-                </mobileForm.Field>
-                <mobileForm.Field name="dob_year">
-                  {(field) => (
-                    <Input
-                      placeholder="YYYY"
-                      maxLength={4}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="flex-1 text-center"
-                    />
-                  )}
-                </mobileForm.Field>
-              </div>
-            </div>
+            {/* Date of Birth Field */}
+            <mobileForm.Field
+              name="date_of_birth"
+              validators={{
+                onChange: ({ value, fieldApi }) => {
+                  // Get current form values
+                  const panValue = fieldApi.form.getFieldValue('pan_number');
+
+                  // If both are empty, show error
+                  if (!value && !panValue) {
+                    return 'Date of Birth is required ';
+                  }
+
+                  // If DOB is provided, validate it
+                  if (value) {
+                    const result = dateOfBirthValidator.safeParse(value);
+                    return result.success ? undefined : result.error.errors[0].message;
+                  }
+
+                  return undefined;
+                },
+                onSubmit: ({ value, fieldApi }) => {
+                  const panValue = fieldApi.form.getFieldValue('pan_number');
+
+                  if (!value && !panValue) {
+                    return 'Date of Birth is required';
+                  }
+
+                  if (value) {
+                    const result = dateOfBirthValidator.safeParse(value);
+                    return result.success ? undefined : result.error.errors[0].message;
+                  }
+
+                  return undefined;
+                },
+              }}
+            >
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel>Date of Birth</FieldLabel>
+                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !field.state.value && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.state.value ? (
+                          dayjs(field.state.value).format('MMMM D, YYYY')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.state.value}
+                        onSelect={(date) => {
+                          if (date) {
+                            field.handleChange(date);
+                            setPopoverOpen(false);
+                            // Trigger validation
+                            field.handleBlur();
+                          }
+                        }}
+                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                        initialFocus
+                        captionLayout="dropdown"
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FieldError>
+                    {field.state.meta.isTouched && field.state.meta.errors.length > 0
+                      ? field.state.meta.errors[0]
+                      : null}
+                  </FieldError>
+                </Field>
+              )}
+            </mobileForm.Field>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -213,13 +312,40 @@ export const InterestedForm = () => {
               </div>
             </div>
 
+            {/* PAN Number Field */}
             <mobileForm.Field
               name="pan_number"
               validators={{
-                onChange: ({ value }) => {
-                  if (!value) return undefined;
-                  const result = interestedSchema.shape.pan_number.safeParse(value);
-                  return result.success ? undefined : result.error.errors[0].message;
+                onChange: ({ value, fieldApi }) => {
+                  // Get current form values
+                  const dobValue = fieldApi.form.getFieldValue('date_of_birth');
+
+                  // If both are empty, show error
+                  if (!value && !dobValue) {
+                    return 'PAN Number is required ';
+                  }
+
+                  // If PAN is provided, validate it
+                  if (value && value.length > 0) {
+                    const result = panNumberValidator.safeParse(value);
+                    return result.success ? undefined : result.error.errors[0].message;
+                  }
+
+                  return undefined;
+                },
+                onSubmit: ({ value, fieldApi }) => {
+                  const dobValue = fieldApi.form.getFieldValue('date_of_birth');
+
+                  if (!value && !dobValue) {
+                    return 'PAN Number is required';
+                  }
+
+                  if (value && value.length > 0) {
+                    const result = panNumberValidator.safeParse(value);
+                    return result.success ? undefined : result.error.errors[0].message;
+                  }
+
+                  return undefined;
                 },
               }}
             >
@@ -249,7 +375,7 @@ export const InterestedForm = () => {
 
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>By continuing the application process, I hereby agree/authorise the following:</p>
-          <ol className="list-decimal list-inside space-y-1 pl-2">
+          <ol className="list-inside list-decimal space-y-1 pl-2">
             <li>
               Samatva Awareness <span className="text-primary underline">Terms & Conditions</span>{' '}
               and <span className="text-primary underline">Privacy Policy</span>
