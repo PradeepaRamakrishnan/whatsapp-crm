@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { otpSchema } from '../lib/validation';
 
 export const OtpVerificationForm = () => {
@@ -49,25 +49,36 @@ export const OtpVerificationForm = () => {
               const result = otpSchema.shape.otp.safeParse(value);
               return result.success ? undefined : result.error.errors[0].message;
             },
+            onSubmit: ({ value }) => {
+              const result = otpSchema.shape.otp.safeParse(value);
+              return result.success ? undefined : result.error.errors[0].message;
+            },
           }}
         >
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0}>
               <FieldLabel htmlFor={field.name}>OTP Code</FieldLabel>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="text"
-                maxLength={6}
-                placeholder="000000"
-                value={field.state.value}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  field.handleChange(val);
-                }}
-                onBlur={field.handleBlur}
-                className="text-center tracking-widest"
-              />
+              <div className="flex justify-start py-2">
+                <InputOTP
+                  maxLength={6}
+                  value={field.state.value}
+                  onChange={(value) => field.handleChange(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <div className="flex items-center justify-center px-2">
+                    <span className="text-xl font-bold">-</span>
+                  </div>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
               <FieldError>
                 {field.state.meta.isTouched && field.state.meta.errors.length > 0
                   ? field.state.meta.errors[0]
