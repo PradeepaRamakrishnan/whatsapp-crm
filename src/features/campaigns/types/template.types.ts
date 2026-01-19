@@ -6,14 +6,21 @@ export type TemplateBankTag = 'ICICI' | 'HDFC' | 'Axis' | 'IndusInd' | 'All Bank
 
 export type TemplateType = 'Bank-specific' | 'General' | 'Follow-up' | 'Reminder' | 'Settlement';
 
+export interface TemplateContent {
+  subject?: string;
+  body: string;
+}
+
 export interface TemplateData {
   id: string;
-  title: string;
+  name: string;
+  description: string;
   channel: TemplateChannel;
   status: TemplateStatus;
   bankTag?: TemplateBankTag;
   typeTag: TemplateType;
-  content: string;
-  modifiedDate: string;
+  content: string | TemplateContent; // Can be either string or object
+  createdAt: string;
   modifiedBy: string;
+  tags?: string[];
 }
