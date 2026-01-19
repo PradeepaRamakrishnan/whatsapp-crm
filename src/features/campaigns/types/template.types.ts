@@ -18,7 +18,7 @@ export interface TemplateData {
   channel: TemplateChannel;
   status: TemplateStatus;
   bankTag?: TemplateBankTag;
-  typeTag: TemplateType;
+  type: TemplateChannel;
   content: string | TemplateContent; // Can be either string or object
   createdAt: string;
   modifiedBy: string;

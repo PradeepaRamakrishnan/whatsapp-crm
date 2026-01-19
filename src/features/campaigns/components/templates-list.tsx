@@ -22,12 +22,25 @@ export function TemplatesList() {
     (tab: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set('activeTab', tab);
+      params.delete('type'); // Clear type filter when switching tabs
       router.replace(`?${params.toString()}`);
     },
     [searchParams, router],
   );
 
-  // Fetch templates based on activeTab
+  const handleTypeClick = useCallback(
+    (typeTag: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (type === typeTag) {
+        params.delete('type');
+      } else {
+        params.set('type', typeTag);
+      }
+      router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router, type],
+  );
+
   const {
     data: templates = [],
     isLoading,
@@ -38,16 +51,27 @@ export function TemplatesList() {
     placeholderData: (previousData) => previousData,
   });
 
-  // Filter templates
   const filteredTemplates = templates.filter((t) => {
+    if (activeTab !== 'all' && activeTab !== 'by-bank') {
+      if (t.type !== activeTab) {
+        return false;
+      }
+    }
+
     if (activeTab === 'by-bank') {
-      return t.bankTag && t.bankTag !== 'All Banks';
+      if (!t.bankTag || t.bankTag === 'All Banks') {
+        return false;
+      }
     }
-    if (activeTab === 'email' && type) {
-      return t.typeTag === type;
+
+    if (type) {
+      return t.type === type;
     }
+
     return true;
   });
+
+  // console.log(filteredTemplates, 'filteredTemplates');
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -109,7 +133,7 @@ export function TemplatesList() {
           {!isLoading && !error && (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredTemplates.map((template) => (
-                <TemplateCard key={template.id} template={template} />
+                <TemplateCard key={template.id} template={template} onTypeClick={handleTypeClick} />
               ))}
             </div>
           )}
@@ -122,7 +146,9 @@ export function TemplatesList() {
               </div>
               <h3 className="mt-4 text-lg font-semibold">No templates found</h3>
               <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                Get started by creating your first template.
+                {activeTab !== 'all'
+                  ? `No ${activeTab} templates available${type ? ` with type "${type}"` : ''}.`
+                  : 'Get started by creating your first template.'}
               </p>
               <Button onClick={() => router.push('/campaigns/templates/create')}>
                 <Plus className="h-4 w-4" />
