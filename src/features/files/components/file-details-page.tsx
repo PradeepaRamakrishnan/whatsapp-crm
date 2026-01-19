@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFileById } from '../services';
 import type { FileDetailData } from '../types/file.types';
+import { FileActions } from './file-actions';
 import { FileRecordsTable } from './file-records-table';
 
 interface FileDetailsPageProps {
@@ -16,7 +17,6 @@ interface FileDetailsPageProps {
 }
 
 export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
-  // Only fetch file metadata (always page 1) - FileRecordsTable handles pagination separately
   const { data: file, isLoading } = useQuery<FileDetailData>({
     queryKey: ['file', fileId, { page: 1, limit: 10 }],
     queryFn: () => getFileById(fileId, 1, 10),
@@ -112,6 +112,14 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
               </div>
             </div>
           </div>
+
+          {/* Action Buttons */}
+          <FileActions
+            fileId={fileId}
+            fileName={file.name}
+            currentStatus={file.status}
+            variant="buttons"
+          />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
-import type { FileDetailData, FilesResponse } from '../types/file.types';
+import type { FileDetailData, FileStatus, FilesResponse } from '../types/file.types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_FILES_API_URL}`,
@@ -12,6 +12,23 @@ const axiosClient = axios.create({
   },
   withCredentials: true,
 });
+
+export async function create(body: unknown) {
+  try {
+    const response = await axiosClient({
+      method: 'POST',
+
+      data: JSON.stringify(body),
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch files');
+    }
+    throw error;
+  }
+}
 
 export async function getAllFiles(page: number, limit: number): Promise<FilesResponse> {
   try {
@@ -52,6 +69,43 @@ export async function getFileById(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch file by ID');
+    }
+    throw error;
+  }
+}
+
+export async function updateFileStatus(id: string, status: FileStatus): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    await axiosClient({
+      method: 'PATCH',
+      url: `/${id}/status`,
+      data: { status },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update file status');
+    }
+    throw error;
+  }
+}
+
+export async function deleteFile(id: string): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    await axiosClient({
+      method: 'DELETE',
+      url: `/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete file');
     }
     throw error;
   }
