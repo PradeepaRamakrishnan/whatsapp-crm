@@ -10,7 +10,8 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Pencil, Trash2 } from 'lucide-react';
+import dayjs from 'dayjs';
+import { Calendar, IndianRupee, Mail, Pencil, Phone, Trash2, User } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -24,6 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -100,6 +109,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const searchParams = useSearchParams();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [selectedRecord, setSelectedRecord] = React.useState<FileRecord | null>(null);
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -118,11 +128,17 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     [searchParams, router],
   );
 
-  const { data: fileData, isLoading } = useQuery({
+  const {
+    data: fileData,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ['file', fileId, { page, limit: pageSize }],
     queryFn: () => getFileById(fileId, page, pageSize),
     placeholderData: (previousData) => previousData,
   });
+
+  const showLoading = isLoading || (isFetching && !fileData);
 
   const records = fileData?.contents.data || [];
   const totalRecords = fileData?.contents.meta.total || 0;
@@ -157,7 +173,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
               table.getColumn('customerName')?.setFilterValue(event.target.value)
             }
             className="max-w-sm w-full"
-            disabled={isLoading}
+            disabled={showLoading}
           />
         </div>
 
@@ -205,7 +221,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {showLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
                   Loading records...
@@ -213,7 +229,11 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedRecord(row.original)}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -258,6 +278,93 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
           </Button>
         </div>
       </div>
+
+      <Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
+        <SheetContent className="flex flex-col sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <span>{selectedRecord?.customerName}</span>
+            </SheetTitle>
+            <SheetDescription>Customer record details</SheetDescription>
+          </SheetHeader>
+
+          {selectedRecord && (
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
+                    <Mail className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-muted-foreground">Email Address</p>
+                    <p className="truncate text-sm font-medium">{selectedRecord.emailId || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-green-50 dark:bg-green-950/30">
+                    <Phone className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-muted-foreground">Mobile Number</p>
+                    <p className="text-sm font-medium">{selectedRecord.mobileNumber || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30">
+                    <IndianRupee className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-muted-foreground">Settlement Amount</p>
+                    <p className="text-sm font-semibold">
+                      ₹{Number(selectedRecord.settlementAmount).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-950/30">
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-muted-foreground">Created At</p>
+                    <p className="text-sm font-medium">
+                      {dayjs(selectedRecord.createdAt).format('MMM DD, YYYY hh:mm A')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedRecord.additionalData &&
+                Object.keys(selectedRecord.additionalData).length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="mb-3 text-sm font-semibold">Additional Information</h4>
+                      <div className="grid gap-2">
+                        {Object.entries(selectedRecord.additionalData).map(([key, value]) => (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2"
+                          >
+                            <span className="text-xs font-medium capitalize text-muted-foreground">
+                              {key.replace(/_/g, ' ')}
+                            </span>
+                            <span className="text-sm font-medium">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

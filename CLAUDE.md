@@ -246,6 +246,43 @@ export async function getAllFiles(page: number, limit: number) {
 }
 ```
 
+### Sheet/Modal Pattern
+
+When displaying detail views (e.g., clicking a table row to show record details), use the **shadcn Sheet** component with this pattern:
+
+```typescript
+// 1. State for selected item
+const [selectedRecord, setSelectedRecord] = React.useState<RecordType | null>(null);
+
+// 2. Table row click handler
+<TableRow
+  className="cursor-pointer"
+  onClick={() => setSelectedRecord(row.original)}
+>
+
+// 3. Sheet component structure (scrollable)
+<Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
+  <SheetContent className="flex flex-col sm:max-w-md">
+    <SheetHeader>
+      <SheetTitle>Title</SheetTitle>
+      <SheetDescription>Description</SheetDescription>
+    </SheetHeader>
+
+    {selectedRecord && (
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+        {/* Content here */}
+      </div>
+    )}
+  </SheetContent>
+</Sheet>
+```
+
+**Key points:**
+- `SheetContent` needs `flex flex-col` for proper layout
+- Content wrapper needs `flex-1 overflow-y-auto` for scrolling
+- Use `open={!!selectedRecord}` to control visibility
+- Reset state on close: `onOpenChange={(open) => !open && setSelectedRecord(null)}`
+
 ### Middleware
 
 `src/proxy.ts` (should be `middleware.ts` per Next.js conventions) handles:
