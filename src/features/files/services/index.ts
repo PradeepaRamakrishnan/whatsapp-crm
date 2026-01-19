@@ -13,18 +13,23 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function create(body: unknown) {
+export async function createFile(formData: FormData) {
   try {
+    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-
-      data: JSON.stringify(body),
+      url: '/create',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Cookie: cookieStore.toString(),
+      },
     });
 
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch files');
+      throw new Error(error.response?.data?.message || 'Failed to upload file');
     }
     throw error;
   }
