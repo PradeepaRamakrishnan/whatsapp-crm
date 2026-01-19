@@ -4,8 +4,8 @@ import { ArrowLeft, Check, Save } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import Channels from '@/features/configuration/components/Channels';
-import TemplatesTab from '@/features/configuration/components/Template';
+import Channels from '@/features/configuration/components/channels';
+import TemplatesTab from '@/features/configuration/components/template';
 
 const steps = [
   { id: 1, name: 'Template', description: 'Configure templates' },
