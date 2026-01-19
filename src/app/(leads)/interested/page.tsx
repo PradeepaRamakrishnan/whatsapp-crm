@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { InterestedForm } from '@/features/leads/components/interested_form';
+import { InterestedForm } from '@/features/leads/components/interested-form';
 
 const InterestedPage = () => {
   return (
