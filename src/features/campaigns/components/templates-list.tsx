@@ -1,24 +1,53 @@
 'use client';
 
-import { Building2, Mail, MessageSquare, Phone, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Mail, MessageSquare, Phone, Plus } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockTemplates } from '../lib/templates-data';
+import { getAllTemplates } from '../services';
 import type { TemplateChannel } from '../types/template.types';
 import { TemplateCard } from './template-card';
 
 export function TemplatesList() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'all' | TemplateChannel | 'by-bank'>('all');
+  const searchParams = useSearchParams();
 
-  const filteredTemplates =
-    activeTab === 'all'
-      ? mockTemplates
-      : activeTab === 'by-bank'
-        ? mockTemplates.filter((t) => t.bankTag && t.bankTag !== 'All Banks')
-        : mockTemplates.filter((t) => t.channel === activeTab);
+  const activeTab = (searchParams.get('activeTab') as TemplateChannel | 'all' | 'by-bank') || 'all';
+  const type = searchParams.get('type');
+
+  const updateActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('activeTab', tab);
+      router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router],
+  );
+
+  // Fetch templates based on activeTab
+  const {
+    data: templates = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['templates', activeTab],
+    queryFn: () => getAllTemplates(activeTab),
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Filter templates
+  const filteredTemplates = templates.filter((t) => {
+    if (activeTab === 'by-bank') {
+      return t.bankTag && t.bankTag !== 'All Banks';
+    }
+    if (activeTab === 'email' && type) {
+      return t.typeTag === type;
+    }
+    return true;
+  });
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -37,7 +66,7 @@ export function TemplatesList() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+      <Tabs value={activeTab} onValueChange={updateActiveTab}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="all">All Templates</TabsTrigger>
           <TabsTrigger value="email">
@@ -52,22 +81,41 @@ export function TemplatesList() {
             <MessageSquare className="h-4 w-4" />
             WhatsApp
           </TabsTrigger>
-          <TabsTrigger value="by-bank">
-            <Building2 className="h-4 w-4" />
-            By Bank
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border p-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="mt-4 text-sm text-muted-foreground">Loading templates...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-destructive/50 bg-destructive/10 p-8">
+              <div className="rounded-full bg-destructive/20 p-4">
+                <Mail className="h-8 w-8 text-destructive" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">Failed to load templates</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {error instanceof Error ? error.message : 'An error occurred'}
+              </p>
+            </div>
+          )}
+
           {/* Templates Grid */}
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTemplates.map((template) => (
-              <TemplateCard key={template.id} template={template} />
-            ))}
-          </div>
+          {!isLoading && !error && (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredTemplates.map((template) => (
+                <TemplateCard key={template.id} template={template} />
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {filteredTemplates.length === 0 && (
+          {!isLoading && !error && filteredTemplates.length === 0 && (
             <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
               <div className="rounded-full bg-muted p-4">
                 <Mail className="h-8 w-8 text-muted-foreground" />
