@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { PendingFilesTable } from './pending-files-table';
 
 export function PendingFilesList() {
@@ -14,7 +15,9 @@ export function PendingFilesList() {
       </div>
 
       {/* Pending Files Table */}
-      <PendingFilesTable />
+      <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+        <PendingFilesTable />
+      </Suspense>
     </div>
   );
 }

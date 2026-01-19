@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, Database, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -135,7 +136,11 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           <CardDescription>All records from {file.name}</CardDescription>
         </CardHeader>
         <CardContent>
-          <FileRecordsTable fileId={fileId} />
+          <Suspense
+            fallback={<div className="flex items-center justify-center p-8">Loading...</div>}
+          >
+            <FileRecordsTable fileId={fileId} />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

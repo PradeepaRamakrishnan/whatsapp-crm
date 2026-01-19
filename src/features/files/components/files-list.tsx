@@ -2,6 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { FilesTable } from './files-table';
 
@@ -22,7 +23,9 @@ export function FilesList() {
       </div>
 
       {/* Files Table */}
-      <FilesTable />
+      <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+        <FilesTable />
+      </Suspense>
     </div>
   );
 }

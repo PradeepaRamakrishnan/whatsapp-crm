@@ -39,6 +39,110 @@ pnpm lint:fix     # Auto-fix issues with Biome
 ### Git Hooks
 Pre-commit hook runs `lint-staged` which automatically formats and checks staged files with Biome.
 
+### Testing
+```bash
+pnpm test              # Run all tests once
+pnpm test:watch        # Watch mode (recommended for development)
+pnpm test:ui           # Visual UI for tests
+pnpm test:coverage     # Generate coverage report
+```
+
+## Testing
+
+### Framework & Tools
+
+| Tool | Purpose |
+|------|---------|
+| **Vitest** | Test runner (fast, Vite-powered) |
+| **Testing Library** | React component testing utilities |
+| **jsdom** | Browser environment simulation |
+| **@vitest/ui** | Visual test interface |
+| **@vitest/coverage-v8** | Code coverage reports |
+
+### Configuration
+
+**vitest.config.mts:**
+- Uses `jsdom` environment for React testing
+- Configured with `@vitejs/plugin-react` for JSX support
+- Path aliases via `vite-tsconfig-paths` (supports `@/` imports)
+- Global test utilities enabled
+- Setup file: `vitest.setup.ts` (imports `@testing-library/jest-dom`)
+
+### Test Types
+
+1. **Unit Tests** - Pure functions, utilities, validation logic
+   - Example: `src/features/auth/lib/validation.test.ts`
+   - Tests Zod schemas for email/password validation
+   - Fast, isolated, no dependencies
+
+2. **Integration Tests** - API services with mocked HTTP calls
+   - Example: `src/features/auth/services/index.test.ts`
+   - Mocks axios using `vi.mock()`
+   - Tests login, getCurrentUser, logout flows
+   - Verifies error handling
+
+3. **Component Tests** - React components with user interactions
+   - Uses `@testing-library/react` for rendering
+   - Uses `@testing-library/user-event` for interactions
+   - Tests forms, validation, user workflows
+
+### Testing Patterns
+
+**Arrange-Act-Assert:**
+```typescript
+it('should validate email correctly', () => {
+  // Arrange: Set up test data
+  const input = { email: 'test@example.com', password: 'pass123' };
+  
+  // Act: Execute the code
+  const result = loginSchema.safeParse(input);
+  
+  // Assert: Verify the outcome
+  expect(result.success).toBe(true);
+});
+```
+
+**Mocking Axios:**
+```typescript
+vi.mock('axios', () => ({
+  default: Object.assign(vi.fn(), {
+    create: vi.fn(() => vi.fn()),
+  }),
+}));
+```
+
+**Testing Async Functions:**
+```typescript
+it('should fetch user data', async () => {
+  vi.mocked(axios).mockResolvedValueOnce({ data: mockUser });
+  const result = await getCurrentUser();
+  expect(result).toEqual(mockUser);
+});
+```
+
+### Test Coverage
+
+Current coverage focuses on the **auth** feature:
+- ✅ `validation.ts` - Email/password validation schemas
+- ✅ `services/index.ts` - Login, getCurrentUser, logout APIs
+- 🚧 Component tests - Planned for login form
+
+**Priority for new tests:**
+1. Files feature (validation, services)
+2. Campaigns feature (CRUD operations)
+3. Critical user flows (file upload, lead submission)
+
+### Best Practices
+
+- **Co-locate tests** - Place `.test.ts` files next to source files
+- **Descriptive names** - Use `it('should reject invalid email')` not `it('test1')`
+- **Test behavior, not implementation** - Focus on what code does, not how
+- **Mock external dependencies** - APIs, third-party libraries
+- **Don't mock everything** - Test real logic, mock only boundaries
+- **One assertion per test** - Makes failures easier to diagnose
+
+See `TESTING.md` for detailed testing guide and examples.
+
 ## Architecture
 
 ### Route Groups
