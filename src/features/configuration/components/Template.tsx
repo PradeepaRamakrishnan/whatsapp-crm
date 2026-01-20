@@ -84,8 +84,8 @@ export default function TemplatesTab({
       )}
 
       {/* Email Templates */}
-      <Card className="border-blue-200 ">
-        <div className={emailEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-blue-200 p-4 ">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-blue-600 p-2.5 shrink-0">
@@ -123,9 +123,7 @@ export default function TemplatesTab({
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>
@@ -187,8 +185,8 @@ export default function TemplatesTab({
       </Card>
 
       {/* SMS Templates */}
-      <Card className="border-green-200 ">
-        <div className={smsEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-green-200 p-4 ">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-green-600 p-2.5 shrink-0">
@@ -223,9 +221,7 @@ export default function TemplatesTab({
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>
@@ -252,8 +248,8 @@ export default function TemplatesTab({
       </Card>
 
       {/* WhatsApp Templates */}
-      <Card className="border-emerald-200 ">
-        <div className={whatsappEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-emerald-200 p-4">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-emerald-600 p-2.5 shrink-0">
@@ -288,9 +284,7 @@ export default function TemplatesTab({
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>

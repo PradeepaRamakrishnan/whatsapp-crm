@@ -38,3 +38,23 @@ export async function getAllTemplates(
     throw error;
   }
 }
+
+export async function getAllConfiguration(): Promise<any> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/configurations`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch configurations');
+    }
+    throw error;
+  }
+}

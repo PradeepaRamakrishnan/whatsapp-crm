@@ -1,6 +1,5 @@
-'use client';
-
 import Image from 'next/image';
+import { Suspense } from 'react';
 import { OtpVerificationForm } from '@/features/leads/components/otp-verification-form';
 
 const OtpVerificationPage = () => {
@@ -73,7 +72,16 @@ const OtpVerificationPage = () => {
             </div>
           </div>
 
-          <OtpVerificationForm />
+          <Suspense
+            fallback={
+              <div className="w-full max-w-md animate-pulse space-y-4">
+                <div className="h-8 bg-muted rounded" />
+                <div className="h-12 bg-muted rounded" />
+              </div>
+            }
+          >
+            <OtpVerificationForm />
+          </Suspense>
         </div>
       </div>
     </div>

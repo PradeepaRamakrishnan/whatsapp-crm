@@ -12,21 +12,12 @@ import {
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { MoreHorizontal } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
 import slugify from 'slugify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -46,6 +37,7 @@ import {
 } from '@/components/ui/table';
 import { getAllFiles } from '../services';
 import type { FileData, FileStatus, FilesResponse } from '../types/file.types';
+import { FileActions } from './file-actions';
 
 dayjs.extend(utc);
 
@@ -112,22 +104,15 @@ export const columns: ColumnDef<FileData>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: () => {
+    cell: ({ row }) => {
+      const file = row.original;
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => null}>Mark as Reviewed</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => null}>Delete</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <FileActions
+          fileId={file.id}
+          fileName={file.name}
+          currentStatus={file.status}
+          variant="dropdown"
+        />
       );
     },
   },
