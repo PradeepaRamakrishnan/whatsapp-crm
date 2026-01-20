@@ -36,6 +36,8 @@ export const InterestedForm = () => {
     setSearchParams(new URLSearchParams(window.location.search));
   }, []);
   const mobileNumber = searchParams?.get('mobile') || '';
+  const campaignId = searchParams?.get('campaignId');
+  const contactId = searchParams?.get('contactId');
 
   // Form for Mobile Number
   const mobileForm = useForm({
@@ -45,8 +47,12 @@ export const InterestedForm = () => {
       date_of_birth: undefined as Date | undefined,
     },
     onSubmit: async ({ value }) => {
-      // Update URL to /interested/otp with mobile number
-      router.push(`/interested/otp?mobile=${value.mobile}`);
+      // Update URL to /interested/otp with mobile number and campaign params if present
+      const params = new URLSearchParams({ mobile: value.mobile });
+      if (campaignId) params.append('campaignId', campaignId);
+      if (contactId) params.append('contactId', contactId);
+
+      router.push(`/interested/otp?${params.toString()}`);
     },
   });
 

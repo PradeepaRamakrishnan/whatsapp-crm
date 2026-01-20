@@ -2,15 +2,21 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { markContactInterested } from '@/features/campaigns/services';
 import { otpSchema } from '../lib/validation';
 
 export const OtpVerificationForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mobile = searchParams.get('mobile') || '';
+  const campaignId = searchParams.get('campaignId');
+  const contactId = searchParams.get('contactId');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form for OTP
   const otpForm = useForm({
@@ -18,8 +24,26 @@ export const OtpVerificationForm = () => {
       otp: '',
     },
     onSubmit: async () => {
-      // Navigate to the full details form
-      router.push('/interested-form');
+      // Check if this is from a campaign interest link
+      if (campaignId && contactId) {
+        setIsSubmitting(true);
+        try {
+          // Call the markContactInterested API
+          await markContactInterested(campaignId, contactId);
+          toast.success('Thank you! Your interest has been recorded.');
+
+          // Navigate to the full details form with campaign params
+          router.push(`/interested-form?campaignId=${campaignId}&contactId=${contactId}`);
+        } catch (error) {
+          console.error('Failed to mark contact as interested:', error);
+          toast.error(error instanceof Error ? error.message : 'Failed to process your request');
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        // Regular flow - navigate to the full details form
+        router.push('/interested-form');
+      }
     },
   });
 
@@ -87,8 +111,12 @@ export const OtpVerificationForm = () => {
           )}
         </otpForm.Field>
 
-        <Button type="submit" className="w-full" disabled={otpForm.state.isSubmitting}>
-          {otpForm.state.isSubmitting ? 'Verifying...' : 'Verify & Proceed'}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={otpForm.state.isSubmitting || isSubmitting}
+        >
+          {otpForm.state.isSubmitting || isSubmitting ? 'Verifying...' : 'Verify & Proceed'}
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">

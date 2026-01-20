@@ -274,3 +274,69 @@ export async function updateTemplate(id: string, body: Record<string, unknown>):
     throw error;
   }
 }
+
+export async function markContactInterested(
+  campaignId: string,
+  contactId: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/interested?campaignId=${campaignId}&contactId=${contactId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to mark contact as interested');
+    }
+    throw error;
+  }
+}
+
+export async function markContactNotInterested(
+  campaignId: string,
+  contactId: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/not-interested?campaignId=${campaignId}&contactId=${contactId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to mark contact as not interested');
+    }
+    throw error;
+  }
+}
+
+export async function unsubscribeContact(campaignId: string, contactId: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/unsubscribe?campaignId=${campaignId}&contactId=${contactId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to unsubscribe contact');
+    }
+    throw error;
+  }
+}
