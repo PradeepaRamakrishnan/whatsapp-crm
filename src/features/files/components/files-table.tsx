@@ -233,7 +233,9 @@ export function FilesTable() {
                   key={row.id}
                   className="cursor-pointer"
                   onClick={() =>
-                    router.push(`/files/${slugify(row.original.name)}/${row.original.id}`)
+                    router.push(
+                      `/files/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
+                    )
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
