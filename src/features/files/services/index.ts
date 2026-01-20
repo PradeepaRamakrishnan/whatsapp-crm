@@ -145,7 +145,7 @@ export async function updateFileRecord(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
-      url: `/${fileId}/records/${recordId}`,
+      url: `/${fileId}/contents/${recordId}`,
       data,
       headers: {
         Cookie: cookieStore.toString(),
