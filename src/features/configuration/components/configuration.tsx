@@ -99,7 +99,7 @@ const Configuration = () => {
             Configure templates and channels for your AI agents
           </p>
         </div>
-        <Button onClick={() => router.push('/agents/configuration/edit')}>
+        <Button onClick={() => router.push('/campaigns/configuration/edit')}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit
         </Button>
