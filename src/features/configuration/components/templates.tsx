@@ -15,6 +15,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { getAllTemplates } from '@/features/campaigns/services';
 
+// import { mockTemplates } from '@/features/campaigns/lib/templates-data';
+
 interface TemplatesTabProps {
   emailEnabled: boolean;
   setEmailEnabled: (value: boolean) => void;
@@ -28,6 +30,7 @@ interface TemplatesTabProps {
   setSmsTemplate: (value: string) => void;
   whatsappTemplate: string;
   setWhatsappTemplate: (value: string) => void;
+  errors?: Record<string, string>;
 }
 
 export default function Templates({
@@ -43,6 +46,7 @@ export default function Templates({
   setSmsTemplate,
   whatsappTemplate,
   setWhatsappTemplate,
+  errors = {},
 }: TemplatesTabProps) {
   // Fetch templates from API
   const { data: templatesData, isLoading } = useQuery({
@@ -50,21 +54,32 @@ export default function Templates({
     queryFn: () => getAllTemplates(),
   });
 
+  interface Template {
+    id: string;
+    _id?: string;
+    status: string;
+    type: string;
+    name: string;
+    content: string | { subject?: string; body?: string };
+    tags?: string[];
+    createdAt: string;
+  }
+
   // Ensure templatesData is an array
-  const allTemplates = Array.isArray(templatesData) ? templatesData : [];
-
-  // Filter templates by type and status
+  const allTemplates = Array.isArray(templatesData) ? (templatesData as Template[]) : [];
   const emailTemplates = allTemplates.filter(
-    (t: any) => t.status === 'approved' && t.type === 'email',
+    (t: Template) => t.status === 'approved' && t.type === 'email',
   );
-  const smsTemplates = allTemplates.filter((t: any) => t.status === 'approved' && t.type === 'sms');
+  const smsTemplates = allTemplates.filter(
+    (t: Template) => t.status === 'approved' && t.type === 'sms',
+  );
   const whatsappTemplates = allTemplates.filter(
-    (t: any) => t.status === 'approved' && t.type === 'whatsapp',
+    (t: Template) => t.status === 'approved' && t.type === 'whatsapp',
   );
 
-  const selectedEmailData = allTemplates.find((t: any) => t.id === emailTemplate);
-  const selectedSmsData = allTemplates.find((t: any) => t.id === smsTemplate);
-  const selectedWhatsappData = allTemplates.find((t: any) => t.id === whatsappTemplate);
+  const selectedEmailData = allTemplates.find((t: Template) => t.id === emailTemplate);
+  const selectedSmsData = allTemplates.find((t: Template) => t.id === smsTemplate);
+  const selectedWhatsappData = allTemplates.find((t: Template) => t.id === whatsappTemplate);
 
   const atLeastOneChannelEnabled = emailEnabled || smsEnabled || whatsappEnabled;
 
@@ -217,7 +232,10 @@ export default function Templates({
                     </SelectTrigger>
                     <SelectContent>
                       {emailTemplates.map((template: any) => (
-                        <SelectItem key={template._id} value={template._id}>
+                        <SelectItem
+                          key={template._id || template.id}
+                          value={template._id || template.id}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="flex-1">
                               <div className="font-medium">{template.name}</div>
@@ -236,6 +254,11 @@ export default function Templates({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.emailTemplate && (
+                    <p className="text-sm font-medium text-destructive mt-1.5 animate-in fade-in-50">
+                      {errors.emailTemplate}
+                    </p>
+                  )}
                 </div>
               )}
             </>
@@ -293,7 +316,10 @@ export default function Templates({
                     </SelectTrigger>
                     <SelectContent>
                       {smsTemplates.map((template: any) => (
-                        <SelectItem key={template._id} value={template._id}>
+                        <SelectItem
+                          key={template._id || template.id}
+                          value={template._id || template.id}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="flex-1">
                               <div className="font-medium">{template.name}</div>
@@ -312,6 +338,11 @@ export default function Templates({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.smsTemplate && (
+                    <p className="text-sm font-medium text-destructive mt-1.5 animate-in fade-in-50">
+                      {errors.smsTemplate}
+                    </p>
+                  )}
                 </div>
               )}
             </>
@@ -369,7 +400,10 @@ export default function Templates({
                     </SelectTrigger>
                     <SelectContent>
                       {whatsappTemplates.map((template: any) => (
-                        <SelectItem key={template._id} value={template._id}>
+                        <SelectItem
+                          key={template._id || template.id}
+                          value={template._id || template.id}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="flex-1">
                               <div className="font-medium">{template.name}</div>
@@ -388,6 +422,11 @@ export default function Templates({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.whatsappTemplate && (
+                    <p className="text-sm font-medium text-destructive mt-1.5 animate-in fade-in-50">
+                      {errors.whatsappTemplate}
+                    </p>
+                  )}
                 </div>
               )}
             </>

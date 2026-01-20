@@ -1,3 +1,5 @@
+'use client';
+import cronstrue from 'cronstrue';
 import {
   ArrowRight,
   ChevronDown,
@@ -12,17 +14,52 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+// import { getAllConfiguration } from '@/features/campaigns/services';
+// import { useQuery } from '@tanstack/react-query';
 
 interface ChannelsProps {
   emailEnabled: boolean;
   smsEnabled: boolean;
   whatsappEnabled: boolean;
+  configuration?: any;
+  scheduleMode: 'now' | 'schedule';
+  setScheduleMode: (mode: 'now' | 'schedule') => void;
+  scheduledDate: string;
+  setScheduledDate: (date: string) => void;
+  scheduledTime: string;
+  setScheduledTime: (time: string) => void;
+  frequency: string;
+  setFrequency: (freq: string) => void;
+  interval: string;
+  setInterval: (int: string) => void;
 }
 
-const Channel = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) => {
-  const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
+const Channel = ({
+  emailEnabled,
+  smsEnabled,
+  whatsappEnabled,
+  configuration,
+  scheduleMode,
+  setScheduleMode,
+  scheduledDate,
+  setScheduledDate,
+  scheduledTime,
+  setScheduledTime,
+  frequency,
+  setFrequency,
+  interval,
+  setInterval,
+}: ChannelsProps) => {
+  // Local state for delays (keep local for now as not requested to be saved yet? Or maybe they should be saved too?)
+  // The user only mentioned updating schedulerEnabled and cronPattern.
   const [smsDelay, setSmsDelay] = useState('10');
   const [whatsappDelay, setWhatsappDelay] = useState('15');
   const [channelOrder, setChannelOrder] = useState<('email' | 'sms' | 'whatsapp')[]>([
@@ -31,8 +68,17 @@ const Channel = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) =
     'whatsapp',
   ]);
 
+  // const { data: configuration } = useQuery({
+  //   queryKey: ['configurations'],
+  //   queryFn: () => getAllConfiguration(),
+  // });
+
+  // const configArray = Array.isArray(configuration) ? configuration : [];
+  // const firstConfig = configArray[0];
+
+  // console.log('Templates Data:', configuration);
+
   const swapChannels = (index1: number, index2: number) => {
-    // Email is always first (index 0), only allow swapping SMS and WhatsApp
     if (index1 === 0 || index2 === 0) return;
     const newOrder = [...channelOrder];
     [newOrder[index1], newOrder[index2]] = [newOrder[index2], newOrder[index1]];
@@ -118,6 +164,43 @@ const Channel = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) =
                   required
                 />
               </Field>
+
+              <Field>
+                <FieldLabel>Frequency</FieldLabel>
+                <Select value={frequency} onValueChange={setFrequency}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <Field>
+                <FieldLabel>Interval</FieldLabel>
+                <Input
+                  type="number"
+                  min="1"
+                  value={interval}
+                  onChange={(e) => setInterval(e.target.value)}
+                  placeholder="days"
+                  required
+                />
+              </Field>
+
+              {configuration?.cronPattern && (
+                <div className="sm:col-span-2 text-sm text-muted-foreground mt-2 bg-muted/40 p-2 rounded border">
+                  Scheduled:{' '}
+                  <span className="font-medium text-foreground">
+                    {cronstrue.toString(configuration.cronPattern)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

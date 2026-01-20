@@ -3,6 +3,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import cronstrue from 'cronstrue';
 import { Mail, MessageSquare, Pencil, Phone, Send } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { useState } from 'react';
@@ -69,6 +70,7 @@ const Configuration = () => {
       ? {
           type: 'email' as const,
           name: getTemplateName(firstConfig.emailTemplate),
+          description: firstConfig.emailTemplate.description || 'No description available',
           bank: getBankTags(firstConfig.emailTemplate),
           content: getEmailContent(firstConfig.emailTemplate.content),
         }
@@ -82,6 +84,7 @@ const Configuration = () => {
       ? {
           type: 'sms' as const,
           name: getTemplateName(firstConfig.smsTemplate),
+          description: firstConfig.smsTemplate.description || 'No description available',
           bank: getBankTags(firstConfig.smsTemplate),
           content: getTemplateContent(firstConfig.smsTemplate.content),
         }
@@ -95,6 +98,7 @@ const Configuration = () => {
       ? {
           type: 'whatsapp' as const,
           name: getTemplateName(firstConfig.whatsappTemplate),
+          description: firstConfig.whatsappTemplate.description || 'No description available',
           bank: getBankTags(firstConfig.whatsappTemplate),
           content: getTemplateContent(firstConfig.whatsappTemplate.content),
         }
@@ -107,9 +111,9 @@ const Configuration = () => {
   };
 
   // Get scheduler status and cron pattern
-  const schedulerEnabled = firstConfig?.schedulerEnabled ?? false;
-  const cronPattern = firstConfig?.cronPattern || 'Not configured';
-  const approved = firstConfig?.approved ?? false;
+  // const schedulerEnabled = firstConfig?.schedulerEnabled ?? false;
+  // const cronPattern = firstConfig?.cronPattern || 'Not configured';
+  // const approved = firstConfig?.approved ?? false;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-8 p-6">
@@ -137,7 +141,7 @@ const Configuration = () => {
       ) : (
         <div className="grid gap-6">
           {/* Configuration Status */}
-          {firstConfig && (
+          {/* {firstConfig && (
             <Card>
               <CardHeader>
                 <CardTitle>Configuration Status</CardTitle>
@@ -155,7 +159,7 @@ const Configuration = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
           {/* Template Summary */}
           <Card>
@@ -163,61 +167,77 @@ const Configuration = () => {
               <CardTitle>Template Summary</CardTitle>
               <CardDescription>Communication templates used</CardDescription>
             </CardHeader>
+
             <CardContent>
-              <div className="space-y-3">
-                {/* Email Template */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Email Card */}
                 <button
                   type="button"
-                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
                   onClick={() => setSelectedTemplate(templates.email)}
+                  className="rounded-xl  p-4 text-left hover:bg-muted/40 border border-blue-200 transition"
                 >
-                  <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-muted-foreground">Email Template</div>
-                    <div className="text-sm font-medium mt-0.5">{templates.email.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {templates.email.bank}
-                      </Badge>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="rounded-lg bg-blue-100 p-2">
+                      <Mail className="h-5 w-5 text-blue-600" />
                     </div>
+                    <h4 className="text-sm font-semibold">Email</h4>
+                  </div>
+
+                  <p className="text-sm mb-2 font-medium text-foreground">{templates.email.name}</p>
+                  <p className="text-sm text-foreground">{templates.email.description}</p>
+
+                  <div className="mt-3">
+                    <Badge variant="outline" className="text-xs">
+                      {templates.email.bank}
+                    </Badge>
                   </div>
                 </button>
 
-                {/* SMS Template */}
+                {/* SMS Card */}
                 <button
                   type="button"
-                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
                   onClick={() => setSelectedTemplate(templates.sms)}
+                  className="rounded-xl border p-4 text-left  border-green-200 hover:bg-muted/40 transition"
                 >
-                  <MessageSquare className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-muted-foreground">SMS Template</div>
-                    <div className="text-sm font-medium mt-0.5">{templates.sms.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {templates.sms.bank}
-                      </Badge>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="rounded-lg bg-green-100 p-2">
+                      <MessageSquare className="h-5 w-5 text-green-600" />
                     </div>
+                    <h4 className="text-sm font-semibold">SMS</h4>
+                  </div>
+
+                  <p className="text-sm mb-2 font-medium text-foreground">{templates.sms.name}</p>
+                  <p className="text-sm text-foreground">{templates.sms.description}</p>
+
+                  <div className="mt-3">
+                    <Badge variant="outline" className="text-xs">
+                      {templates.sms.bank}
+                    </Badge>
                   </div>
                 </button>
 
-                {/* WhatsApp Template */}
+                {/* WhatsApp Card */}
                 <button
                   type="button"
-                  className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
                   onClick={() => setSelectedTemplate(templates.whatsapp)}
+                  className="rounded-xl border p-4 text-left border-emerald-200 hover:bg-muted/40 transition"
                 >
-                  <Send className="h-5 w-5 text-emerald-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-muted-foreground">
-                      WhatsApp Template
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="rounded-lg bg-emerald-100 p-2">
+                      <Send className="h-5 w-5 text-emerald-600" />
                     </div>
-                    <div className="text-sm font-medium mt-0.5">{templates.whatsapp.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {templates.whatsapp.bank}
-                      </Badge>
-                    </div>
+                    <h4 className="text-sm font-semibold">WhatsApp</h4>
+                  </div>
+
+                  <p className="text-sm mb-2 font-medium text-foreground">
+                    {templates.whatsapp.name}
+                  </p>
+                  <p className="text-sm text-foreground">{templates.whatsapp.description}</p>
+
+                  <div className="mt-3">
+                    <Badge variant="outline" className="text-xs">
+                      {templates.whatsapp.bank}
+                    </Badge>
                   </div>
                 </button>
               </div>
@@ -230,7 +250,20 @@ const Configuration = () => {
               <CardTitle>Channel Timing</CardTitle>
               <CardDescription>Message scheduling configuration</CardDescription>
             </CardHeader>
+
             <CardContent>
+              <div className="rounded-lg mb-3 border bg-muted/40 p-4">
+                <div className="text-sm font-medium">
+                  Scheduler Time:{' '}
+                  {firstConfig?.cronPattern
+                    ? cronstrue.toString(firstConfig.cronPattern, {
+                        use24HourTimeFormat: false,
+                        dayOfWeekStartIndexZero: false,
+                        verbose: true, // More detailed description
+                      })
+                    : 'Schedule not configured'}
+                </div>
+              </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
                   <Mail className="h-4 w-4 text-blue-600" />
@@ -261,6 +294,8 @@ const Configuration = () => {
                   <span className="text-sm font-medium">Call</span>
                 </div>
               </div>
+
+              {/* Scheduler Time Display */}
             </CardContent>
           </Card>
         </div>
