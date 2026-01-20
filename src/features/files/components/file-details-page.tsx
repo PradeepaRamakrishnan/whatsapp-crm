@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Calendar, Database, FileText } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Calendar, Database, FileText, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFileById } from '../services';
 import type { FileDetailData } from '../types/file.types';
 import { FileActions } from './file-actions';
@@ -123,34 +123,74 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
         </div>
       </div>
 
-      {/* Stats Card */}
-      <Card className="w-full">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-          <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
-            <FileText className="h-4 w-4 text-blue-600" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{file.contents.meta.total.toLocaleString()}</div>
-          <p className="text-xs text-muted-foreground">Records in {file.name}</p>
-        </CardContent>
-      </Card>
+      {/* Stats Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
+              <FileText className="h-4 w-4 text-blue-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {file.stats?.totalRecords.toLocaleString() ??
+                file.contents.meta.total.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">Records in {file.name}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Invalid Records</CardTitle>
+            <div className="rounded-lg bg-red-100 p-2 dark:bg-red-950/30">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {file.stats?.totalInvalidRecords.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Records with errors</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Duplicate Emails</CardTitle>
+            <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950/30">
+              <Mail className="h-4 w-4 text-amber-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {file.stats?.duplicateInOtherFilesEmailCount.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Found in other files</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Duplicate Mobiles</CardTitle>
+            <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-950/30">
+              <Phone className="h-4 w-4 text-purple-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {file.stats?.duplicateInOtherFilesMobileCount.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Found in other files</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Records Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>File Records</CardTitle>
-          <CardDescription>All records from {file.name}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense
-            fallback={<div className="flex items-center justify-center p-8">Loading...</div>}
-          >
-            <FileRecordsTable fileId={fileId} />
-          </Suspense>
-        </CardContent>
-      </Card>
+      <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+        <FileRecordsTable fileId={fileId} />
+      </Suspense>
     </div>
   );
 }

@@ -2,6 +2,12 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import type {
+  CampaignContactsResponse,
+  CampaignDetailsResponse,
+  CampaignsResponse,
+  CampaignTimelineResponse,
+} from '../types';
 import type { TemplateChannel, TemplateData } from '../types/template.types';
 
 const axiosClient = axios.create({
@@ -12,6 +18,94 @@ const axiosClient = axios.create({
   },
   withCredentials: true,
 });
+
+export async function getAllCampaigns(page: number, limit: number): Promise<CampaignsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/?page=${page}&limit=${limit}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch get all campaigns');
+    }
+    throw error;
+  }
+}
+
+export async function getCampaignById(id: string): Promise<CampaignDetailsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch campaign by id');
+    }
+    throw error;
+  }
+}
+
+export async function getCampaignContacts(
+  id: string,
+  page: number,
+  limit: number,
+): Promise<CampaignContactsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/${id}/contacts?page=${page}&limit=${limit}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch campaign contacts');
+    }
+    throw error;
+  }
+}
+
+export async function getCampaignTimeline(id: string): Promise<CampaignTimelineResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/${id}/timeline`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch campaign timeline');
+    }
+    throw error;
+  }
+}
 
 export async function getAllTemplates(
   channel?: TemplateChannel | 'all' | 'by-bank',
@@ -39,7 +133,7 @@ export async function getAllTemplates(
   }
 }
 
-export async function getAllConfiguration(): Promise<any> {
+export async function getAllConfiguration(): Promise<unknown> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
@@ -54,6 +148,66 @@ export async function getAllConfiguration(): Promise<any> {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch configurations');
+    }
+    throw error;
+  }
+}
+
+export async function runCampaign(id: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${id}/run`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to run campaign');
+    }
+    throw error;
+  }
+}
+
+export async function pauseCampaign(id: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${id}/pause`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to pause campaign');
+    }
+    throw error;
+  }
+}
+
+export async function resumeCampaign(id: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${id}/resume`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to resume campaign');
     }
     throw error;
   }
