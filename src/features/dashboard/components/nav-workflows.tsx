@@ -2,7 +2,7 @@
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
@@ -29,7 +29,24 @@ export function NavWorkflows({
   }[];
 }) {
   const pathname = usePathname();
-  const [openWorkflow, setOpenWorkflow] = useState<string | null>(workflows[0]?.name || null);
+
+  // Find which workflow contains the active path
+  const getActiveWorkflow = useCallback(() => {
+    return (
+      workflows.find((w) => w.url === pathname || w.items?.some((item) => item.url === pathname))
+        ?.name || null
+    );
+  }, [workflows, pathname]);
+
+  const [openWorkflow, setOpenWorkflow] = useState<string | null>(getActiveWorkflow);
+
+  // Update open workflow when pathname changes
+  useEffect(() => {
+    const activeWorkflow = getActiveWorkflow();
+    if (activeWorkflow) {
+      setOpenWorkflow(activeWorkflow);
+    }
+  }, [getActiveWorkflow]);
 
   return (
     <SidebarGroup>
