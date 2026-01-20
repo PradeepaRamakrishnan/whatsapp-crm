@@ -17,8 +17,7 @@ export const OtpVerificationForm = () => {
     defaultValues: {
       otp: '',
     },
-    onSubmit: async ({ value }) => {
-      // console.log('Verifying OTP:', value.otp);
+    onSubmit: async () => {
       // Navigate to the full details form
       router.push('/interested-form');
     },

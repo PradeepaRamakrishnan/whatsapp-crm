@@ -7,6 +7,7 @@ import type {
   CampaignDetailsResponse,
   CampaignsResponse,
   CampaignTimelineResponse,
+  Configuration,
 } from '../types';
 import type { TemplateChannel, TemplateData } from '../types/template.types';
 
@@ -133,7 +134,7 @@ export async function getAllTemplates(
   }
 }
 
-export async function getAllConfiguration(): Promise<unknown> {
+export async function getAllConfiguration(): Promise<Configuration> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({

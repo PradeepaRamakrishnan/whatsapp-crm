@@ -98,7 +98,7 @@ const getStatusStyle = (status: TemplateData['status']) => {
 export function TemplateCard({
   template,
   onEdit,
-  onDuplicate,
+  onDuplicate: _onDuplicate,
   onPreview,
   onArchive,
 }: TemplateCardProps) {

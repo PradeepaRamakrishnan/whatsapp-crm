@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getAllConfiguration } from '@/features/campaigns/services';
+import type { Configuration } from '@/features/campaigns/types';
 
 interface TemplatePreview {
   type: 'email' | 'sms' | 'whatsapp';
@@ -23,19 +24,20 @@ interface TemplatePreview {
   bank: string;
 }
 
-const Configuration = () => {
+const ConfigurationPage = () => {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<TemplatePreview | null>(null);
 
-  const { data: configuration } = useQuery({
+  const { data: configuration } = useQuery<Configuration>({
     queryKey: ['configurations'],
     queryFn: () => getAllConfiguration(),
   });
 
   // Helper to safely get content string
-  const getContentString = (content: any) => {
+  const getContentString = (content: string | Record<string, unknown>): string => {
     if (typeof content === 'string') return content;
-    return content?.body || '';
+    const contentObj = content as Record<string, unknown>;
+    return String(contentObj?.body || '');
   };
 
   // Map API data to UI structure or use defaults
@@ -250,4 +252,4 @@ const Configuration = () => {
   );
 };
 
-export default Configuration;
+export default ConfigurationPage;

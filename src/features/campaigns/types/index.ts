@@ -143,3 +143,21 @@ export interface CampaignTimelineData {
 export interface CampaignTimelineResponse {
   data: CampaignTimelineData[];
 }
+
+// Configuration Types
+export interface TemplateContent {
+  body?: string;
+  [key: string]: unknown;
+}
+
+export interface ConfigTemplate {
+  name: string;
+  bankTag: string;
+  content: TemplateContent | string;
+}
+
+export interface Configuration {
+  email?: ConfigTemplate;
+  sms?: ConfigTemplate;
+  whatsapp?: ConfigTemplate;
+}

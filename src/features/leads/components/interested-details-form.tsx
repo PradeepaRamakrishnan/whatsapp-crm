@@ -31,7 +31,7 @@ export const InterestedDetailsForm = () => {
       city: '',
       pincode: '',
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async () => {
       setIsSubmitted(true);
     },
   });

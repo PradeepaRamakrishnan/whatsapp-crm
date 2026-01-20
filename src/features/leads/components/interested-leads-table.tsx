@@ -28,7 +28,9 @@ interface BorrowersTableInCampaignProps {
   campaignId?: number;
 }
 
-export function BorrowersTableInCampaign({ campaignId }: BorrowersTableInCampaignProps) {
+export function BorrowersTableInCampaign({
+  campaignId: _campaignId,
+}: BorrowersTableInCampaignProps) {
   const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,

@@ -9,7 +9,7 @@ interface InterestedLeadsListProps {
   chainId: number;
 }
 
-export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
+export function InterestedLeadsList({ chainId: _chainId }: InterestedLeadsListProps) {
   const stats = [
     {
       title: 'Total Interested',
