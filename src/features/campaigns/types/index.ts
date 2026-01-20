@@ -151,8 +151,11 @@ export interface TemplateContent {
 }
 
 export interface ConfigTemplate {
+  _id?: string;
+  id?: string;
   name: string;
-  bankTag: string;
+  bankTag?: string;
+  active?: boolean;
   content: TemplateContent | string;
 }
 
@@ -160,4 +163,12 @@ export interface Configuration {
   email?: ConfigTemplate;
   sms?: ConfigTemplate;
   whatsapp?: ConfigTemplate;
+  emailTemplate?: ConfigTemplate;
+  smsTemplate?: ConfigTemplate;
+  whatsappTemplate?: ConfigTemplate;
+  schedulerEnabled?: boolean;
+  frequency?: number;
+  interval?: number;
+  cronPattern?: string;
+  [key: string]: unknown;
 }
