@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Archive, Copy, Edit, Eye, Mail, MessageSquare, Phone } from 'lucide-react';
+import { Archive, Edit, Eye, Mail, MessageSquare, Phone } from 'lucide-react';
 import truncate from 'truncate-html';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -184,7 +184,7 @@ export function TemplateCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-4 gap-2 pt-3">
+        <div className="grid grid-cols-3 gap-2 pt-3">
           <Button
             variant="outline"
             size="sm"
@@ -195,7 +195,7 @@ export function TemplateCard({
             <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Edit</span>
           </Button>
 
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={() => onDuplicate?.(template)}
@@ -205,7 +205,7 @@ export function TemplateCard({
             <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               Duplicate
             </span>
-          </Button>
+          </Button> */}
 
           <Button
             variant="outline"
