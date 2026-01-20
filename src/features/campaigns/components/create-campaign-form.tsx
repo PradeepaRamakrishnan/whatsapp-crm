@@ -430,14 +430,14 @@ export function CreateCampaignForm() {
                               <SelectItem key={template.id} value={template.id}>
                                 <div className="flex items-center gap-3">
                                   <div className="flex-1">
-                                    <div className="font-medium">{template.title}</div>
+                                    <div className="font-medium">{template.name}</div>
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-xs text-muted-foreground">
                                         {template.bankTag}
                                       </span>
                                       <span className="text-xs text-muted-foreground">•</span>
                                       <span className="text-xs text-muted-foreground">
-                                        {template.typeTag}
+                                        {template.tags?.join(', ')}
                                       </span>
                                     </div>
                                   </div>
@@ -455,16 +455,22 @@ export function CreateCampaignForm() {
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs text-muted-foreground mb-1">Subject:</p>
-                                <p className="text-sm font-medium">{selectedEmailData.title}</p>
+                                <p className="text-sm font-medium">
+                                  {typeof selectedEmailData.content === 'object'
+                                    ? selectedEmailData.content.subject
+                                    : selectedEmailData.name}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-xs text-muted-foreground mb-2">Content:</p>
                                 <div className="rounded-md bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap">
-                                  {selectedEmailData.content}
+                                  {typeof selectedEmailData.content === 'object'
+                                    ? selectedEmailData.content.body
+                                    : selectedEmailData.content}
                                 </div>
                               </div>
                               <div className="flex items-center gap-4 pt-2 text-xs text-muted-foreground border-t">
-                                <span>Modified: {selectedEmailData.modifiedDate}</span>
+                                <span>Created: {selectedEmailData.createdAt}</span>
                                 <span>•</span>
                                 <span>By: {selectedEmailData.modifiedBy}</span>
                                 <span>•</span>
@@ -511,14 +517,14 @@ export function CreateCampaignForm() {
                               <SelectItem key={template.id} value={template.id}>
                                 <div className="flex items-center gap-3">
                                   <div className="flex-1">
-                                    <div className="font-medium">{template.title}</div>
+                                    <div className="font-medium">{template.name}</div>
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-xs text-muted-foreground">
                                         {template.bankTag}
                                       </span>
                                       <span className="text-xs text-muted-foreground">•</span>
                                       <span className="text-xs text-muted-foreground">
-                                        {template.typeTag}
+                                        {template.tags?.join(', ')}
                                       </span>
                                     </div>
                                   </div>
@@ -529,9 +535,13 @@ export function CreateCampaignForm() {
                         </Select>
                         {selectedSmsData && (
                           <div className="rounded-md border bg-background p-4">
-                            <p className="text-sm leading-relaxed">{selectedSmsData.content}</p>
+                            <p className="text-sm leading-relaxed">
+                              {typeof selectedSmsData.content === 'string'
+                                ? selectedSmsData.content
+                                : selectedSmsData.content.body}
+                            </p>
                             <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
-                              <span>Modified: {selectedSmsData.modifiedDate}</span>
+                              <span>Created: {selectedSmsData.createdAt}</span>
                               <span>By: {selectedSmsData.modifiedBy}</span>
                             </div>
                           </div>
@@ -572,14 +582,14 @@ export function CreateCampaignForm() {
                               <SelectItem key={template.id} value={template.id}>
                                 <div className="flex items-center gap-3">
                                   <div className="flex-1">
-                                    <div className="font-medium">{template.title}</div>
+                                    <div className="font-medium">{template.name}</div>
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-xs text-muted-foreground">
                                         {template.bankTag}
                                       </span>
                                       <span className="text-xs text-muted-foreground">•</span>
                                       <span className="text-xs text-muted-foreground">
-                                        {template.typeTag}
+                                        {template.tags?.join(', ')}
                                       </span>
                                     </div>
                                   </div>
@@ -591,10 +601,12 @@ export function CreateCampaignForm() {
                         {selectedWhatsappData && (
                           <div className="rounded-md border bg-background p-4">
                             <p className="text-sm leading-relaxed">
-                              {selectedWhatsappData.content}
+                              {typeof selectedWhatsappData.content === 'string'
+                                ? selectedWhatsappData.content
+                                : selectedWhatsappData.content.body}
                             </p>
                             <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
-                              <span>Modified: {selectedWhatsappData.modifiedDate}</span>
+                              <span>Created: {selectedWhatsappData.createdAt}</span>
                               <span>By: {selectedWhatsappData.modifiedBy}</span>
                             </div>
                           </div>
@@ -911,7 +923,7 @@ export function CreateCampaignForm() {
                             Email Template
                           </div>
                           <div className="text-sm font-medium mt-0.5">
-                            {selectedEmailData?.title || 'Not selected'}
+                            {selectedEmailData?.name || 'Not selected'}
                           </div>
                           {selectedEmailData && (
                             <div className="flex items-center gap-2 mt-1">
@@ -933,7 +945,7 @@ export function CreateCampaignForm() {
                             SMS Template
                           </div>
                           <div className="text-sm font-medium mt-0.5">
-                            {selectedSmsData?.title || 'Not selected'}
+                            {selectedSmsData?.name || 'Not selected'}
                           </div>
                           {selectedSmsData && (
                             <div className="flex items-center gap-2 mt-1">
@@ -955,7 +967,7 @@ export function CreateCampaignForm() {
                             WhatsApp Template
                           </div>
                           <div className="text-sm font-medium mt-0.5">
-                            {selectedWhatsappData?.title || 'Not selected'}
+                            {selectedWhatsappData?.name || 'Not selected'}
                           </div>
                           {selectedWhatsappData && (
                             <div className="flex items-center gap-2 mt-1">

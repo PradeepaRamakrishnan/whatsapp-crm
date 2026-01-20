@@ -1,4 +1,4 @@
-import { Bot, Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
+import { Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -31,25 +31,18 @@ export const dashboardData = {
       ],
     },
     {
-      name: 'Agents',
-      url: '/agents/configuration',
-      icon: Bot,
-      items: [
-        {
-          title: 'Configuration',
-          url: '/agents/configuration',
-        },
-        {
-          title: 'Logs',
-          url: '/agents/logs',
-        },
-      ],
-    },
-    {
       name: 'Campaigns',
       url: '/campaigns/list',
       icon: Briefcase,
       items: [
+        {
+          title: 'Configuration',
+          url: '/campaigns/configuration',
+        },
+        {
+          title: 'Logs',
+          url: '/campaigns/logs',
+        },
         {
           title: 'All Campaigns',
           url: '/campaigns/list',
