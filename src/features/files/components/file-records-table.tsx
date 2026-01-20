@@ -44,100 +44,11 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getFileById } from '../services';
 import type { FileRecord } from '../types/file.types';
+import { FileRecordEdit } from './file-record-edit';
 
 interface FileRecordsTableProps {
   fileId: string;
 }
-
-const columns: ColumnDef<FileRecord>[] = [
-  {
-    accessorKey: 'customerName',
-    header: 'Customer Name',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('customerName')}</div>,
-  },
-  {
-    accessorKey: 'emailId',
-    header: 'Email',
-    cell: ({ row }) => <div className="text-sm">{row.getValue('emailId')}</div>,
-  },
-  {
-    accessorKey: 'mobileNumber',
-    header: 'Mobile No.',
-    cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">{row.getValue('mobileNumber')}</div>
-    ),
-  },
-  {
-    accessorKey: 'settlementAmount',
-    header: 'Settlement Amount',
-    cell: ({ row }) => {
-      const amount = row.getValue('settlementAmount') as number;
-      return <div className="font-medium">₹{Number(amount).toLocaleString('en-IN')}</div>;
-    },
-  },
-  {
-    id: 'existsIn',
-    header: 'Exists In',
-    cell: ({ row }) => {
-      const duplicates = row.original.duplicateInFiles || [];
-      if (duplicates.length === 0) {
-        return <span className="text-sm text-muted-foreground">-</span>;
-      }
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 cursor-pointer">
-                <Copy className="h-3.5 w-3.5 text-amber-500" />
-                <span className="text-sm text-amber-600 font-medium">
-                  {duplicates.length} file{duplicates.length > 1 ? 's' : ''}
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold">Also exists in:</p>
-                {duplicates.map((file) => (
-                  <p key={file.fileId} className="text-xs">
-                    • {file.fileName}
-                  </p>
-                ))}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    },
-  },
-  {
-    id: 'actions',
-    header: () => <div className="text-right">Actions</div>,
-    cell: () => (
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
-  },
-];
 
 export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const router = useRouter();
@@ -145,6 +56,98 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [selectedRecord, setSelectedRecord] = React.useState<FileRecord | null>(null);
+  const [recordToEdit, setRecordToEdit] = React.useState<FileRecord | null>(null);
+
+  const columns: ColumnDef<FileRecord>[] = [
+    {
+      accessorKey: 'customerName',
+      header: 'Customer Name',
+      cell: ({ row }) => <div className="font-medium">{row.getValue('customerName')}</div>,
+    },
+    {
+      accessorKey: 'emailId',
+      header: 'Email',
+      cell: ({ row }) => <div className="text-sm">{row.getValue('emailId')}</div>,
+    },
+    {
+      accessorKey: 'mobileNumber',
+      header: 'Mobile No.',
+      cell: ({ row }) => (
+        <div className="text-sm text-muted-foreground">{row.getValue('mobileNumber')}</div>
+      ),
+    },
+    {
+      accessorKey: 'settlementAmount',
+      header: 'Settlement Amount',
+      cell: ({ row }) => {
+        const amount = row.getValue('settlementAmount') as number;
+        return <div className="font-medium">₹{Number(amount).toLocaleString('en-IN')}</div>;
+      },
+    },
+    {
+      id: 'existsIn',
+      header: 'Exists In',
+      cell: ({ row }) => {
+        const duplicates = row.original.duplicateInFiles || [];
+        if (duplicates.length === 0) {
+          return <span className="text-sm text-muted-foreground">-</span>;
+        }
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 cursor-pointer">
+                  <Copy className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="text-sm text-amber-600 font-medium">
+                    {duplicates.length} file{duplicates.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold">Also exists in:</p>
+                  {duplicates.map((file) => (
+                    <p key={file.fileId} className="text-xs">
+                      • {file.fileName}
+                    </p>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setRecordToEdit(row.original);
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -424,6 +427,13 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
           )}
         </SheetContent>
       </Sheet>
+
+      <FileRecordEdit
+        key={recordToEdit?.id || 'none'}
+        fileId={fileId}
+        record={recordToEdit}
+        onOpenChange={(open) => !open && setRecordToEdit(null)}
+      />
     </div>
   );
 }

@@ -4,12 +4,14 @@ import { z } from 'zod';
 // Individual field validators for direct access
 export const phoneNumberValidator = z
   .string()
+  .min(1, 'Mobile number is required')
   .min(10, 'Mobile number must be 10 digits')
   .max(10, 'Mobile number must be 10 digits')
   .regex(/^[0-9]+$/, 'Please enter a valid mobile number');
 
 export const panNumberValidator = z
   .string()
+  .min(1, 'PAN number is required')
   .length(10, 'PAN number must be 10 characters')
   .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Please enter a valid PAN number');
 
@@ -18,14 +20,6 @@ export const dateOfBirthValidator = z
     required_error: 'Date of birth is required',
     invalid_type_error: 'Please select a valid date',
   })
-  .refine(
-    (date) => {
-      const dob = dayjs(date);
-      const age = dayjs().diff(dob, 'year');
-      return age >= 18;
-    },
-    { message: 'You must be at least 18 years old' },
-  )
   .refine(
     (date) => {
       const year = dayjs(date).year();

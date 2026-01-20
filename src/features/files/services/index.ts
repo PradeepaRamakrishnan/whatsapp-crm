@@ -2,7 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
-import type { FileDetailData, FileStatus, FilesResponse } from '../types/file.types';
+import type { FileDetailData, FileRecord, FileStatus, FilesResponse } from '../types/file.types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_FILES_API_URL}`,
@@ -131,6 +131,30 @@ export async function deleteFile(id: string): Promise<void> {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to delete file');
+    }
+    throw error;
+  }
+}
+
+export async function updateFileRecord(
+  fileId: string,
+  recordId: string,
+  data: Partial<FileRecord>,
+): Promise<FileRecord> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/${fileId}/records/${recordId}`,
+      data,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update record');
     }
     throw error;
   }
