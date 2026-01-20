@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import type { CampaignsResponse } from '../types';
 import type { TemplateChannel, TemplateData } from '../types/template.types';
 
 const axiosClient = axios.create({
@@ -12,6 +13,27 @@ const axiosClient = axios.create({
   },
   withCredentials: true,
 });
+
+export async function getAllCampaigns(page: number, limit: number): Promise<CampaignsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/?page=${page}&limit=${limit}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch get all campaigns');
+    }
+    throw error;
+  }
+}
 
 export async function getAllTemplates(
   channel?: TemplateChannel | 'all' | 'by-bank',
