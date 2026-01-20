@@ -1,11 +1,15 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Check, Save } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import Channels from '@/features/configuration/components/Channels';
-import TemplatesTab from '@/features/configuration/components/Template';
+
+import { getConfigurationyId } from '@/features/campaigns/services';
+import Channel from '@/features/configuration/components/channel';
+import Templates from '@/features/configuration/components/templates';
 
 const steps = [
   { id: 1, name: 'Template', description: 'Configure templates' },
@@ -14,7 +18,15 @@ const steps = [
 
 export default function EditConfigurationPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
   const [currentStep, setCurrentStep] = useState(1);
+
+  const { data: config, isLoading } = useQuery({
+    queryKey: ['configuration', id],
+    queryFn: () => getConfigurationyId(id),
+    enabled: !!id,
+  });
 
   // State (lifted from main page)
   const [emailEnabled, setEmailEnabled] = useState<boolean>(true);
@@ -23,6 +35,29 @@ export default function EditConfigurationPage() {
   const [emailTemplate, setEmailTemplate] = useState<string>('');
   const [smsTemplate, setSmsTemplate] = useState<string>('');
   const [whatsappTemplate, setWhatsappTemplate] = useState<string>('');
+
+  useEffect(() => {
+    if (config) {
+      // Map configuration to state using _id or id for template selection
+      if (config.emailTemplate) {
+        setEmailEnabled(config.emailTemplate.active ?? true);
+        const templateId = config.emailTemplate._id || config.emailTemplate.id;
+        if (templateId) setEmailTemplate(templateId);
+      }
+
+      if (config.smsTemplate) {
+        setSmsEnabled(config.smsTemplate.active ?? true);
+        const templateId = config.smsTemplate._id || config.smsTemplate.id;
+        if (templateId) setSmsTemplate(templateId);
+      }
+
+      if (config.whatsappTemplate) {
+        setWhatsappEnabled(config.whatsappTemplate.active ?? true);
+        const templateId = config.whatsappTemplate._id || config.whatsappTemplate.id;
+        if (templateId) setWhatsappTemplate(templateId);
+      }
+    }
+  }, [config]);
 
   const handleNext = () => {
     if (currentStep < steps.length) {
@@ -41,6 +76,14 @@ export default function EditConfigurationPage() {
   const handleSave = () => {
     router.push('/agents/configuration');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-6">
+        <div className="text-muted-foreground">Loading configuration...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-1 flex-col gap-8 p-6">
@@ -105,7 +148,7 @@ export default function EditConfigurationPage() {
       <div className="flex-1">
         {currentStep === 1 && (
           <div className="space-y-6">
-            <TemplatesTab
+            <Templates
               emailEnabled={emailEnabled}
               setEmailEnabled={setEmailEnabled}
               smsEnabled={smsEnabled}
@@ -127,7 +170,7 @@ export default function EditConfigurationPage() {
 
         {currentStep === 2 && (
           <div className="space-y-6">
-            <Channels
+            <Channel
               emailEnabled={emailEnabled}
               smsEnabled={smsEnabled}
               whatsappEnabled={whatsappEnabled}

@@ -19,7 +19,7 @@ interface ChannelsProps {
   whatsappEnabled: boolean;
 }
 
-const Channels = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) => {
+const Channel = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) => {
   const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
@@ -170,7 +170,6 @@ const Channels = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) 
                       <div className="font-semibold text-sm">{config.label}</div>
                       {isFirst && <div className="text-xs text-muted-foreground">(Start)</div>}
                     </div>
-                    {/* Only show swap buttons for SMS and WhatsApp (not Email) */}
                     {!isFirst && (
                       <div className="flex flex-col gap-1 ml-2">
                         {index > 1 && (
@@ -217,7 +216,6 @@ const Channels = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) 
 
             <ArrowRight className="h-5 w-5 text-muted-foreground" />
 
-            {/* Call Follow-up */}
             <div className="flex items-center gap-3 rounded-lg border-2 border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-800 dark:bg-purple-950/30">
               <Phone className="h-5 w-5 text-purple-600" />
               <div>
@@ -265,4 +263,4 @@ const Channels = ({ emailEnabled, smsEnabled, whatsappEnabled }: ChannelsProps) 
   );
 };
 
-export default Channels;
+export default Channel;
