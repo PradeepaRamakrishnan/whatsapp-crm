@@ -146,29 +146,39 @@ export interface CampaignTimelineResponse {
 
 // Configuration Types
 export interface TemplateContent {
+  subject?: string;
   body?: string;
   [key: string]: unknown;
 }
 
 export interface ConfigTemplate {
-  _id?: string;
-  id?: string;
+  id: string;
   name: string;
-  bankTag?: string;
-  active?: boolean;
-  content: TemplateContent | string;
+  description: string;
+  type: 'email' | 'sms' | 'whatsapp';
+  content: TemplateContent;
+  status: 'approved' | 'pending' | 'rejected';
+  tags: string[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Configuration {
-  email?: ConfigTemplate;
-  sms?: ConfigTemplate;
-  whatsapp?: ConfigTemplate;
+  id: string;
   emailTemplate?: ConfigTemplate;
   smsTemplate?: ConfigTemplate;
   whatsappTemplate?: ConfigTemplate;
-  schedulerEnabled?: boolean;
+  schedulerId?: string;
+  cronPattern?: string;
   frequency?: number;
   interval?: number;
-  cronPattern?: string;
-  [key: string]: unknown;
+  schedulerEnabled?: boolean;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConfigurationResponse {
+  data: Configuration[];
 }

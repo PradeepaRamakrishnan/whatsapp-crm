@@ -30,92 +30,78 @@ const ConfigurationPage = () => {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<TemplatePreview | null>(null);
 
-  const { data: configuration, isLoading } = useQuery({
+  const { data: configurationResponse, isLoading } = useQuery({
     queryKey: ['configurations'],
     queryFn: () => getAllConfiguration(),
   });
 
-  // Helper to safely get content string from email template
-  const getEmailContent = (content: string | Record<string, unknown> | undefined): string => {
+  // Get the first configuration from the data array
+  const config = configurationResponse?.data?.[0];
+
+  // Helper to get email content (HTML body)
+  const getEmailContent = (content: { subject?: string; body?: string } | undefined): string => {
     if (!content) return 'No content configured';
-    if (typeof content === 'string') return content;
-    const contentObj = content as Record<string, unknown>;
-    return String(contentObj?.body || '');
+    return content.body || 'No content configured';
   };
 
-  // Helper to safely get content string from SMS/WhatsApp template
-  const getTemplateContent = (content: string | Record<string, unknown> | undefined): string => {
+  // Helper to get SMS/WhatsApp content (text body)
+  const getTemplateContent = (content: { subject?: string; body?: string } | undefined): string => {
     if (!content) return 'No content configured';
-    if (typeof content === 'string') return content;
-    if (typeof content === 'object' && (content as Record<string, unknown>)?.body)
-      return String((content as Record<string, unknown>).body);
-    return 'No content configured';
+    return content.body || 'No content configured';
   };
-
-  // Helper to get template name
-  const getTemplateName = (template: Record<string, unknown> | undefined): string => {
-    if (!template) return 'No Template Configured';
-    return String(template.name || 'Unnamed Template');
-  };
-
-  // Helper to get bank tags
-  const getBankTags = (template: Record<string, unknown> | undefined): string => {
-    if (!template?.tags || !Array.isArray(template.tags)) return 'All Banks';
-    return (template.tags as string[]).join(', ');
-  };
-
-  const configArray = Array.isArray(configuration) ? configuration : [];
-  const firstConfig = configArray[0]; // Assuming first config for now
 
   const templates = {
-    email: firstConfig?.emailTemplate
+    email: config?.emailTemplate
       ? {
           type: 'email' as const,
-          name: getTemplateName(firstConfig.emailTemplate),
-          description: firstConfig.emailTemplate.description || 'No description available',
-          bank: getBankTags(firstConfig.emailTemplate),
-          content: getEmailContent(firstConfig.emailTemplate.content),
+          name: config.emailTemplate.name,
+          description: config.emailTemplate.description,
+          bank: config.emailTemplate.tags.join(', '),
+          content: getEmailContent(config.emailTemplate.content),
         }
       : {
           type: 'email' as const,
           name: 'No Template Configured',
+          description: 'No description available',
           bank: '-',
           content: 'No content configured',
         },
-    sms: firstConfig?.smsTemplate
+    sms: config?.smsTemplate
       ? {
           type: 'sms' as const,
-          name: getTemplateName(firstConfig.smsTemplate),
-          description: firstConfig.smsTemplate.description || 'No description available',
-          bank: getBankTags(firstConfig.smsTemplate),
-          content: getTemplateContent(firstConfig.smsTemplate.content),
+          name: config.smsTemplate.name,
+          description: config.smsTemplate.description,
+          bank: config.smsTemplate.tags.join(', '),
+          content: getTemplateContent(config.smsTemplate.content),
         }
       : {
           type: 'sms' as const,
           name: 'No Template Configured',
+          description: 'No description available',
           bank: '-',
           content: 'No content configured',
         },
-    whatsapp: firstConfig?.whatsappTemplate
+    whatsapp: config?.whatsappTemplate
       ? {
           type: 'whatsapp' as const,
-          name: getTemplateName(firstConfig.whatsappTemplate),
-          description: firstConfig.whatsappTemplate.description || 'No description available',
-          bank: getBankTags(firstConfig.whatsappTemplate),
-          content: getTemplateContent(firstConfig.whatsappTemplate.content),
+          name: config.whatsappTemplate.name,
+          description: config.whatsappTemplate.description,
+          bank: config.whatsappTemplate.tags.join(', '),
+          content: getTemplateContent(config.whatsappTemplate.content),
         }
       : {
           type: 'whatsapp' as const,
           name: 'No Template Configured',
+          description: 'No description available',
           bank: '-',
           content: 'No content configured',
         },
   };
 
   // Get scheduler status and cron pattern
-  // const schedulerEnabled = firstConfig?.schedulerEnabled ?? false;
-  // const cronPattern = firstConfig?.cronPattern || 'Not configured';
-  // const approved = firstConfig?.approved ?? false;
+  // const schedulerEnabled = config?.schedulerEnabled ?? false;
+  // const cronPattern = config?.cronPattern || 'Not configured';
+  // const approved = config?.approved ?? false;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-8 p-6">
@@ -128,10 +114,12 @@ const ConfigurationPage = () => {
           </p>
         </div>
         <Button
-          onClick={() =>
-            firstConfig?._id && router.push(`/campaigns/configuration/${firstConfig._id}`)
-          }
-          disabled={!firstConfig?._id}
+          onClick={() => {
+            if (config?.id) {
+              router.push(`/campaigns/configuration/${config.id}`);
+            }
+          }}
+          disabled={!config || isLoading}
         >
           <Pencil className="mr-2 h-4 w-4" />
           Edit
@@ -143,7 +131,7 @@ const ConfigurationPage = () => {
       ) : (
         <div className="grid gap-6">
           {/* Configuration Status */}
-          {/* {firstConfig && (
+          {/* {config && (
             <Card>
               <CardHeader>
                 <CardTitle>Configuration Status</CardTitle>
@@ -257,8 +245,8 @@ const ConfigurationPage = () => {
               <div className="rounded-lg mb-3 border bg-muted/40 p-4">
                 <div className="text-sm font-medium">
                   Scheduler Time:{' '}
-                  {firstConfig?.cronPattern
-                    ? cronstrue.toString(firstConfig.cronPattern, {
+                  {config?.cronPattern
+                    ? cronstrue.toString(config.cronPattern, {
                         use24HourTimeFormat: false,
                         dayOfWeekStartIndexZero: false,
                         verbose: true, // More detailed description

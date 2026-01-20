@@ -51,23 +51,20 @@ export default function EditConfigurationPage() {
 
   useEffect(() => {
     if (config) {
-      // Map configuration to state using _id or id for template selection
+      // Map configuration to state using id for template selection
       if (config.emailTemplate) {
         setEmailEnabled(config.emailTemplate.active ?? true);
-        const templateId = config.emailTemplate._id || config.emailTemplate.id;
-        if (templateId) setEmailTemplate(templateId);
+        setEmailTemplate(config.emailTemplate.id);
       }
 
       if (config.smsTemplate) {
         setSmsEnabled(config.smsTemplate.active ?? true);
-        const templateId = config.smsTemplate._id || config.smsTemplate.id;
-        if (templateId) setSmsTemplate(templateId);
+        setSmsTemplate(config.smsTemplate.id);
       }
 
       if (config.whatsappTemplate) {
         setWhatsappEnabled(config.whatsappTemplate.active ?? true);
-        const templateId = config.whatsappTemplate._id || config.whatsappTemplate.id;
-        if (templateId) setWhatsappTemplate(templateId);
+        setWhatsappTemplate(config.whatsappTemplate.id);
       }
 
       // Initialize Scheduler
