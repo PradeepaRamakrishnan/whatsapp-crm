@@ -2,7 +2,8 @@
 
 import { Clock, Info, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BorrowersTableInCampaign } from '@/features/campaigns/components/borrowers-table-in-campaign';
+
+// import { BorrowersTableInCampaign } from '@/features/campaigns/components/borrowers-table-in-campaign';
 
 interface InterestedLeadsListProps {
   chainId: number;
@@ -75,7 +76,7 @@ export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
       </div>
 
       {/* Leads Table */}
-      <BorrowersTableInCampaign chainId={chainId} basePath="/leads/interested" />
+      {/* <BorrowersTableInCampaign chainId={chainId} basePath="/leads/interested" /> */}
     </div>
   );
 }
