@@ -3,8 +3,8 @@
 import { useForm } from '@tanstack/react-form';
 import dayjs from 'dayjs';
 import { CalendarIcon } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -25,12 +25,17 @@ type Step = 'mobile' | 'otp';
 export const InterestedForm = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const isOtpStep = pathname?.includes('/otp');
   const step: Step = isOtpStep ? 'otp' : 'mobile';
-  const mobileNumber = searchParams.get('mobile') || '';
+
+  useEffect(() => {
+    // Access search params only on client side
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, []);
+  const mobileNumber = searchParams?.get('mobile') || '';
 
   // Form for Mobile Number
   const mobileForm = useForm({
