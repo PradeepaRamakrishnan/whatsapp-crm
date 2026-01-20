@@ -84,8 +84,8 @@ export default function TemplatesTab({
       )}
 
       {/* Email Templates */}
-      <Card className="border-blue-200 bg-linear-to-br from-blue-50 to-blue-100/50 dark:border-blue-800 dark:from-blue-950/30 dark:to-blue-900/20">
-        <div className={emailEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-blue-200 p-4 ">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-blue-600 p-2.5 shrink-0">
@@ -117,15 +117,13 @@ export default function TemplatesTab({
                     <SelectItem key={template.id} value={template.id}>
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <div className="font-medium">{template.title}</div>
+                          <div className="font-medium">{template.name}</div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>
@@ -140,18 +138,37 @@ export default function TemplatesTab({
                     <span className="text-sm font-semibold">Email Preview</span>
                   </div>
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Subject:</p>
-                      <p className="text-sm font-medium">{selectedEmailData.title}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Content:</p>
-                      <div className="rounded-md bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap">
-                        {selectedEmailData.content}
-                      </div>
-                    </div>
+                    {typeof selectedEmailData.content === 'string' ? (
+                      <>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Subject:</p>
+                          <p className="text-sm font-medium">{selectedEmailData.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-2">Content:</p>
+                          <div className="rounded-md bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                            {selectedEmailData.content}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Subject:</p>
+                          <p className="text-sm font-medium">
+                            {selectedEmailData.content.subject || selectedEmailData.name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-2">Body:</p>
+                          <div className="rounded-md bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                            {selectedEmailData.content.body}
+                          </div>
+                        </div>
+                      </>
+                    )}
                     <div className="flex items-center gap-4 pt-2 text-xs text-muted-foreground border-t">
-                      <span>Modified: {selectedEmailData.modifiedDate}</span>
+                      <span>Modified: {selectedEmailData.createdAt}</span>
                       <span>•</span>
                       <span>By: {selectedEmailData.modifiedBy}</span>
                       <span>•</span>
@@ -168,8 +185,8 @@ export default function TemplatesTab({
       </Card>
 
       {/* SMS Templates */}
-      <Card className="border-green-200 bg-linear-to-br from-green-50 to-green-100/50 dark:border-green-800 dark:from-green-950/30 dark:to-green-900/20">
-        <div className={smsEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-green-200 p-4 ">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-green-600 p-2.5 shrink-0">
@@ -198,15 +215,13 @@ export default function TemplatesTab({
                     <SelectItem key={template.id} value={template.id}>
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <div className="font-medium">{template.title}</div>
+                          <div className="font-medium">{template.name}</div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>
@@ -216,9 +231,13 @@ export default function TemplatesTab({
               </Select>
               {selectedSmsData && (
                 <div className="rounded-md border bg-background p-4">
-                  <p className="text-sm leading-relaxed">{selectedSmsData.content}</p>
+                  <p className="text-sm leading-relaxed">
+                    {typeof selectedSmsData.content === 'string'
+                      ? selectedSmsData.content
+                      : selectedSmsData.content.body}
+                  </p>
                   <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
-                    <span>Modified: {selectedSmsData.modifiedDate}</span>
+                    <span>Modified: {selectedSmsData.createdAt}</span>
                     <span>By: {selectedSmsData.modifiedBy}</span>
                   </div>
                 </div>
@@ -229,8 +248,8 @@ export default function TemplatesTab({
       </Card>
 
       {/* WhatsApp Templates */}
-      <Card className="border-emerald-200 bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:border-emerald-800 dark:from-emerald-950/30 dark:to-emerald-900/20">
-        <div className={whatsappEnabled ? 'p-6' : 'p-4'}>
+      <Card className="border-emerald-200 p-4">
+        <div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-emerald-600 p-2.5 shrink-0">
@@ -259,15 +278,13 @@ export default function TemplatesTab({
                     <SelectItem key={template.id} value={template.id}>
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <div className="font-medium">{template.title}</div>
+                          <div className="font-medium">{template.name}</div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">
                               {template.bankTag}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {template.typeTag}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{template.type}</span>
                           </div>
                         </div>
                       </div>
@@ -277,9 +294,13 @@ export default function TemplatesTab({
               </Select>
               {selectedWhatsappData && (
                 <div className="rounded-md border bg-background p-4">
-                  <p className="text-sm leading-relaxed">{selectedWhatsappData.content}</p>
+                  <p className="text-sm leading-relaxed">
+                    {typeof selectedWhatsappData.content === 'string'
+                      ? selectedWhatsappData.content
+                      : selectedWhatsappData.content.body}
+                  </p>
                   <div className="mt-3 flex flex-col gap-1 pt-3 border-t text-xs text-muted-foreground">
-                    <span>Modified: {selectedWhatsappData.modifiedDate}</span>
+                    <span>Modified: {selectedWhatsappData.createdAt}</span>
                     <span>By: {selectedWhatsappData.modifiedBy}</span>
                   </div>
                 </div>

@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { InterestedForm } from '@/features/leads/components/interested-form';
+import { OtpVerificationForm } from '@/features/leads/components/otp-verification-form';
 
-const InterestedPage = () => {
+const OtpVerificationPage = () => {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left Side - Brand Visual (Hidden on mobile) */}
@@ -18,7 +18,7 @@ const InterestedPage = () => {
         <div className="relative z-10 max-w-xl w-full space-y-12">
           {/* Logo Section */}
           <div className="flex justify-center lg:justify-start">
-            <div className="relative w-40 h-16">
+            <div className="relative w-36 h-16">
               <Image
                 src="/assets/images/samatvalogo.png"
                 alt="Samatva CRM Logo"
@@ -65,34 +65,19 @@ const InterestedPage = () => {
               <div className="relative w-48 h-24 ">
                 <Image
                   src="/assets/images/samatvalogo.png"
-                  alt="A1 Loans"
+                  alt="Samatva"
                   fill
                   className="object-contain"
                 />
               </div>
-              {/* <div className="flex flex-col">
-                <h1 className="text-xl font-bold leading-tight">A1 Loans</h1>
-                <p className="text-sm font-semibold leading-tight">Anchorage Finkred</p>
-                <p className="text-xs text-gray-500 italic">RBI approved NBFC</p>
-              </div> */}
             </div>
-
-            {/* <div className="relative w-full h-56">
-              <Image
-                src="/assets/images/finance.png"
-                alt="Loan illustration"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div> */}
           </div>
 
-          <InterestedForm />
+          <OtpVerificationForm />
         </div>
       </div>
     </div>
   );
 };
 
-export default InterestedPage;
+export default OtpVerificationPage;
