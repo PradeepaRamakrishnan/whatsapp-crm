@@ -7,16 +7,16 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import {
-  dateOfBirthValidator,
-  interestedSchema,
-  panNumberValidator,
-  phoneNumberValidator,
-} from '../lib/validation';
+// import {
+//   dateOfBirthValidator,
+//   interestedSchema,
+//   panNumberValidator,
+//   phoneNumberValidator,
+// } from '../lib/validation';
 
 export const InterestedForm = () => {
   const router = useRouter();
@@ -30,18 +30,6 @@ export const InterestedForm = () => {
       date_of_birth: undefined as Date | undefined,
     },
     onSubmit: async ({ value }) => {
-      // Validate the entire form
-      const result = interestedSchema.safeParse({
-        phone_number: value.mobile,
-        pan_number: value.pan_number || undefined,
-        date_of_birth: value.date_of_birth,
-      });
-
-      if (!result.success) {
-        // Validation failed - errors are already shown by field validators
-        return;
-      }
-
       // Update URL to /interested/otp with mobile number
       router.push(`/interested/otp?mobile=${value.mobile}`);
     },
@@ -69,19 +57,7 @@ export const InterestedForm = () => {
       >
         <div className="space-y-4">
           {/* Mobile Number Field */}
-          <mobileForm.Field
-            name="mobile"
-            validators={{
-              onChange: ({ value }) => {
-                const result = phoneNumberValidator.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
-              },
-              onSubmit: ({ value }) => {
-                const result = phoneNumberValidator.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
-              },
-            }}
-          >
+          <mobileForm.Field name="mobile">
             {(field) => (
               <Field data-invalid={field.state.meta.errors.length > 0}>
                 <FieldLabel htmlFor={field.name}>Mobile Number</FieldLabel>
@@ -113,89 +89,92 @@ export const InterestedForm = () => {
             <h3 className="font-semibold text-sm">Verification Details</h3>
 
             {/* Date of Birth Field */}
-            <mobileForm.Field
-              name="date_of_birth"
-              validators={{
-                onChange: ({ value, fieldApi }) => {
-                  // Get current form values
-                  const panValue = fieldApi.form.getFieldValue('pan_number');
-
-                  // If both are empty, show error
-                  if (!value && !panValue) {
-                    return 'Date of Birth is required ';
-                  }
-
-                  // If DOB is provided, validate it
-                  if (value) {
-                    const result = dateOfBirthValidator.safeParse(value);
-                    return result.success ? undefined : result.error.errors[0].message;
-                  }
-
-                  return undefined;
-                },
-                onSubmit: ({ value, fieldApi }) => {
-                  const panValue = fieldApi.form.getFieldValue('pan_number');
-
-                  if (!value && !panValue) {
-                    return 'Date of Birth is required';
-                  }
-
-                  if (value) {
-                    const result = dateOfBirthValidator.safeParse(value);
-                    return result.success ? undefined : result.error.errors[0].message;
-                  }
-
-                  return undefined;
-                },
-              }}
-            >
+            <mobileForm.Field name="date_of_birth">
               {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel>Date of Birth</FieldLabel>
-                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.state.value && 'text-muted-foreground',
-                        )}
+                <FieldSet className="flex flex-col w-full">
+                  <Field data-invalid={field.state.meta.errors.length > 0}>
+                    <FieldLabel htmlFor={field.name}>Date of Birth *</FieldLabel>
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                      <PopoverTrigger
+                        asChild
+                        disabled={false}
+                        aria-invalid={
+                          !!field.state.meta.errors.length && field.state.meta.isTouched
+                        }
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.state.value ? (
-                          dayjs(field.state.value).format('MMMM D, YYYY')
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.state.value}
-                        onSelect={(date) => {
-                          if (date) {
-                            field.handleChange(date);
-                            setPopoverOpen(false);
-                            // Trigger validation
-                            field.handleBlur();
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            'group w-full justify-start text-left font-normal transition-all hover:bg-gray-50',
+                            !field.state.value && 'text-muted-foreground',
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 size-4 transition-colors" />
+                          {field.state.value ? (
+                            dayjs(field.state.value).format('MMMM D, YYYY')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto border border-gray-200 p-0 shadow-lg"
+                        align="start"
+                      >
+                        <Calendar
+                          mode="single"
+                          selected={field.state.value}
+                          onSelect={(date) => {
+                            if (date) {
+                              field.handleChange(date);
+                              setPopoverOpen(false);
+                              field.handleBlur();
+                            }
+                          }}
+                          disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                          initialFocus
+                          aria-invalid={
+                            !!field.state.meta.errors.length && field.state.meta.isTouched
                           }
-                        }}
-                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                        initialFocus
-                        captionLayout="dropdown"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FieldError>
-                    {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                      ? field.state.meta.errors[0]
-                      : null}
-                  </FieldError>
-                </Field>
+                          className="rounded-lg bg-white p-3"
+                          classNames={{
+                            months: 'space-y-4',
+                            month: 'space-y-4',
+                            caption: 'flex justify-center pt-1 relative items-center px-10',
+                            caption_label: 'text-sm font-medium text-gray-900',
+                            nav: 'space-x-1 flex items-center',
+                            nav_button:
+                              'h-7 w-7 bg-transparent p-0 hover:bg-gray-100 text-gray-700 border-none rounded-md transition-all inline-flex items-center justify-center',
+                            nav_button_previous: 'absolute left-1',
+                            nav_button_next: 'absolute right-1',
+                            table: 'w-full border-collapse space-y-1',
+                            head_row: 'flex',
+                            head_cell: 'text-gray-500 rounded-md w-9 font-normal text-[0.6rem]',
+                            row: 'flex w-full mt-2',
+                            cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-gray-100/50 [&:has([aria-selected])]:bg-gray-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+                            day: 'h-9 w-9 p-0 font-medium  text-sm text-center aria-selected:opacity-100 hover:bg-gray-100 rounded-md transition-colors',
+                            day_range_end: 'day-range-end',
+                            day_selected:
+                              'bg-gray-900 text-white hover:bg-gray-900 hover:text-white focus:bg-gray-900 focus:text-white',
+                            day_today: 'bg-gray-100 text-gray-900',
+                            day_outside:
+                              'day-outside text-gray-400 opacity-50 aria-selected:bg-gray-100/50 aria-selected:text-gray-500',
+                            day_disabled: 'text-gray-400 opacity-50',
+                            day_range_middle:
+                              'aria-selected:bg-gray-100 aria-selected:text-gray-900',
+                            day_hidden: 'invisible',
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FieldError>
+                      {field.state.meta.isTouched && field.state.meta.errors.length > 0
+                        ? field.state.meta.errors[0]
+                        : null}
+                    </FieldError>
+                  </Field>
+                </FieldSet>
               )}
             </mobileForm.Field>
 
@@ -209,49 +188,16 @@ export const InterestedForm = () => {
             </div>
 
             {/* PAN Number Field */}
-            <mobileForm.Field
-              name="pan_number"
-              validators={{
-                onChange: ({ value, fieldApi }) => {
-                  // Get current form values
-                  const dobValue = fieldApi.form.getFieldValue('date_of_birth');
-
-                  // If both are empty, show error
-                  if (!value && !dobValue) {
-                    return 'PAN Number is required ';
-                  }
-
-                  // If PAN is provided, validate it
-                  if (value && value.length > 0) {
-                    const result = panNumberValidator.safeParse(value);
-                    return result.success ? undefined : result.error.errors[0].message;
-                  }
-
-                  return undefined;
-                },
-                onSubmit: ({ value, fieldApi }) => {
-                  const dobValue = fieldApi.form.getFieldValue('date_of_birth');
-
-                  if (!value && !dobValue) {
-                    return 'PAN Number is required';
-                  }
-
-                  if (value && value.length > 0) {
-                    const result = panNumberValidator.safeParse(value);
-                    return result.success ? undefined : result.error.errors[0].message;
-                  }
-
-                  return undefined;
-                },
-              }}
-            >
+            <mobileForm.Field name="pan_number">
               {(field) => (
                 <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel htmlFor={field.name}>PAN Number</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>
+                    PAN Number <span className="ml-0.5 text-destructive">*</span>
+                  </FieldLabel>
                   <Input
                     id={field.name}
                     name={field.name}
-                    placeholder="ABCDE1234F"
+                    placeholder="ENTER 10 DIGIT PAN"
                     maxLength={10}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
