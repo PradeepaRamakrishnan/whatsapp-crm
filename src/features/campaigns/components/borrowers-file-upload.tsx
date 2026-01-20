@@ -175,21 +175,26 @@ export function BorrowersFileUpload({
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
                       <span>
-                        <strong>Required columns:</strong> Customer Name, Phone Number, Email,
-                        Outstanding Amount, Bank, Settlements
+                        <strong>Customer Name</strong> (alternative: Customer)
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                      <span>Phone number must be 10 digits</span>
+                      <span>
+                        <strong>Settlement Amount</strong> (alternative: Settlement Amt)
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                      <span>Outstanding amount must be ≤ ₹2,00,000</span>
+                      <span>
+                        <strong>Mobile Number</strong> (alternative: Mobile No)
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                      <span>Settlement count must be ≤ 2</span>
+                      <span>
+                        <strong>Email ID</strong> (alternative: Email)
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -265,8 +270,8 @@ export function BorrowersFileUpload({
         </Card>
       )}
 
-      {/* Validation Results */}
-      {validationResult && (
+      {/* Validation Results (show only when invalid) */}
+      {validationResult && !validationResult.isValid && (
         <div className="space-y-4">
           {/* Summary Card */}
           <Card
