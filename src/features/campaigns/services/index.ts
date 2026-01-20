@@ -212,3 +212,61 @@ export async function resumeCampaign(id: string): Promise<unknown> {
     throw error;
   }
 }
+
+export async function getConfigurationyId(id: string): Promise<any> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/configurations/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch file by ID');
+    }
+    throw error;
+  }
+}
+
+export async function updateConfiguration(id: string, body: any): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    await axiosClient({
+      method: 'PATCH',
+      url: `/configurations/${id}`,
+      data: body,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update file configuration');
+    }
+    throw error;
+  }
+}
+
+export async function updateTemplate(id: string, body: any): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    await axiosClient({
+      method: 'PATCH',
+      url: `templates/${id}`,
+      data: { body },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update file template');
+    }
+    throw error;
+  }
+}
