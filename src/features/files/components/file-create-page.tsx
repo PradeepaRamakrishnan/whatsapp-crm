@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { FileSpreadsheet, Info, Upload, X } from 'lucide-react';
+import { FileSpreadsheet, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -117,9 +116,7 @@ export function FileCreatePage() {
         <Card className="shadow-md">
           <CardHeader className="border-b bg-muted/30">
             <CardTitle className="text-2xl">File Upload</CardTitle>
-            <CardDescription>
-              Upload CSV or Excel files containing your borrowers data
-            </CardDescription>
+            <CardDescription>Upload CSV files containing your borrowers data</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
@@ -206,6 +203,42 @@ export function FileCreatePage() {
                 {(field) => (
                   <Field data-invalid={field.state.meta.errors.length > 0}>
                     <div className="space-y-4">
+                      {/* File Requirements */}
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+                        <h4 className="mb-3 text-sm font-semibold text-blue-900 dark:text-blue-100">
+                          CSV File Requirements
+                        </h4>
+                        <p className="mb-3 text-xs text-blue-800 dark:text-blue-200">
+                          Your CSV file must include these required columns:
+                        </p>
+                        <ul className="space-y-1.5 text-xs text-blue-800 dark:text-blue-200">
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
+                            <span>
+                              <strong>Customer Name</strong> (or: Customer)
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
+                            <span>
+                              <strong>Settlement Amount</strong> (or: Settlement Amt)
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
+                            <span>
+                              <strong>Mobile Number</strong> (or: Mobile No)
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
+                            <span>
+                              <strong>Email ID</strong> (or: Email)
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+
                       <section
                         aria-label="File upload drop zone"
                         onDragEnter={handleDragEnter}
@@ -220,57 +253,6 @@ export function FileCreatePage() {
                           field.state.meta.errors.length > 0 ? 'border-red-500' : '',
                         )}
                       >
-                        {/* File Requirements Icon */}
-                        <div className="absolute right-4 top-4 z-10">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 rounded-full p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                              >
-                                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                <span className="sr-only">File requirements</span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-96" align="end">
-                              <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                  File Requirements
-                                </h3>
-                                <ul className="space-y-2 text-xs text-foreground">
-                                  <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                                    <span>
-                                      <strong>Customer Name</strong> (alternative: Customer)
-                                    </span>
-                                  </li>
-                                  <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                                    <span>
-                                      <strong>Settlement Amount</strong> (alternative: Settlement
-                                      Amt)
-                                    </span>
-                                  </li>
-                                  <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                                    <span>
-                                      <strong>Mobile Number</strong> (alternative: Mobile No)
-                                    </span>
-                                  </li>
-                                  <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-400" />
-                                    <span>
-                                      <strong>Email ID</strong> (alternative: Email)
-                                    </span>
-                                  </li>
-                                </ul>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-
                         <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
                           <div
                             className={cn(
@@ -295,12 +277,12 @@ export function FileCreatePage() {
                           </div>
                           <Button type="button" variant="outline" size="lg" asChild>
                             <label className="cursor-pointer">
-                              Select Files
+                              Select CSV Files
                               <input
                                 type="file"
                                 className="hidden"
                                 multiple
-                                accept=".csv,.xlsx,.xls"
+                                accept=".csv"
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files.length > 0) {
                                     const newFiles = Array.from(e.target.files);
@@ -310,9 +292,6 @@ export function FileCreatePage() {
                               />
                             </label>
                           </Button>
-                          <p className="mt-3 text-xs text-muted-foreground">
-                            Supported formats: CSV, Excel (.xlsx, .xls) • Max 10MB per file
-                          </p>
                         </div>
                       </section>
 
