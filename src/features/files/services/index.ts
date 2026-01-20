@@ -98,16 +98,36 @@ export async function updateFileStatus(id: string, status: FileStatus): Promise<
   }
 }
 
+export async function markAsReviewed(id: string): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/${id}/reviewed`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update file as reviewed');
+    }
+    throw error;
+  }
+}
+
 export async function deleteFile(id: string): Promise<void> {
   try {
     const cookieStore = await cookies();
-    await axiosClient({
+    const response = await axiosClient({
       method: 'DELETE',
       url: `/${id}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
     });
+    return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to delete file');

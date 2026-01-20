@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { deleteFile, updateFileStatus } from '../services';
+import { deleteFile, markAsReviewed } from '../services';
 import type { FileStatus } from '../types/file.types';
 
 interface FileActionsProps {
@@ -45,11 +46,14 @@ export function FileActions({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const markAsReviewedMutation = useMutation({
-    mutationFn: () => updateFileStatus(fileId, 'reviewed'),
+    mutationFn: () => markAsReviewed(fileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['file', fileId] });
       onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to mark as reviewed');
     },
   });
 
@@ -60,6 +64,9 @@ export function FileActions({
       setShowDeleteDialog(false);
       onSuccess?.();
       router.push('/files/list');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to delete file');
     },
   });
 
