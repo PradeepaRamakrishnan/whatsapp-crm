@@ -33,13 +33,15 @@ const InterestedPage = () => {
           <div className="space-y-6">
             <div className="space-y-2">
               <h2 className="text-3xl font-extrabold leading-tight text-slate-900 dark:text-slate-100">
-                Instant Loans.
+                Rebuild Credit,
+                <br />
+                Regain Credibility
               </h2>
             </div>
 
             <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
-              Get access to quick credit solutions tailored for your financial needs. Secure,
-              reliable, and fast.
+              Expert credit counseling to help you improve your credit score and access better
+              financial opportunities. Professional guidance from former banking experts.
             </p>
           </div>
 
