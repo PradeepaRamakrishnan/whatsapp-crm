@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { Suspense } from 'react';
 import { InterestedForm } from '@/features/leads/components/interested-form';
 
 const InterestedPage = () => {
@@ -90,7 +91,18 @@ const InterestedPage = () => {
             </div> */}
           </div>
 
-          <InterestedForm />
+          <Suspense
+            fallback={
+              <div className="w-full max-w-lg space-y-4 animate-pulse">
+                <div className="h-8 bg-muted rounded" />
+                <div className="h-12 bg-muted rounded" />
+                <div className="h-12 bg-muted rounded" />
+                <div className="h-12 bg-muted rounded" />
+              </div>
+            }
+          >
+            <InterestedForm />
+          </Suspense>
         </div>
       </div>
     </div>
