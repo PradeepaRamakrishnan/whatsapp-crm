@@ -1,16 +1,18 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { CalendarIcon } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Field, FieldError, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { markContactInterested } from '@/features/campaigns/services';
 import { cn } from '@/lib/utils';
 import { otpSchema } from '../lib/validation';
 
@@ -25,19 +27,25 @@ type Step = 'mobile' | 'otp';
 export const InterestedForm = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+  const searchParams = useSearchParams();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const isOtpStep = pathname?.includes('/otp');
   const step: Step = isOtpStep ? 'otp' : 'mobile';
 
-  useEffect(() => {
-    // Access search params only on client side
-    setSearchParams(new URLSearchParams(window.location.search));
-  }, []);
-  const mobileNumber = searchParams?.get('mobile') || '';
-  const campaignId = searchParams?.get('campaignId');
-  const contactId = searchParams?.get('contactId');
+  const mobileNumber = searchParams.get('mobile') || '';
+  const campaignId = searchParams.get('campaignId');
+  const contactId = searchParams.get('contactId');
+
+  // Use React Query to mark contact as interested immediately when visiting from campaign link
+  useQuery({
+    queryKey: ['markInterested', campaignId, contactId],
+    queryFn: () => markContactInterested(campaignId as string, contactId as string),
+    enabled: !!campaignId && !!contactId && !isOtpStep,
+    retry: 1, // Only retry once on failure
+    staleTime: Number.POSITIVE_INFINITY, // Never refetch - this is a one-time action
+    gcTime: 0, // Don't cache the result
+  });
 
   // Form for Mobile Number
   const mobileForm = useForm({
