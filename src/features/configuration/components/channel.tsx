@@ -1,5 +1,5 @@
 'use client';
-import cronstrue from 'cronstrue';
+// import cronstrue from 'cronstrue';
 import {
   ArrowRight,
   ChevronDown,
@@ -184,7 +184,7 @@ const Channel = ({
               </Field>
 
               <Field>
-                <FieldLabel>Interval</FieldLabel>
+                <FieldLabel>Interval (days)</FieldLabel>
                 <Input
                   type="number"
                   min="1"
@@ -195,14 +195,14 @@ const Channel = ({
                 />
               </Field>
 
-              {configuration?.cronPattern && typeof configuration.cronPattern === 'string' && (
+              {/* {configuration?.cronPattern && typeof configuration.cronPattern === 'string' && (
                 <div className="sm:col-span-2 text-sm text-muted-foreground mt-2 bg-muted/40 p-2 rounded border">
                   Scheduled:{' '}
                   <span className="font-medium text-foreground">
                     {cronstrue.toString(configuration.cronPattern)}
                   </span>
                 </div>
-              )}
+              )} */}
             </div>
           )}
         </CardContent>
