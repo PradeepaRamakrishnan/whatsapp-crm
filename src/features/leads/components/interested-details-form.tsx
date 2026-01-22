@@ -272,13 +272,9 @@ export const InterestedDetailsForm = () => {
         </div>
 
         <div className="flex justify-center pt-8">
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full md:w-auto px-12 h-14 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95 flex items-center gap-2 group"
-          >
+          <Button type="submit" size="lg" className="w-full md:w-auto px-12">
             Submit Application
-            <Send className="h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            <Send className="h-5 w-5" />
           </Button>
         </div>
       </form>
