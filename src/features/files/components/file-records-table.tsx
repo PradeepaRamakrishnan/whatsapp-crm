@@ -26,7 +26,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -320,15 +326,12 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
               </div>
               <span>{selectedRecord?.customerName}</span>
             </SheetTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Customer Record Details</span>
-            </div>
+            <SheetDescription>Customer record details</SheetDescription>
           </SheetHeader>
 
           {selectedRecord && (
-            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-1 pb-4">
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
               <div className="grid gap-4">
-                <h3 className="text-sm font-semibold mt-2">Personal Information</h3>
                 <div className="flex items-start gap-3 rounded-lg border p-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
                     <Mail className="h-4 w-4 text-blue-600" />
@@ -378,7 +381,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                 <>
                   <Separator />
                   <div>
-                    <h3 className="mb-3 text-sm font-semibold">Exists in Other Files</h3>
+                    <h4 className="mb-3 text-sm font-semibold">Exists in Other Files</h4>
                     <div className="space-y-2">
                       {selectedRecord.duplicateInFiles.map((file) => (
                         <div
@@ -403,7 +406,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                   <>
                     <Separator />
                     <div>
-                      <h3 className="mb-3 text-sm font-semibold">Additional Information</h3>
+                      <h4 className="mb-3 text-sm font-semibold">Additional Information</h4>
                       <div className="grid gap-2">
                         {Object.entries(selectedRecord.additionalData).map(([key, value]) => (
                           <div
