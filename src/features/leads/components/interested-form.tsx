@@ -6,12 +6,18 @@ import dayjs from 'dayjs';
 import { CalendarIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Field, FieldError, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { markContactInterested } from '@/features/campaigns/services';
 import { cn } from '@/lib/utils';
 import { dateOfBirthValidator, panNumberValidator, phoneNumberValidator } from '../lib/validation';
@@ -20,6 +26,8 @@ export const InterestedForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date(currentYear - 25, 0));
 
   const campaignId = searchParams.get('campaignId');
   const contactId = searchParams.get('contactId');
@@ -39,21 +47,32 @@ export const InterestedForm = () => {
       pan_number: '',
       date_of_birth: undefined as Date | undefined,
     },
+    validators: {
+      onSubmit: ({ value }) => {
+        // Validate that either DOB or PAN is provided
+        if (!value.date_of_birth && !value.pan_number) {
+          return {
+            form: 'Please provide either Date of Birth or PAN Number',
+            fields: {
+              date_of_birth: 'Required if PAN is not provided',
+              pan_number: 'Required if Date of Birth is not provided',
+            },
+          };
+        }
+        return undefined;
+      },
+    },
     onSubmit: async ({ value }) => {
       try {
-        // if (value.date_of_birth) {
-        //   await createLead({
-        //     mobile: value.mobile,
-        //     pan_number: value.pan_number,
-        //     date_of_birth: value.date_of_birth.toISOString(),
-        //     campaignId: campaignId || undefined,
-        //     contactId: contactId || undefined,
-        //   });
-        // }
-
         const params = new URLSearchParams({ mobile: value.mobile });
         if (campaignId) params.append('campaignId', campaignId);
         if (contactId) params.append('contactId', contactId);
+        if (value.date_of_birth) {
+          params.append('date_of_birth', value.date_of_birth.toISOString());
+        }
+        if (value.pan_number) {
+          params.append('pan_number', value.pan_number);
+        }
 
         router.push(`/interested/otp?${params.toString()}`);
       } catch (error) {
@@ -77,37 +96,236 @@ export const InterestedForm = () => {
         }}
         className="space-y-4"
       >
-        <div className="space-y-4">
-          {/* Mobile Number Field */}
+        {/* Mobile Number Field */}
+        <mobileForm.Field
+          name="mobile"
+          validators={{
+            onChange: ({ value }) => {
+              const result = phoneNumberValidator.safeParse(value);
+              return result.success ? undefined : result.error.errors[0].message;
+            },
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0}>
+              <FieldLabel htmlFor={field.name}>Mobile Number</FieldLabel>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                  <span className="text-muted-foreground font-medium border-r pr-3">+91</span>
+                </div>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="tel"
+                  placeholder="9999911223"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
+                  onBlur={field.handleBlur}
+                  className="pl-16"
+                />
+              </div>
+              <FieldError>
+                {field.state.meta.isTouched && field.state.meta.errors.length > 0
+                  ? field.state.meta.errors[0]
+                  : null}
+              </FieldError>
+            </Field>
+          )}
+        </mobileForm.Field>
+
+        <div className="space-y-3">
+          <h3 className="font-semibold text-sm">Verification Details</h3>
+
+          {/* Date of Birth Field */}
           <mobileForm.Field
-            name="mobile"
+            name="date_of_birth"
             validators={{
-              onChange: ({ value }) => {
-                const result = phoneNumberValidator.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
+              onChange: ({ value, fieldApi }) => {
+                const panNumber = fieldApi.form.getFieldValue('pan_number');
+                // If PAN is provided, DOB is optional
+                if (panNumber && panNumber.length > 0) {
+                  if (!value) return undefined;
+                }
+                // If no PAN and no DOB, show error
+                if (!value && (!panNumber || panNumber.length === 0)) {
+                  return 'Date of birth is required if PAN is not provided';
+                }
+                // Validate DOB if provided
+                if (value) {
+                  const result = dateOfBirthValidator.safeParse(value);
+                  return result.success ? undefined : result.error.errors[0].message;
+                }
+                return undefined;
+              },
+            }}
+          >
+            {(field) => {
+              const months = [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+              ];
+              const years = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => 1900 + i);
+
+              return (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>
+                    Date of Birth <span className="ml-0.5 text-destructive">*</span>
+                  </FieldLabel>
+                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal h-10',
+                          !field.state.value && 'text-muted-foreground',
+                          field.state.meta.errors.length > 0 &&
+                            field.state.meta.isTouched &&
+                            'border-destructive focus-visible:ring-destructive',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.state.value ? (
+                          dayjs(field.state.value).format('MMMM D, YYYY')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <div className="flex items-center gap-2 p-3 border-b">
+                        <Select
+                          value={String(calendarMonth.getMonth())}
+                          onValueChange={(value) => {
+                            const newMonth = new Date(calendarMonth);
+                            newMonth.setMonth(Number.parseInt(value, 10));
+                            setCalendarMonth(newMonth);
+                          }}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {months.map((month, index) => (
+                              <SelectItem key={month} value={String(index)}>
+                                {month}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={String(calendarMonth.getFullYear())}
+                          onValueChange={(value) => {
+                            const newMonth = new Date(calendarMonth);
+                            newMonth.setFullYear(Number.parseInt(value, 10));
+                            setCalendarMonth(newMonth);
+                          }}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {years.reverse().map((year) => (
+                              <SelectItem key={year} value={String(year)}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Calendar
+                        mode="single"
+                        month={calendarMonth}
+                        onMonthChange={setCalendarMonth}
+                        selected={field.state.value}
+                        onSelect={(date) => {
+                          if (date) {
+                            const normalizedDate = new Date(date);
+                            normalizedDate.setHours(12, 0, 0, 0);
+                            field.handleChange(normalizedDate);
+                            // Trigger validation on PAN field
+                            setTimeout(() => {
+                              setPopoverOpen(false);
+                              field.handleBlur();
+                              field.form.validateField('pan_number', 'change');
+                            }, 100);
+                          }
+                        }}
+                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FieldError>
+                    {field.state.meta.isTouched && field.state.meta.errors.length > 0
+                      ? field.state.meta.errors[0]
+                      : null}
+                  </FieldError>
+                </Field>
+              );
+            }}
+          </mobileForm.Field>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+
+          {/* PAN Number Field */}
+          <mobileForm.Field
+            name="pan_number"
+            validators={{
+              onChange: ({ value, fieldApi }) => {
+                const dateOfBirth = fieldApi.form.getFieldValue('date_of_birth');
+                // If DOB is provided, PAN is optional
+                if (dateOfBirth) {
+                  if (!value || value.length === 0) return undefined;
+                }
+                // If no DOB and no PAN, show error
+                if ((!value || value.length === 0) && !dateOfBirth) {
+                  return 'PAN number is required if Date of Birth is not provided';
+                }
+                // Validate PAN if provided
+                if (value && value.length > 0) {
+                  const result = panNumberValidator.safeParse(value);
+                  return result.success ? undefined : result.error.errors[0].message;
+                }
+                return undefined;
               },
             }}
           >
             {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
-                <FieldLabel htmlFor={field.name} className="font-semibold">
-                  Mobile Number
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldLabel htmlFor={field.name}>
+                  PAN Number <span className="ml-0.5 text-destructive">*</span>
                 </FieldLabel>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                    <span className="text-muted-foreground font-medium border-r pr-3">+91</span>
-                  </div>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="tel"
-                    placeholder="9999911223"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
-                    onBlur={field.handleBlur}
-                    className="pl-16 h-12 text-lg tracking-wider font-medium"
-                  />
-                </div>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  placeholder="ENTER PAN (E.G. ABCDE1234F)"
+                  maxLength={10}
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value.toUpperCase());
+                    // Trigger validation on date_of_birth field
+                    field.form.validateField('date_of_birth', 'change');
+                  }}
+                  onBlur={field.handleBlur}
+                  className="uppercase font-mono tracking-widest"
+                />
                 <FieldError>
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0
                     ? field.state.meta.errors[0]
@@ -116,170 +334,9 @@ export const InterestedForm = () => {
               </Field>
             )}
           </mobileForm.Field>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm">Verification Details</h3>
-
-            {/* Date of Birth Field - FIXED VERSION */}
-            <mobileForm.Field
-              name="date_of_birth"
-              validators={{
-                onChange: ({ value }) => {
-                  if (!value) return 'Date of birth is required';
-                  const result = dateOfBirthValidator.safeParse(value);
-                  return result.success ? undefined : result.error.errors[0].message;
-                },
-              }}
-            >
-              {(field) => (
-                <FieldSet className="flex flex-col w-full">
-                  <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
-                    <FieldLabel htmlFor={field.name} className="font-semibold">
-                      Date of Birth *
-                    </FieldLabel>
-                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                      <PopoverTrigger
-                        asChild
-                        disabled={false}
-                        aria-invalid={
-                          !!field.state.meta.errors.length && field.state.meta.isTouched
-                        }
-                      >
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className={cn(
-                            'group w-full justify-start text-left font-normal transition-all hover:bg-gray-50 h-11',
-                            !field.state.value && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 size-4 transition-colors text-muted-foreground" />
-                          {field.state.value ? (
-                            dayjs(field.state.value).format('MMMM D, YYYY')
-                          ) : (
-                            <span>Select date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-auto border border-gray-200 p-0 shadow-lg"
-                        align="start"
-                        onOpenAutoFocus={(e) => {
-                          // Prevent focus on mount to avoid keyboard issues
-                          e.preventDefault();
-                        }}
-                      >
-                        <Calendar
-                          mode="single"
-                          selected={field.state.value}
-                          onSelect={(date) => {
-                            // Enhanced date selection with proper handling
-                            if (date) {
-                              // Set time to noon to avoid timezone issues
-                              const normalizedDate = new Date(date);
-                              normalizedDate.setHours(12, 0, 0, 0);
-
-                              field.handleChange(normalizedDate);
-
-                              // Small delay before closing to ensure state updates
-                              setTimeout(() => {
-                                setPopoverOpen(false);
-                                field.handleBlur();
-                              }, 100);
-                            }
-                          }}
-                          disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                          initialFocus
-                          aria-invalid={
-                            !!field.state.meta.errors.length && field.state.meta.isTouched
-                          }
-                          className="rounded-lg bg-white p-3"
-                          classNames={{
-                            months: 'space-y-4',
-                            month: 'space-y-4',
-                            caption: 'flex justify-center pt-1 relative items-center px-10',
-                            caption_label: 'text-sm font-medium text-gray-900',
-                            nav: 'space-x-1 flex items-center',
-                            nav_button:
-                              'h-7 w-7 bg-transparent p-0 hover:bg-gray-100 text-gray-700 border-none rounded-md transition-all inline-flex items-center justify-center',
-                            nav_button_previous: 'absolute left-1',
-                            nav_button_next: 'absolute right-1',
-                            table: 'w-full border-collapse space-y-1',
-                            head_row: 'flex',
-                            head_cell: 'text-gray-500 rounded-md w-9 font-normal text-[0.6rem]',
-                            row: 'flex w-full mt-2',
-                            cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-gray-100/50 [&:has([aria-selected])]:bg-gray-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
-                            day: 'h-9 w-9 p-0 font-medium text-sm text-center aria-selected:opacity-100 hover:bg-gray-100 rounded-md transition-colors',
-                            day_range_end: 'day-range-end',
-                            day_selected:
-                              'bg-gray-900 text-white hover:bg-gray-900 hover:text-white focus:bg-gray-900 focus:text-white',
-                            day_today: 'bg-gray-100 text-gray-900',
-                            day_outside:
-                              'day-outside text-gray-400 opacity-50 aria-selected:bg-gray-100/50 aria-selected:text-gray-500',
-                            day_disabled: 'text-gray-400 opacity-50',
-                            day_range_middle:
-                              'aria-selected:bg-gray-100 aria-selected:text-gray-900',
-                            day_hidden: 'invisible',
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FieldError>
-                      {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                        ? field.state.meta.errors[0]
-                        : null}
-                    </FieldError>
-                  </Field>
-                </FieldSet>
-              )}
-            </mobileForm.Field>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-
-            {/* PAN Number Field */}
-            <mobileForm.Field
-              name="pan_number"
-              validators={{
-                onChange: ({ value }) => {
-                  const result = panNumberValidator.safeParse(value);
-                  return result.success ? undefined : result.error.errors[0].message;
-                },
-              }}
-            >
-              {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel htmlFor={field.name}>
-                    PAN Number <span className="ml-0.5 text-destructive">*</span>
-                  </FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    placeholder="ENTER PAN (E.G. ABCDE1234F)"
-                    maxLength={10}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
-                    onBlur={field.handleBlur}
-                    className="uppercase h-11 font-mono tracking-widest"
-                  />
-                  <FieldError>
-                    {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                      ? field.state.meta.errors[0]
-                      : null}
-                  </FieldError>
-                </Field>
-              )}
-            </mobileForm.Field>
-          </div>
         </div>
 
-        <div className="space-y-3 text-[13px] text-muted-foreground leading-relaxed">
+        <div className="space-y-3 text-sm text-muted-foreground">
           <p>By continuing, I hereby agree/authorise the following:</p>
           <ul className="list-disc space-y-1.5 pl-4">
             <li>
@@ -298,12 +355,13 @@ export const InterestedForm = () => {
           </ul>
         </div>
 
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full font-semibold shadow-lg shadow-primary/20"
-          disabled={mobileForm.state.isSubmitting}
-        >
+        {mobileForm.state.errors.length > 0 && (
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            {mobileForm.state.errors[0]}
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={mobileForm.state.isSubmitting}>
           {mobileForm.state.isSubmitting ? 'Sending OTP...' : 'Send OTP'}
         </Button>
       </form>
