@@ -91,13 +91,18 @@ export function EditFinancialInstitutionSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md border-l border-slate-200 bg-white p-0 overflow-y-auto">
-        <SheetHeader className="p-6 border-b border-slate-200">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
-              <Landmark className="h-5 w-5" />
+      <SheetContent className="flex flex-col px-4 pt-2 sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Landmark className="h-5 w-5 text-primary" />
             </div>
-            <SheetTitle className="text-xl font-bold text-slate-900">Edit Institution</SheetTitle>
+            <span>Edit Institution</span>
+          </SheetTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              Modify financial institution details
+            </span>
           </div>
         </SheetHeader>
 
@@ -107,13 +112,11 @@ export function EditFinancialInstitutionSheet({
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-8 p-6"
+          className="flex flex-1 flex-col gap-6 overflow-y-auto pb-4"
         >
           {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Basic Information
-            </h3>
+          <div className="grid gap-4">
+            {/* <h3 className="text-sm font-semibold mt-2">Basic Information</h3> */}
             <div className="grid gap-4">
               <form.Field
                 name="name"
@@ -134,7 +137,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                      className="focus:border-primary focus:ring-primary/20"
                     />
                     <FieldError>
                       {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -164,7 +167,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-mono uppercase"
+                      className="focus:border-primary focus:ring-primary/20 font-mono uppercase"
                     />
                     <FieldError>
                       {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -184,7 +187,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                      className="focus:border-primary focus:ring-primary/20"
                     />
                   </Field>
                 )}
@@ -198,7 +201,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onValueChange={(val: 'active' | 'inactive') => field.handleChange(val)}
                     >
-                      <SelectTrigger className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20">
+                      <SelectTrigger className="focus:border-primary focus:ring-primary/20">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -213,10 +216,8 @@ export function EditFinancialInstitutionSheet({
           </div>
 
           {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Primary Contact
-            </h3>
+          <div className="grid gap-4">
+            {/* <h3 className="text-sm font-semibold">Primary Contact</h3> */}
             <div className="grid gap-4">
               <form.Field
                 name="contactName"
@@ -231,14 +232,14 @@ export function EditFinancialInstitutionSheet({
                 {(field) => (
                   <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-1.5">
                     <FieldLabel htmlFor={`edit-${field.name}`}>
-                      Full Name <span className="text-red-500">*</span>
+                      Contact Name <span className="text-red-500">*</span>
                     </FieldLabel>
                     <Input
                       id={`edit-${field.name}`}
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                      className="focus:border-primary focus:ring-primary/20"
                     />
                     <FieldError>
                       {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -268,7 +269,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                      className="focus:border-primary focus:ring-primary/20"
                     />
                     <FieldError>
                       {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -297,7 +298,7 @@ export function EditFinancialInstitutionSheet({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                      className="focus:border-primary focus:ring-primary/20"
                     />
                     <FieldError>
                       {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -319,7 +320,7 @@ export function EditFinancialInstitutionSheet({
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSubmitting || isPending}
-                  className="bg-orange-500 hover:bg-orange-600 text-white min-w-[120px]"
+                  className="min-w-[120px]"
                 >
                   {isSubmitting || isPending ? (
                     <>

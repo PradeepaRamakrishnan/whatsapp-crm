@@ -1,11 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Edit, Eye, MoreHorizontal, Search } from 'lucide-react';
+import { Edit, Eye, MoreHorizontal } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -34,27 +35,24 @@ import type { FinancialInstitution, FinancialInstitutionsResponse } from '../typ
 import { EditFinancialInstitutionSheet } from './edit-financial-institution-sheet';
 import { FinancialInstitutionDetailSheet } from './financial-institution-detail-sheet';
 
-const getStatusStyles = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-      return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100/80 border-transparent';
-    case 'inactive':
-      return 'bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-transparent';
-    default:
-      return 'bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-transparent';
-  }
-};
+// const getStatusStyles = (status: string): string => {
+//   switch (status?.toLowerCase()) {
+//     case 'active':
+//       return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+//     case 'inactive':
+//       return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+//     default:
+//       return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+//   }
+// };
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-IN', {
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
   }).format(date);
 };
 
@@ -110,44 +108,63 @@ export function FinancialInstitutionsTable() {
   const endIndex = Math.min(meta.page * meta.limit, meta.total);
 
   return (
-    <div className="w-full space-y-4">
-      {/* Search Bar */}
-      <div className="flex items-center">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+        <div className="flex-1">
           <Input
-            placeholder="Search institutions..."
+            placeholder="Filter institutions..."
             value={search}
             onChange={(e) => updateParams({ search: e.target.value })}
-            className="pl-9 h-10 border-slate-200 focus-visible:ring-offset-0 focus-visible:ring-1 focus-visible:ring-slate-300"
+            className="max-w-sm w-full"
           />
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
+            Rows per page
+          </label>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(val) => {
+              const v = Number(val) || 10;
+              updateParams({ limit: v, page: 1 });
+            }}
+          >
+            <SelectTrigger size="sm" className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow mt-2 overflow-hidden">
-        <Table>
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
           <TableHeader>
-            <TableRow className="bg-slate-100/50 hover:bg-slate-50/50">
-              <TableHead className="w-[300px] font-semibold text-slate-900">
-                Institution Name
-              </TableHead>
-              <TableHead className="font-semibold text-slate-900">IFSC Code</TableHead>
-              <TableHead className="font-semibold text-slate-900">Branch</TableHead>
-              <TableHead className="font-semibold text-slate-900">Contact Person</TableHead>
-              <TableHead className="font-semibold text-slate-900">Email</TableHead>
-              <TableHead className="font-semibold text-slate-900">Phone</TableHead>
-              <TableHead className="font-semibold text-slate-900">Status</TableHead>
-              <TableHead className="font-semibold text-slate-900">Uploaded At</TableHead>
-              <TableHead className="w-[100px] font-semibold text-slate-900 text-right">
-                Actions
-              </TableHead>
+            <TableRow>
+              <TableHead>Institution Name</TableHead>
+              <TableHead>IFSC Code</TableHead>
+              <TableHead>Branch</TableHead>
+              <TableHead>Contact Person</TableHead>
+              {/* <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Status</TableHead> */}
+              <TableHead>Uploaded At</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-slate-500">
+                <TableCell colSpan={9} className="h-24 text-center">
                   Loading...
                 </TableCell>
               </TableRow>
@@ -159,7 +176,7 @@ export function FinancialInstitutionsTable() {
               </TableRow>
             ) : institutions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-slate-500">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No results found
                 </TableCell>
               </TableRow>
@@ -167,32 +184,30 @@ export function FinancialInstitutionsTable() {
               institutions.map((item) => (
                 <TableRow
                   key={item.id}
-                  className="hover:bg-slate-50 border-slate-100 cursor-pointer group"
+                  className="cursor-pointer"
                   onClick={() => handleRowClick(item)}
                 >
-                  <TableCell className="font-medium text-slate-900">{item.name}</TableCell>
-                  <TableCell className="text-slate-600">{item.ifscCode}</TableCell>
-                  <TableCell className="text-slate-600">{item.branch}</TableCell>
-                  <TableCell className="text-slate-600">{item.contact.name}</TableCell>
-                  <TableCell className="text-slate-600">{item.contact.email}</TableCell>
-                  <TableCell className="text-slate-600">{item.contact.phone}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.ifscCode}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.branch}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.contact.name}</TableCell>
+                  {/* <TableCell className="text-muted-foreground">{item.contact.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.contact.phone}</TableCell>
                   <TableCell>
                     <Badge
-                      variant="secondary"
-                      className={`rounded-full px-3 py-0.5 font-medium ${getStatusStyles(item.status)}`}
+                      variant="outline"
+                      className={`font-medium ${getStatusStyles(item.status)}`}
                     >
                       {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                     </Badge>
+                  </TableCell> */}
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(item.createdAt)}
                   </TableCell>
-                  <TableCell className="text-slate-500">{formatDate(item.createdAt)}</TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full"
-                        >
+                        <Button variant="ghost" size="icon">
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Actions</span>
                         </Button>
@@ -217,54 +232,29 @@ export function FinancialInstitutionsTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
-        <div className="text-sm text-slate-500 font-medium order-2 sm:order-1">
-          Showing {meta.total > 0 ? startIndex : 0} to {endIndex} of {meta.total}{' '}
-          <span className="ml-2 inline-flex items-center gap-2">
-            Rows Per Page:
-            <Select
-              value={String(meta.limit)}
-              onValueChange={(val) => updateParams({ limit: Number(val), page: 1 })}
-            >
-              <SelectTrigger className="h-8 w-[70px] border-slate-200 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </span>
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          Showing {meta.total > 0 ? startIndex : 0} to {endIndex} of {meta.total} results
         </div>
-
-        <div className="flex items-center gap-1 order-1 sm:order-2">
+        <div className="space-x-2">
           <Button
             variant="outline"
-            size="icon"
-            className="h-9 w-9 border-slate-200"
+            size="sm"
             onClick={() => updateParams({ page: Math.max(meta.page - 1, 1) })}
             disabled={meta.page <= 1}
           >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous Page</span>
+            Previous
           </Button>
-          <Button
-            className="h-9 w-9 bg-orange-500 hover:bg-orange-600 text-white font-medium"
-            onClick={() => {}} // Current page button usually just shows the number
-          >
-            {meta.page}
-          </Button>
+          <span className="text-sm">
+            Page {meta.page} of {meta.totalPages || 1}
+          </span>
           <Button
             variant="outline"
-            size="icon"
-            className="h-9 w-9 border-slate-200"
+            size="sm"
             onClick={() => updateParams({ page: Math.min(meta.page + 1, meta.totalPages) })}
-            disabled={meta.page >= meta.totalPages}
+            disabled={meta.page >= meta.totalPages || meta.totalPages === 0}
           >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next Page</span>
+            Next
           </Button>
         </div>
       </div>

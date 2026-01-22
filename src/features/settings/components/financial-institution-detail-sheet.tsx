@@ -14,19 +14,19 @@ interface FinancialInstitutionDetailSheetProps {
 const getStatusStyles = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'active':
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
     case 'inactive':
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
     default:
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
   }
 };
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-IN', {
-    month: 'long',
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: '2-digit',
@@ -44,106 +44,90 @@ export function FinancialInstitutionDetailSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md border-l border-slate-200 bg-white p-0 overflow-y-auto">
-        <SheetHeader className="p-6 border-b border-slate-200">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
-              <Landmark className="h-6 w-6" />
+      <SheetContent className="flex flex-col px-4 pt-2 sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Landmark className="h-5 w-5 text-primary" />
             </div>
-            <div className="space-y-1">
-              <SheetTitle className="text-xl font-bold text-slate-900 leading-tight">
-                {institution.name}
-              </SheetTitle>
-              <Badge
-                variant="outline"
-                className={`rounded-full ${getStatusStyles(institution.status)}`}
-              >
-                {institution.status.toUpperCase()}
-              </Badge>
-            </div>
+            <span>{institution.name}</span>
+          </SheetTitle>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={`font-medium ${getStatusStyles(institution.status)}`}
+            >
+              {institution.status.charAt(0).toUpperCase() + institution.status.slice(1)}
+            </Badge>
+            <span className="text-xs text-muted-foreground">Financial Institution Details</span>
           </div>
         </SheetHeader>
 
-        <div className="p-6">
-          {/* Combined Information Card */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            {/* Basic Information Section */}
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-                <Building2 className="h-4 w-4" />
-                Basic Information
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-slate-500">IFSC Code</span>
-                  <span className="text-sm font-mono font-semibold text-slate-900 uppercase">
-                    {institution.ifscCode}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-t border-slate-50">
-                  <span className="text-sm text-slate-500">Branch</span>
-                  <span className="text-sm font-medium text-slate-900 capitalize">
-                    {institution.branch || '-'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start py-2 border-t border-slate-50">
-                  <span className="text-sm text-slate-500">Created At</span>
-                  <span className="text-sm font-medium text-slate-900 flex items-center gap-1.5 text-right">
-                    <Clock className="h-3.5 w-3.5 text-slate-400" />
-                    {formatDate(institution.createdAt)}
-                  </span>
-                </div>
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-4">
+          <div className="grid gap-4">
+            <h3 className="text-sm font-semibold mt-2">Basic Information</h3>
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
+                <Building2 className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">IFSC Code</p>
+                <p className="text-sm font-semibold uppercase">{institution.ifscCode}</p>
               </div>
             </div>
 
-            {/* Contact Information Section */}
-            <div className="p-5">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-                <User className="h-4 w-4" />
-                Primary Contact
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg  ">
-                  <div className="p-2.5 rounded-full bg-primary text-white">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                      Contact Name
-                    </span>
-                    <p className="text-base text-slate-700 mt-0.5">
-                      {institution.contact.name || '-'}
-                    </p>
-                  </div>
-                </div>
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-50 dark:bg-slate-950/30">
+                <Landmark className="h-4 w-4 text-slate-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Branch</p>
+                <p className="text-sm font-medium capitalize">{institution.branch || '-'}</p>
+              </div>
+            </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100 group transition-colors hover:bg-blue-50/50 hover:border-blue-200">
-                  <div className="p-2 rounded-md bg-blue-100 border border-blue-200 text-blue-600  transition-colors">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                      Email Address
-                    </span>
-                    <span className="text-sm text-slate-700 break-all mt-0.5">
-                      {institution.contact.email || '-'}
-                    </span>
-                  </div>
-                </div>
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-950/30">
+                <Clock className="h-4 w-4 text-purple-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Created At</p>
+                <p className="text-sm font-medium">{formatDate(institution.createdAt)}</p>
+              </div>
+            </div>
+          </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100 group transition-colors hover:bg-green-50/50 hover:border-green-200">
-                  <div className="p-2 rounded-md bg-green-100 border border-green-200 text-green-600   transition-colors">
-                    <Phone className="h-4 w-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                      Phone Number
-                    </span>
-                    <span className="text-sm text-slate-700 mt-0.5">
-                      {institution.contact.phone || '-'}
-                    </span>
-                  </div>
-                </div>
+          <div className="grid gap-4">
+            <h3 className="text-sm font-semibold">Primary Contact</h3>
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Contact Name</p>
+                <p className="text-sm font-medium">{institution.contact.name || '-'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
+                <Mail className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Email Address</p>
+                <p className="truncate text-sm font-medium">{institution.contact.email || '-'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-green-50 dark:bg-green-950/30">
+                <Phone className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Phone Number</p>
+                <p className="text-sm font-medium">{institution.contact.phone || '-'}</p>
               </div>
             </div>
           </div>

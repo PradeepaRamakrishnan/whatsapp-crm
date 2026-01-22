@@ -76,7 +76,7 @@ export function FinancialInstitutionsList() {
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <div className={`rounded-lg p-2 ${stat.bgColor}`}>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
