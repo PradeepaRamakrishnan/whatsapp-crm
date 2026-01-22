@@ -341,3 +341,30 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
     throw error;
   }
 }
+
+// export async function createLead(data: {
+//   mobile: string;
+//   pan_number: string;
+//   date_of_birth: string;
+//   campaignId?: string;
+//   contactId?: string;
+// }): Promise<unknown> {
+//   try {
+//     const cookieStore = await cookies();
+//     const response = await axiosClient({
+//       method: 'POST',
+//       url: '/leads',
+//       data,
+//       headers: {
+//         Cookie: cookieStore.toString(),
+//       },
+//     });
+
+//     return response.data;
+//   } catch (error: unknown) {
+//     if (error instanceof AxiosError) {
+//       throw new Error(error.response?.data?.message || 'Failed to create lead');
+//     }
+//     throw error;
+//   }
+// }
