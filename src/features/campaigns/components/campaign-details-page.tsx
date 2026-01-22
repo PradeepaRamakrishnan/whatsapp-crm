@@ -190,7 +190,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
-            {campaign.status === 'active' && (
+            {(campaign.status === 'active' || campaign.status === 'failed') && (
               <Button
                 variant="default"
                 size="sm"

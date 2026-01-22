@@ -79,12 +79,16 @@ export const columns: ColumnDef<CampaignContactData>[] = [
   {
     accessorKey: 'contact.mobileNumber',
     header: 'Mobile Number',
-    cell: ({ row }) => <div>{row.original.contact.mobileNumber}</div>,
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">{row.original.contact.mobileNumber}</div>
+    ),
   },
   {
     accessorKey: 'contact.emailId',
     header: 'Email',
-    cell: ({ row }) => <div className="text-sm">{row.original.contact.emailId}</div>,
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">{row.original.contact.emailId}</div>
+    ),
   },
   {
     accessorKey: 'contact.settlementAmount',
@@ -101,7 +105,7 @@ export const columns: ColumnDef<CampaignContactData>[] = [
     cell: ({ row }) => {
       const status: string = row.getValue('status');
       return (
-        <Badge className={getStatusColor(status)} variant="secondary">
+        <Badge variant="outline" className={`font-medium ${getStatusColor(status)}`}>
           {status.replace('_', ' ')}
         </Badge>
       );
@@ -135,7 +139,9 @@ export const columns: ColumnDef<CampaignContactData>[] = [
     header: 'Created At',
     cell: ({ row }) => {
       const date: string = row.getValue('createdAt');
-      return <div>{dayjs(date).format('DD MMM YYYY')}</div>;
+      return (
+        <div className="text-sm text-muted-foreground">{dayjs(date).format('DD MMM YYYY')}</div>
+      );
     },
   },
 ];
@@ -218,21 +224,40 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
   }
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-center justify-between">
-        <Input
-          placeholder="Search contacts..."
-          value={globalFilter ?? ''}
-          onChange={(event) => setGlobalFilter(String(event.target.value))}
-          className="max-w-sm"
-        />
-        <div className="text-sm text-muted-foreground">
-          {totalRecords} contact{totalRecords !== 1 ? 's' : ''} total
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search contacts..."
+            value={globalFilter ?? ''}
+            onChange={(event) => setGlobalFilter(String(event.target.value))}
+            className="max-w-sm w-full"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
+            Rows per page
+          </label>
+          <Select value={`${pageSize}`} onValueChange={handlePageSizeChange}>
+            <SelectTrigger size="sm" className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -252,7 +277,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer"
                   onClick={() => setSelectedContact(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -273,41 +298,28 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
         </Table>
       </div>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <Select value={`${pageSize}`} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              <SelectGroup>
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <SelectItem key={size} value={`${size}`}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          Showing {totalRecords > 0 ? (page - 1) * pageSize + 1 : 0} to{' '}
+          {Math.min(page * pageSize, totalRecords)} of {totalRecords} results
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {page} of {totalPages || 1}
-          </div>
+        <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
+            onClick={() => handlePageChange(Math.max(page - 1, 1))}
+            disabled={page === 1}
           >
             Previous
           </Button>
+          <span className="text-sm">
+            Page {page} of {totalPages || 1}
+          </span>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= totalPages}
+            onClick={() => handlePageChange(Math.min(page + 1, totalPages))}
+            disabled={page >= totalPages || totalPages === 0}
           >
             Next
           </Button>
