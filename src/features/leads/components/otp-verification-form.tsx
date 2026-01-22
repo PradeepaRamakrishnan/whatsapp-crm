@@ -32,7 +32,7 @@ export const OtpVerificationForm = () => {
 
   return (
     <div className="w-full max-w-md space-y-8">
-      <div className="space-y-2">
+      <div className="space-y-2 text-center">
         <h2 className="text-3xl font-bold tracking-tight">Verify OTP</h2>
         <p className="text-muted-foreground">
           Enter the 6-digit code sent to{' '}

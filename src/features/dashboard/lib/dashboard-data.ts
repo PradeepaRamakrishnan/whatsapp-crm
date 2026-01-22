@@ -60,12 +60,12 @@ export const dashboardData = {
       items: [
         {
           title: 'All Leads',
-          url: '/leads/all',
+          url: '/leads/list',
         },
-        {
-          title: 'Interested',
-          url: '/leads/interested',
-        },
+        // {
+        //   title: 'Interested',
+        //   url: '/leads/interested',
+        // },
         {
           title: 'Qualified',
           url: '/leads/qualified',

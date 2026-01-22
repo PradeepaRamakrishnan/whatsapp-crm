@@ -3,6 +3,7 @@
 
 import {
   createColumnHelper,
+  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -10,40 +11,49 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { CheckCircle2, EllipsisIcon, FunnelX, Phone, PhoneOff, Settings2 } from 'lucide-react';
+import { CheckCircle2, EllipsisIcon, Phone, PhoneOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
-import { DataGridTable } from '@/components/ui/data-grid-table';
-import { type Filter, type FilterFieldConfig, Filters } from '@/components/ui/filters';
+// import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
+import type { Filter } from '@/components/ui/filters';
 import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { type BorrowerData, borrowersData } from '../lib/data';
 
-interface BorrowersTableInCampaignProps {
+interface InterestedLeadsTableProps {
   campaignId?: number;
 }
 
-export function BorrowersTableInCampaign({
-  campaignId: _campaignId,
-}: BorrowersTableInCampaignProps) {
+export function InterestedLeadsTable({ campaignId: _campaignId }: InterestedLeadsTableProps) {
   const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [filters] = useState<Filter[]>([]);
 
   const columnHelper = createColumnHelper<BorrowerData>();
 
   const columns = [
     columnHelper.accessor('name', {
-      header: ({ column }) => <DataGridColumnHeader title="Name" column={column} />,
+      header: 'Name',
       cell: ({ getValue, row }) => (
         <button
           onClick={() => router.push(`/leads/interested/${row.original.id}`)}
@@ -53,41 +63,25 @@ export function BorrowersTableInCampaign({
         </button>
       ),
       size: 180,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.accessor('email', {
-      header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
+      header: 'Email',
       cell: ({ getValue }) => <div className="text-sm">{String(getValue() || '')}</div>,
       size: 220,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.accessor('phone', {
-      header: ({ column }) => <DataGridColumnHeader title="Phone" column={column} />,
+      header: 'Phone',
       cell: ({ getValue }) => (
         <div className="text-sm text-muted-foreground">{String(getValue() || '')}</div>
       ),
       size: 150,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.accessor('loanAmount', {
-      header: ({ column }) => <DataGridColumnHeader title="Amount" column={column} />,
+      header: 'Amount',
       cell: ({ getValue }) => (
         <div className="font-medium">₹{getValue().toLocaleString('en-IN')}</div>
       ),
       size: 150,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
       filterFn: (row, columnId, filterValue) => {
         if (!filterValue) return true;
         const [min, max] = filterValue;
@@ -96,17 +90,13 @@ export function BorrowersTableInCampaign({
       },
     }),
     columnHelper.accessor('settlementCount', {
-      header: ({ column }) => <DataGridColumnHeader title="Settlement Count" column={column} />,
+      header: 'Settlement Count',
       cell: ({ getValue }) => <div className="font-medium">{getValue()}</div>,
       size: 150,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.display({
       id: 'email-status',
-      header: () => <div className="text-center">Email</div>,
+      header: 'Email',
       cell: ({ row }) => (
         <div className="flex justify-center">
           {row.original.contactStatus.email ? (
@@ -117,14 +107,10 @@ export function BorrowersTableInCampaign({
         </div>
       ),
       size: 80,
-      enableSorting: false,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.display({
       id: 'sms-status',
-      header: () => <div className="text-center">SMS</div>,
+      header: 'SMS',
       cell: ({ row }) => (
         <div className="flex justify-center">
           {row.original.contactStatus.sms && !row.original.dndStatus ? (
@@ -135,14 +121,10 @@ export function BorrowersTableInCampaign({
         </div>
       ),
       size: 80,
-      enableSorting: false,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.display({
       id: 'whatsapp-status',
-      header: () => <div className="text-center">WhatsApp</div>,
+      header: 'WhatsApp',
       cell: ({ row }) => (
         <div className="flex justify-center">
           {row.original.contactStatus.whatsapp && !row.original.dndStatus ? (
@@ -153,13 +135,9 @@ export function BorrowersTableInCampaign({
         </div>
       ),
       size: 100,
-      enableSorting: false,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.accessor('dndStatus', {
-      header: () => <div className="text-center">DND</div>,
+      header: 'DND',
       cell: ({ getValue }) => (
         <div className="flex justify-center">
           {getValue() ? (
@@ -170,14 +148,10 @@ export function BorrowersTableInCampaign({
         </div>
       ),
       size: 80,
-      enableSorting: true,
-      enableHiding: true,
-      enableResizing: true,
-      enablePinning: true,
     }),
     columnHelper.display({
       id: 'actions',
-      header: () => <div className="text-right">Actions</div>,
+      header: 'Actions',
       cell: () => (
         <div className="text-right">
           <Button variant="ghost" size="icon">
@@ -186,49 +160,45 @@ export function BorrowersTableInCampaign({
         </div>
       ),
       size: 80,
-      enableSorting: false,
-      enableHiding: false,
-      enableResizing: false,
-      enablePinning: true,
     }),
   ];
 
-  const filterFields = useMemo<FilterFieldConfig[]>(
-    () => [
-      {
-        key: 'name',
-        label: 'Name',
-        type: 'text',
-        placeholder: 'Filter by name...',
-      },
-      {
-        key: 'email',
-        label: 'Email',
-        type: 'email',
-        placeholder: 'Filter by email...',
-      },
-      {
-        key: 'loanType',
-        label: 'Loan Type',
-        type: 'select',
-        placeholder: 'Filter by loan type...',
-        options: [
-          { label: 'Personal Loan', value: 'Personal Loan' },
-          { label: 'Business Loan', value: 'Business Loan' },
-          { label: 'Home Loan', value: 'Home Loan' },
-        ],
-        searchable: true,
-        className: 'w-[160px]',
-      },
-      {
-        key: 'loanAmount',
-        label: 'Loan Amount',
-        type: 'number',
-        placeholder: 'Filter by loan amount...',
-      },
-    ],
-    [],
-  );
+  // const filterFields = useMemo<FilterFieldConfig[]>(
+  //   () => [
+  //     {
+  //       key: 'name',
+  //       label: 'Name',
+  //       type: 'text',
+  //       placeholder: 'Filter by name...',
+  //     },
+  //     {
+  //       key: 'email',
+  //       label: 'Email',
+  //       type: 'email',
+  //       placeholder: 'Filter by email...',
+  //     },
+  //     {
+  //       key: 'loanType',
+  //       label: 'Loan Type',
+  //       type: 'select',
+  //       placeholder: 'Filter by loan type...',
+  //       options: [
+  //         { label: 'Personal Loan', value: 'Personal Loan' },
+  //         { label: 'Business Loan', value: 'Business Loan' },
+  //         { label: 'Home Loan', value: 'Home Loan' },
+  //       ],
+  //       searchable: true,
+  //       className: 'w-[160px]',
+  //     },
+  //     {
+  //       key: 'loanAmount',
+  //       label: 'Loan Amount',
+  //       type: 'number',
+  //       placeholder: 'Filter by loan amount...',
+  //     },
+  //   ],
+  //   [],
+  // );
 
   // Apply filters to data
   const filteredData = useMemo(() => {
@@ -315,13 +285,13 @@ export function BorrowersTableInCampaign({
     return filtered;
   }, [filters]);
 
-  const handleFiltersChange = useCallback((filters: Filter[]) => {
-    setFilters(filters);
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  }, []);
+  // const handleFiltersChange = useCallback((filters: Filter[]) => {
+  //   setFilters(filters);
+  //   setPagination((prev) => ({
+  //     ...prev,
+  //     pageIndex: 0,
+  //   }));
+  // }, []);
 
   const table = useReactTable({
     columns,
@@ -341,21 +311,9 @@ export function BorrowersTableInCampaign({
   });
 
   return (
-    <DataGrid
-      table={table}
-      recordCount={filteredData?.length || 0}
-      tableLayout={{
-        rowBorder: true,
-        headerBorder: true,
-        width: 'fixed',
-        columnsResizable: true,
-        columnsPinnable: true,
-        columnsVisibility: true,
-      }}
-    >
-      <div className="w-full space-y-2.5">
-        {/* Filters and Controls Row */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+        <div className="flex flex-1 items-center gap-2">
           <Input
             className="h-8 w-full sm:w-60"
             value={(table.getState().globalFilter ?? '') as string}
@@ -365,40 +323,106 @@ export function BorrowersTableInCampaign({
             aria-label="Search borrowers"
           />
 
-          <DataGridColumnVisibility
+          {/* <DataGridColumnVisibility
             table={table}
             trigger={
               <Button variant="outline" size="sm">
-                <Settings2 />
+                <Settings2 className="h-4 w-4 mr-2" />
                 View
               </Button>
             }
-          />
-
-          <div className="flex-1">
-            <Filters
-              filters={filters}
-              fields={filterFields}
-              variant="outline"
-              onChange={handleFiltersChange}
-            />
-          </div>
-
-          {filters.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setFilters([])}>
-              <FunnelX /> Clear
-            </Button>
-          )}
+          /> */}
         </div>
 
-        <DataGridContainer>
-          <ScrollArea>
-            <DataGridTable />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </DataGridContainer>
-        <DataGridPagination />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Label className="text-sm text-muted-foreground">Rows per page</Label>
+          <Select
+            value={String(pagination.pageSize)}
+            onValueChange={(val) => {
+              setPagination((prev) => ({ ...prev, pageSize: Number(val), pageIndex: 0 }));
+            }}
+          >
+            <SelectTrigger size="sm" className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                <SelectItem key={pageSize} value={String(pageSize)}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </DataGrid>
+
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="hover:bg-muted/50">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          Showing {filteredData.length > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0} to{' '}
+          {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of{' '}
+          {filteredData.length} results
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <span className="text-sm">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

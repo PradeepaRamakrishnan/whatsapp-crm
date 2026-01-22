@@ -2,6 +2,7 @@
 
 import { Clock, Info, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InterestedLeadsTable } from './interested-leads-table';
 
 // import { BorrowersTableInCampaign } from '@/features/campaigns/components/borrowers-table-in-campaign';
 
@@ -9,7 +10,7 @@ interface InterestedLeadsListProps {
   chainId: number;
 }
 
-export function InterestedLeadsList({ chainId: _chainId }: InterestedLeadsListProps) {
+export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
   const stats = [
     {
       title: 'Total Interested',
@@ -76,7 +77,7 @@ export function InterestedLeadsList({ chainId: _chainId }: InterestedLeadsListPr
       </div>
 
       {/* Leads Table */}
-      {/* <BorrowersTableInCampaign chainId={chainId} basePath="/leads/interested" /> */}
+      <InterestedLeadsTable campaignId={chainId} />
     </div>
   );
 }
