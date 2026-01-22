@@ -15,7 +15,6 @@ import utc from 'dayjs/plugin/utc';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
-import slugify from 'slugify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +37,7 @@ import {
 import { getAllFiles } from '../services';
 import type { FileData, FileStatus, FilesResponse } from '../types/file.types';
 import { FileActions } from './file-actions';
+import { FileDetailSheet } from './file-detail-sheet';
 
 dayjs.extend(utc);
 
@@ -123,6 +123,7 @@ export function FilesTable() {
   const searchParams = useSearchParams();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [selectedFile, setSelectedFile] = React.useState<FileData | null>(null);
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -232,11 +233,7 @@ export function FilesTable() {
                 <TableRow
                   key={row.id}
                   className="cursor-pointer"
-                  onClick={() =>
-                    router.push(
-                      `/files/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
-                    )
-                  }
+                  onClick={() => setSelectedFile(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -282,6 +279,11 @@ export function FilesTable() {
           </Button>
         </div>
       </div>
+      <FileDetailSheet
+        file={selectedFile}
+        isOpen={!!selectedFile}
+        onClose={() => setSelectedFile(null)}
+      />
     </div>
   );
 }
