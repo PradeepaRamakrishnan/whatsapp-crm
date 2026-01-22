@@ -78,5 +78,31 @@ export const otpSchema = z.object({
     .regex(/^[0-9]+$/, 'Please enter a valid OTP'),
 });
 
+export const interestedDetailsSchema = z.object({
+  fullName: z
+    .string()
+    .min(1, 'Full name is required')
+    .min(2, 'Full name must be at least 2 characters'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  employmentType: z.string().min(1, 'Employment type is required'),
+  monthlyIncome: z
+    .string()
+    .min(1, 'Monthly income is required')
+    .regex(/^[0-9]+$/, 'Please enter a valid amount'),
+  loanAmount: z
+    .string()
+    .min(1, 'Loan amount is required')
+    .regex(/^[0-9]+$/, 'Please enter a valid amount'),
+  purpose: z.string().min(1, 'Purpose of loan is required'),
+  state: z.string().min(1, 'State is required'),
+  city: z.string().min(1, 'City is required'),
+  pincode: z
+    .string()
+    .min(1, 'Pincode is required')
+    .length(6, 'Pincode must be 6 digits')
+    .regex(/^[0-9]+$/, 'Pincode must contain only numbers'),
+});
+
 export type InterestedFormData = z.infer<typeof interestedSchema>;
 export type OtpFormData = z.infer<typeof otpSchema>;
+export type InterestedDetailsFormData = z.infer<typeof interestedDetailsSchema>;

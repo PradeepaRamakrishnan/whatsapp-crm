@@ -113,17 +113,18 @@ const InterestedPage = () => {
       </div>
 
       {/* Right Side - Form Container */}
-      <div className="flex h-full items-center justify-center overflow-y-auto bg-background pt-20 p-8">
-        <div className="w-full max-w-md space-y-6 pt-40 sm:pt-32">
+      <div className="flex h-full items-center justify-center overflow-y-auto bg-background p-8">
+        <div className="w-full max-w-md space-y-6">
           {/* Logo */}
-          <div className="flex items-center justify-center mb-2">
-            <div className="relative w-72">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative w-48 sm:w-56">
               <Image
                 src="/assets/images/samatvalogo.png"
                 alt="Samatva Awareness Logo"
-                width={288}
-                height={80}
+                width={224}
+                height={62}
                 className="object-contain"
+                priority
               />
             </div>
           </div>
