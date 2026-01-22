@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { type NextRequest, NextResponse } from 'next/server';
 import type { User } from './features/auth/types/auth.types';
 
-const publicRoutes = ['/interested', '/interested-form'];
+const publicRoutes = ['/interested', '/not-interested'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

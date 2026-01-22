@@ -1,15 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { Suspense } from 'react';
 import { InterestedForm } from '@/features/leads/components/interested-form';
 
 const InterestedPage = () => {
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Left Side - Brand Visual (Hidden on mobile) */}
+    <div className="grid h-screen overflow-hidden lg:grid-cols-2">
+      {/* Left Side - Fintech Visual */}
       <div
-        className="relative hidden lg:flex items-center justify-center p-12 bg-cover bg-center"
+        className="relative hidden h-full items-center justify-center bg-cover bg-center p-12 lg:flex"
         style={{
           backgroundImage: 'url(/assets/images/login-bg.jpg)',
         }}
@@ -17,7 +16,7 @@ const InterestedPage = () => {
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/60" />
 
-        {/* Main Content */}
+        {/* Content */}
         <div className="relative z-10 max-w-md space-y-8 text-white">
           {/* Tagline */}
           <div className="space-y-4">
@@ -115,33 +114,23 @@ const InterestedPage = () => {
       </div>
 
       {/* Right Side - Form Container */}
-      <div className="flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-6">
+      <div className="flex h-full items-center justify-center overflow-y-auto bg-background pt-20 p-8">
+        <div className="w-full max-w-md space-y-6 pt-40 sm:pt-32">
           {/* Logo */}
           <div className="flex items-center justify-center mb-2">
-            <div className="relative w-72 h-20">
+            <div className="relative w-72">
               <Image
                 src="/assets/images/samatvalogo.png"
                 alt="Samatva Awareness Logo"
-                fill
+                width={288}
+                height={80}
                 className="object-contain"
-                priority
               />
             </div>
           </div>
 
-          <Suspense
-            fallback={
-              <div className="w-full space-y-4 animate-pulse">
-                <div className="h-8 bg-muted rounded" />
-                <div className="h-12 bg-muted rounded" />
-                <div className="h-12 bg-muted rounded" />
-                <div className="h-12 bg-muted rounded" />
-              </div>
-            }
-          >
-            <InterestedForm />
-          </Suspense>
+          {/* Form */}
+          <InterestedForm />
         </div>
       </div>
     </div>

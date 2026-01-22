@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { markContactInterested } from '@/features/campaigns/services';
 import { cn } from '@/lib/utils';
+import { dateOfBirthValidator, panNumberValidator, phoneNumberValidator } from '../lib/validation';
+
 export const InterestedForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,17 +24,15 @@ export const InterestedForm = () => {
   const campaignId = searchParams.get('campaignId');
   const contactId = searchParams.get('contactId');
 
-  // Use React Query to mark contact as interested immediately when visiting from campaign link
   useQuery({
     queryKey: ['markInterested', campaignId, contactId],
     queryFn: () => markContactInterested(campaignId as string, contactId as string),
     enabled: !!campaignId && !!contactId,
-    retry: 1, // Only retry once on failure
-    staleTime: Number.POSITIVE_INFINITY, // Never refetch - this is a one-time action
-    gcTime: 0, // Don't cache the result
+    retry: 1,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: 0,
   });
 
-  // Form for Mobile Number
   const mobileForm = useForm({
     defaultValues: {
       mobile: '',
@@ -40,7 +40,6 @@ export const InterestedForm = () => {
       date_of_birth: undefined as Date | undefined,
     },
     onSubmit: async ({ value }) => {
-      // Update URL to /interested/otp with mobile number and campaign params if present
       const params = new URLSearchParams({ mobile: value.mobile });
       if (campaignId) params.append('campaignId', campaignId);
       if (contactId) params.append('contactId', contactId);
@@ -49,7 +48,6 @@ export const InterestedForm = () => {
     },
   });
 
-  // Show mobile form by default
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2 text-center">
@@ -67,7 +65,15 @@ export const InterestedForm = () => {
       >
         <div className="space-y-4">
           {/* Mobile Number Field */}
-          <mobileForm.Field name="mobile">
+          <mobileForm.Field
+            name="mobile"
+            validators={{
+              onChange: ({ value }) => {
+                const result = phoneNumberValidator.safeParse(value);
+                return result.success ? undefined : result.error.errors[0].message;
+              },
+            }}
+          >
             {(field) => (
               <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
                 <FieldLabel htmlFor={field.name} className="font-semibold">
@@ -100,8 +106,17 @@ export const InterestedForm = () => {
           <div className="space-y-3">
             <h3 className="font-semibold text-sm">Verification Details</h3>
 
-            {/* Date of Birth Field */}
-            <mobileForm.Field name="date_of_birth">
+            {/* Date of Birth Field - FIXED VERSION */}
+            <mobileForm.Field
+              name="date_of_birth"
+              validators={{
+                onChange: ({ value }) => {
+                  if (!value) return 'Date of birth is required';
+                  const result = dateOfBirthValidator.safeParse(value);
+                  return result.success ? undefined : result.error.errors[0].message;
+                },
+              }}
+            >
               {(field) => (
                 <FieldSet className="flex flex-col w-full">
                   <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
@@ -135,15 +150,28 @@ export const InterestedForm = () => {
                       <PopoverContent
                         className="w-auto border border-gray-200 p-0 shadow-lg"
                         align="start"
+                        onOpenAutoFocus={(e) => {
+                          // Prevent focus on mount to avoid keyboard issues
+                          e.preventDefault();
+                        }}
                       >
                         <Calendar
                           mode="single"
                           selected={field.state.value}
                           onSelect={(date) => {
+                            // Enhanced date selection with proper handling
                             if (date) {
-                              field.handleChange(date);
-                              setPopoverOpen(false);
-                              field.handleBlur();
+                              // Set time to noon to avoid timezone issues
+                              const normalizedDate = new Date(date);
+                              normalizedDate.setHours(12, 0, 0, 0);
+
+                              field.handleChange(normalizedDate);
+
+                              // Small delay before closing to ensure state updates
+                              setTimeout(() => {
+                                setPopoverOpen(false);
+                                field.handleBlur();
+                              }, 100);
                             }
                           }}
                           disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
@@ -167,7 +195,7 @@ export const InterestedForm = () => {
                             head_cell: 'text-gray-500 rounded-md w-9 font-normal text-[0.6rem]',
                             row: 'flex w-full mt-2',
                             cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-gray-100/50 [&:has([aria-selected])]:bg-gray-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
-                            day: 'h-9 w-9 p-0 font-medium  text-sm text-center aria-selected:opacity-100 hover:bg-gray-100 rounded-md transition-colors',
+                            day: 'h-9 w-9 p-0 font-medium text-sm text-center aria-selected:opacity-100 hover:bg-gray-100 rounded-md transition-colors',
                             day_range_end: 'day-range-end',
                             day_selected:
                               'bg-gray-900 text-white hover:bg-gray-900 hover:text-white focus:bg-gray-900 focus:text-white',
@@ -202,7 +230,15 @@ export const InterestedForm = () => {
             </div>
 
             {/* PAN Number Field */}
-            <mobileForm.Field name="pan_number">
+            <mobileForm.Field
+              name="pan_number"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = panNumberValidator.safeParse(value);
+                  return result.success ? undefined : result.error.errors[0].message;
+                },
+              }}
+            >
               {(field) => (
                 <Field data-invalid={field.state.meta.errors.length > 0}>
                   <FieldLabel htmlFor={field.name}>
@@ -229,8 +265,7 @@ export const InterestedForm = () => {
           </div>
         </div>
 
-        <div className="space-y-3 text-[13px] text-muted-foreground leading-relaxed p-4 rounded-xl bg-orange-50/50 dark:bg-orange-950/10 border border-orange-100/50 dark:border-orange-500/10">
-          <p className="font-medium text-orange-900 dark:text-orange-200">Consent & Privacy</p>
+        <div className="space-y-3 text-[13px] text-muted-foreground leading-relaxed">
           <p>By continuing, I hereby agree/authorise the following:</p>
           <ul className="list-disc space-y-1.5 pl-4">
             <li>
