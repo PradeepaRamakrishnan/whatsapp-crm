@@ -205,7 +205,7 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSubmitting || updateMutation.isPending}
-                  className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px]"
+                  className="min-w-[120px]"
                 >
                   {(isSubmitting || updateMutation.isPending) && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

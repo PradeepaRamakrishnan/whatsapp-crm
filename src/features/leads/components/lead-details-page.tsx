@@ -799,12 +799,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
             <Button variant="outline" onClick={() => setIsUploadModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-              onClick={confirmUpload}
-            >
-              Finish Upload
-            </Button>
+            <Button onClick={confirmUpload}>Finish Upload</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

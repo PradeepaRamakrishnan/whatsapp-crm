@@ -317,7 +317,7 @@ export function CreateFinancialInstitutionForm() {
             <Button
               type="submit"
               disabled={!canSubmit || isSubmitting || isPending}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md shadow-orange-500/20 transition-all"
+              className="min-w-[120px]"
             >
               {isSubmitting || isPending ? (
                 <>
