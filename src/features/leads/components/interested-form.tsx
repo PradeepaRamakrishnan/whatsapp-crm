@@ -40,11 +40,25 @@ export const InterestedForm = () => {
       date_of_birth: undefined as Date | undefined,
     },
     onSubmit: async ({ value }) => {
-      const params = new URLSearchParams({ mobile: value.mobile });
-      if (campaignId) params.append('campaignId', campaignId);
-      if (contactId) params.append('contactId', contactId);
+      try {
+        // if (value.date_of_birth) {
+        //   await createLead({
+        //     mobile: value.mobile,
+        //     pan_number: value.pan_number,
+        //     date_of_birth: value.date_of_birth.toISOString(),
+        //     campaignId: campaignId || undefined,
+        //     contactId: contactId || undefined,
+        //   });
+        // }
 
-      router.push(`/interested/otp?${params.toString()}`);
+        const params = new URLSearchParams({ mobile: value.mobile });
+        if (campaignId) params.append('campaignId', campaignId);
+        if (contactId) params.append('contactId', contactId);
+
+        router.push(`/interested/otp?${params.toString()}`);
+      } catch (error) {
+        console.error('Failed to create lead:', error);
+      }
     },
   });
 
