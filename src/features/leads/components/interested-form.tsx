@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { CalendarIcon } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -14,26 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { markContactInterested } from '@/features/campaigns/services';
 import { cn } from '@/lib/utils';
-import { otpSchema } from '../lib/validation';
-
-type Step = 'mobile' | 'otp';
-// import {
-//   dateOfBirthValidator,
-//   interestedSchema,
-//   panNumberValidator,
-//   phoneNumberValidator,
-// } from '../lib/validation';
-
 export const InterestedForm = () => {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const isOtpStep = pathname?.includes('/otp');
-  const step: Step = isOtpStep ? 'otp' : 'mobile';
-
-  const mobileNumber = searchParams.get('mobile') || '';
   const campaignId = searchParams.get('campaignId');
   const contactId = searchParams.get('contactId');
 
@@ -41,7 +26,7 @@ export const InterestedForm = () => {
   useQuery({
     queryKey: ['markInterested', campaignId, contactId],
     queryFn: () => markContactInterested(campaignId as string, contactId as string),
-    enabled: !!campaignId && !!contactId && !isOtpStep,
+    enabled: !!campaignId && !!contactId,
     retry: 1, // Only retry once on failure
     staleTime: Number.POSITIVE_INFINITY, // Never refetch - this is a one-time action
     gcTime: 0, // Don't cache the result
@@ -64,110 +49,12 @@ export const InterestedForm = () => {
     },
   });
 
-  // Form for OTP
-  const otpForm = useForm({
-    defaultValues: {
-      otp: '',
-    },
-    onSubmit: async () => {
-      // Navigate to the full details form
-      router.push('/interested-form');
-    },
-  });
-
-  // Show OTP form if step is 'otp'
-  if (step === 'otp') {
-    return (
-      <div className="w-full max-w-sm space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight">Verify OTP</h2>
-          <p className="text-xs text-muted-foreground">
-            Enter the 6-digit code sent to <span className="font-semibold">+91 {mobileNumber}</span>
-          </p>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            otpForm.handleSubmit();
-            return false;
-          }}
-          className="space-y-4"
-        >
-          <otpForm.Field
-            name="otp"
-            validators={{
-              onChange: ({ value }) => {
-                const result = otpSchema.shape.otp.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
-              },
-              onSubmit: ({ value }) => {
-                const result = otpSchema.shape.otp.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
-              },
-            }}
-          >
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>OTP Code</FieldLabel>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="text"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={field.state.value}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, '');
-                    field.handleChange(val);
-                  }}
-                  onBlur={field.handleBlur}
-                  className="text-center tracking-widest text-lg"
-                />
-                <FieldError>
-                  {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                    ? field.state.meta.errors[0]
-                    : null}
-                </FieldError>
-              </Field>
-            )}
-          </otpForm.Field>
-
-          <Button type="submit" className="w-full" disabled={otpForm.state.isSubmitting}>
-            {otpForm.state.isSubmitting ? 'Verifying...' : 'Verify & Proceed'}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Didn't receive the code?{' '}
-            <button type="button" className="text-primary hover:underline">
-              Resend OTP
-            </button>
-          </p>
-
-          <div className="pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                router.push('/interested');
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back to form
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
   // Show mobile form by default
   return (
-    <div className="w-full max-w-lg space-y-3">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight">Get Started</h2>
-        <p className="text-xs text-muted-foreground">
-          Enter your details to check your eligibility
-        </p>
+    <div className="w-full space-y-6">
+      <div className="space-y-2 text-center">
+        <h2 className="text-3xl font-bold tracking-tight">Get Started</h2>
+        <p className="text-muted-foreground">Enter your details to check your eligibility</p>
       </div>
 
       <form
@@ -182,10 +69,14 @@ export const InterestedForm = () => {
           {/* Mobile Number Field */}
           <mobileForm.Field name="mobile">
             {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>Mobile Number</FieldLabel>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">+91</span>
+              <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
+                <FieldLabel htmlFor={field.name} className="font-semibold">
+                  Mobile Number
+                </FieldLabel>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                    <span className="text-muted-foreground font-medium border-r pr-3">+91</span>
+                  </div>
                   <Input
                     id={field.name}
                     name={field.name}
@@ -194,11 +85,9 @@ export const InterestedForm = () => {
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value.replace(/[^0-9]/g, ''))}
                     onBlur={field.handleBlur}
+                    className="pl-16 h-12 text-lg tracking-wider font-medium"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  We will send you an OTP to this number
-                </p>
                 <FieldError>
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0
                     ? field.state.meta.errors[0]
@@ -215,8 +104,10 @@ export const InterestedForm = () => {
             <mobileForm.Field name="date_of_birth">
               {(field) => (
                 <FieldSet className="flex flex-col w-full">
-                  <Field data-invalid={field.state.meta.errors.length > 0}>
-                    <FieldLabel htmlFor={field.name}>Date of Birth *</FieldLabel>
+                  <Field data-invalid={field.state.meta.errors.length > 0} className="space-y-2">
+                    <FieldLabel htmlFor={field.name} className="font-semibold">
+                      Date of Birth *
+                    </FieldLabel>
                     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                       <PopoverTrigger
                         asChild
@@ -229,15 +120,15 @@ export const InterestedForm = () => {
                           type="button"
                           variant="outline"
                           className={cn(
-                            'group w-full justify-start text-left font-normal transition-all hover:bg-gray-50',
+                            'group w-full justify-start text-left font-normal transition-all hover:bg-gray-50 h-11',
                             !field.state.value && 'text-muted-foreground',
                           )}
                         >
-                          <CalendarIcon className="mr-2 size-4 transition-colors" />
+                          <CalendarIcon className="mr-2 size-4 transition-colors text-muted-foreground" />
                           {field.state.value ? (
                             dayjs(field.state.value).format('MMMM D, YYYY')
                           ) : (
-                            <span>Pick a date</span>
+                            <span>Select date</span>
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -320,12 +211,12 @@ export const InterestedForm = () => {
                   <Input
                     id={field.name}
                     name={field.name}
-                    placeholder="ENTER 10 DIGIT PAN"
+                    placeholder="ENTER PAN (E.G. ABCDE1234F)"
                     maxLength={10}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
                     onBlur={field.handleBlur}
-                    className="uppercase"
+                    className="uppercase h-11 font-mono tracking-widest"
                   />
                   <FieldError>
                     {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -338,20 +229,32 @@ export const InterestedForm = () => {
           </div>
         </div>
 
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>By continuing the application process, I hereby agree/authorise the following:</p>
-          <ol className="list-inside list-decimal space-y-1 pl-2">
+        <div className="space-y-3 text-[13px] text-muted-foreground leading-relaxed p-4 rounded-xl bg-orange-50/50 dark:bg-orange-950/10 border border-orange-100/50 dark:border-orange-500/10">
+          <p className="font-medium text-orange-900 dark:text-orange-200">Consent & Privacy</p>
+          <p>By continuing, I hereby agree/authorise the following:</p>
+          <ul className="list-disc space-y-1.5 pl-4">
             <li>
-              Samatva Awareness <span className="text-primary underline">Terms & Conditions</span>{' '}
-              and <span className="text-primary underline">Privacy Policy</span>
+              Samatva Awareness{' '}
+              <span className="text-primary font-medium hover:underline cursor-pointer">
+                Terms & Conditions
+              </span>{' '}
+              and{' '}
+              <span className="text-primary font-medium hover:underline cursor-pointer">
+                Privacy Policy
+              </span>
             </li>
             <li>
               I allow Samatva Awareness and its lending partners to access my credit information
             </li>
-          </ol>
+          </ul>
         </div>
 
-        <Button type="submit" className="w-full" disabled={mobileForm.state.isSubmitting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full font-semibold shadow-lg shadow-primary/20"
+          disabled={mobileForm.state.isSubmitting}
+        >
           {mobileForm.state.isSubmitting ? 'Sending OTP...' : 'Send OTP'}
         </Button>
       </form>
