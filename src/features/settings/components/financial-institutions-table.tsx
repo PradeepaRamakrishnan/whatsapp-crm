@@ -5,7 +5,7 @@ import { Edit, Eye, MoreHorizontal } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,16 +35,16 @@ import type { FinancialInstitution, FinancialInstitutionsResponse } from '../typ
 import { EditFinancialInstitutionSheet } from './edit-financial-institution-sheet';
 import { FinancialInstitutionDetailSheet } from './financial-institution-detail-sheet';
 
-const getStatusStyles = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'inactive':
-      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-    default:
-      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-  }
-};
+// const getStatusStyles = (status: string): string => {
+//   switch (status?.toLowerCase()) {
+//     case 'active':
+//       return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+//     case 'inactive':
+//       return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+//     default:
+//       return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+//   }
+// };
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -154,9 +154,9 @@ export function FinancialInstitutionsTable() {
               <TableHead>IFSC Code</TableHead>
               <TableHead>Branch</TableHead>
               <TableHead>Contact Person</TableHead>
-              <TableHead>Email</TableHead>
+              {/* <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Status</TableHead> */}
               <TableHead>Uploaded At</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -191,7 +191,7 @@ export function FinancialInstitutionsTable() {
                   <TableCell>{item.ifscCode}</TableCell>
                   <TableCell className="text-muted-foreground">{item.branch}</TableCell>
                   <TableCell className="text-muted-foreground">{item.contact.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{item.contact.email}</TableCell>
+                  {/* <TableCell className="text-muted-foreground">{item.contact.email}</TableCell>
                   <TableCell className="text-muted-foreground">{item.contact.phone}</TableCell>
                   <TableCell>
                     <Badge
@@ -200,7 +200,7 @@ export function FinancialInstitutionsTable() {
                     >
                       {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                     </Badge>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-muted-foreground">
                     {formatDate(item.createdAt)}
                   </TableCell>
