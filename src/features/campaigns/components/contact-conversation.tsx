@@ -17,7 +17,7 @@ export function ContactConversation({ contact }: ContactConversationProps) {
   const [smsMessage, setSmsMessage] = useState('');
   const [whatsappMessage, setWhatsappMessage] = useState('');
 
-  const settlementAmount = contact.fileContent?.settlementAmount || 0;
+  // const settlementAmount = contact.fileContent?.settlementAmount || 0;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -45,9 +45,9 @@ export function ContactConversation({ contact }: ContactConversationProps) {
                 <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 mb-1">
                   Settlement Offer
                 </p>
-                <p className="text-xs text-emerald-800 dark:text-emerald-200">
+                {/* <p className="text-xs text-emerald-800 dark:text-emerald-200">
                   Dear {contact.customerName}, we have a special settlement offer for you...
-                </p>
+                </p> */}
               </div>
               <span className="text-xs text-muted-foreground mt-1">2 hours ago</span>
             </div>
@@ -105,10 +105,10 @@ export function ContactConversation({ contact }: ContactConversationProps) {
             {/* Sent SMS */}
             <div className="flex flex-col items-end">
               <div className="bg-blue-100 dark:bg-blue-950 rounded-lg p-3 max-w-[85%]">
-                <p className="text-xs text-blue-800 dark:text-blue-200">
+                {/* <p className="text-xs text-blue-800 dark:text-blue-200">
                   Hi! Your loan settlement amount is ₹{settlementAmount.toLocaleString('en-IN')}.
                   Reply YES to proceed.
-                </p>
+                </p> */}
               </div>
               <span className="text-xs text-muted-foreground mt-1">Yesterday</span>
             </div>
@@ -199,10 +199,10 @@ export function ContactConversation({ contact }: ContactConversationProps) {
                   <Clock className="h-3 w-3 text-amber-600" />
                   <p className="text-xs font-medium text-amber-600">Scheduled</p>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                {/* <p className="text-xs text-muted-foreground">
                   Your settlement amount is ₹{settlementAmount.toLocaleString('en-IN')}. Would you
                   like to proceed?
-                </p>
+                </p> */}
               </div>
               <span className="text-xs text-muted-foreground mt-1">Sending in 2 days</span>
             </div>
