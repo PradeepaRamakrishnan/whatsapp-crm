@@ -70,7 +70,7 @@ export async function getFileById(
       },
     });
 
-    return response.data;
+    return response.data.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch file by ID');

@@ -85,11 +85,11 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
       },
     },
     {
-      id: 'existsIn',
-      header: 'Exists In',
+      id: 'campaigns',
+      header: 'Campaigns',
       cell: ({ row }) => {
-        const duplicates = row.original.duplicateInFiles || [];
-        if (duplicates.length === 0) {
+        const campaigns = row.original.campaigns || [];
+        if (campaigns.length === 0) {
           return <span className="text-sm text-muted-foreground">-</span>;
         }
         return (
@@ -97,18 +97,18 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5 cursor-pointer">
-                  <Copy className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-sm text-amber-600 font-medium">
-                    {duplicates.length} file{duplicates.length > 1 ? 's' : ''}
+                  <Copy className="h-3.5 w-3.5 text-blue-500" />
+                  <span className="text-sm text-blue-600 font-medium">
+                    {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''}
                   </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-xs">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold">Also exists in:</p>
-                  {duplicates.map((file) => (
-                    <p key={file.fileId} className="text-xs">
-                      • {file.fileName}
+                  <p className="text-xs font-semibold">Used in campaigns:</p>
+                  {campaigns.map((campaign) => (
+                    <p key={campaign.id} className="text-xs">
+                      • {campaign.name}
                     </p>
                   ))}
                 </div>
@@ -377,21 +377,21 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                 </div>
               </div>
 
-              {selectedRecord.duplicateInFiles && selectedRecord.duplicateInFiles.length > 0 && (
+              {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 && (
                 <>
                   <Separator />
                   <div>
-                    <h4 className="mb-3 text-sm font-semibold">Exists in Other Files</h4>
+                    <h4 className="mb-3 text-sm font-semibold">Used in Campaigns</h4>
                     <div className="space-y-2">
-                      {selectedRecord.duplicateInFiles.map((file) => (
+                      {selectedRecord.campaigns.map((campaign) => (
                         <div
-                          key={file.fileId}
-                          className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/20"
+                          key={campaign.id}
+                          className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/20"
                         >
-                          <Copy className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                          <Copy className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-amber-900 dark:text-amber-100">
-                              {file.fileName}
+                            <p className="truncate text-sm font-medium text-blue-900 dark:text-blue-100">
+                              {campaign.name}
                             </p>
                           </div>
                         </div>
