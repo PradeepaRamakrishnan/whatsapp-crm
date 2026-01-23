@@ -1,20 +1,22 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { Clock, Info, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllLeads } from '../services';
+import type { LeadsResponse } from '../types';
 import { InterestedLeadsTable } from './interested-leads-table';
 
-// import { BorrowersTableInCampaign } from '@/features/campaigns/components/borrowers-table-in-campaign';
+export function InterestedLeadsList() {
+  const { data: leadsResponse } = useQuery<LeadsResponse>({
+    queryKey: ['leads', { page: 1, limit: 10 }],
+    queryFn: () => getAllLeads(1, 10),
+  });
 
-interface InterestedLeadsListProps {
-  chainId: number;
-}
-
-export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
   const stats = [
     {
       title: 'Total Interested',
-      value: '142',
+      value: leadsResponse?.stats?.totalInterested?.toString() || '0',
       icon: Users,
       description: 'Leads who expressed interest',
       color: 'text-orange-600',
@@ -22,7 +24,7 @@ export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
     },
     {
       title: 'New Today',
-      value: '12',
+      value: leadsResponse?.stats?.newToday?.toString() || '0',
       icon: TrendingUp,
       description: 'Incoming interest today',
       color: 'text-blue-600',
@@ -30,7 +32,7 @@ export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
     },
     {
       title: 'Avg. Response Time',
-      value: '2.4h',
+      value: leadsResponse?.stats?.avgResponseTime || '0h',
       icon: Clock,
       description: 'Time to first contact',
       color: 'text-green-600',
@@ -38,7 +40,7 @@ export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
     },
     {
       title: 'Follow-ups Due',
-      value: '8',
+      value: leadsResponse?.stats?.followUpsDue?.toString() || '0',
       icon: Info,
       description: 'Action required',
       color: 'text-purple-600',
@@ -77,7 +79,7 @@ export function InterestedLeadsList({ chainId }: InterestedLeadsListProps) {
       </div>
 
       {/* Leads Table */}
-      <InterestedLeadsTable campaignId={chainId} />
+      <InterestedLeadsTable />
     </div>
   );
 }
