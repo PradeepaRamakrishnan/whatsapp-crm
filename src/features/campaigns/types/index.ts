@@ -79,7 +79,7 @@ export type CampaignDetailsResponse = CampaignDetails;
 export interface CampaignContactData {
   id: string;
   campaign: {
-    id: string;
+    id: string | Record<string, unknown>;
   };
   contact: {
     id: string;
@@ -89,14 +89,22 @@ export interface CampaignContactData {
     emailId: string;
   };
   status: string;
+  responseStatus: 'interested' | 'not_interested' | null;
   email: {
     sent: boolean;
+    sentAt?: string;
   };
   sms: {
     sent: boolean;
   };
   whatsapp: {
     sent: boolean;
+  };
+  lead?: {
+    id: string;
+    interestedAt: string;
+    consentGivenAt: string | null;
+    status: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -110,13 +118,15 @@ export interface CampaignContactsMeta {
 }
 
 export interface CampaignContactsStats {
-  pending: number;
-  emailSent: number;
-  smsSent: number;
-  whatsappSent: number;
-  allSent: number;
-  interested: number;
-  notInterested: number;
+  pending: string | number;
+  processing: string | number;
+  completed: string | number;
+  failed: string | number;
+  emailSent: string | number;
+  smsSent: string | number;
+  whatsappSent: string | number;
+  interested: string | number;
+  notInterested: string | number;
 }
 
 export interface CampaignContactsResponse {

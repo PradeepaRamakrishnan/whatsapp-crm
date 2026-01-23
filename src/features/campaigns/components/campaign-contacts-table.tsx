@@ -61,6 +61,12 @@ const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'pending':
       return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300';
+    case 'processing':
+      return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300';
+    case 'completed':
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+    case 'failed':
+      return 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-300';
     case 'interested':
       return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
     case 'not_interested':
@@ -68,6 +74,21 @@ const getStatusColor = (status: string) => {
     default:
       return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
   }
+};
+
+const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
+  if (responseStatus === 'interested') {
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+  }
+  if (responseStatus === 'not_interested') {
+    return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
+  }
+  return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+};
+
+const formatResponseStatus = (responseStatus: 'interested' | 'not_interested' | null) => {
+  if (responseStatus === null) return 'No Response';
+  return responseStatus.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
 export const columns: ColumnDef<CampaignContactData>[] = [
@@ -100,13 +121,16 @@ export const columns: ColumnDef<CampaignContactData>[] = [
     ),
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: 'responseStatus',
+    header: 'Response Status',
     cell: ({ row }) => {
-      const status: string = row.getValue('status');
+      const responseStatus: 'interested' | 'not_interested' | null = row.getValue('responseStatus');
       return (
-        <Badge variant="outline" className={`font-medium ${getStatusColor(status)}`}>
-          {status.replace('_', ' ')}
+        <Badge
+          variant="outline"
+          className={`font-medium ${getResponseStatusColor(responseStatus)}`}
+        >
+          {formatResponseStatus(responseStatus)}
         </Badge>
       );
     },
@@ -396,13 +420,72 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                 <h4 className="mb-3 text-sm font-semibold">Campaign Status</h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
-                    <span className="text-xs font-medium text-muted-foreground">Status</span>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Processing Status
+                    </span>
                     <Badge className={getStatusColor(selectedContact.status)} variant="secondary">
                       {selectedContact.status.replace('_', ' ')}
                     </Badge>
                   </div>
+                  <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Response Status
+                    </span>
+                    <Badge
+                      className={getResponseStatusColor(selectedContact.responseStatus)}
+                      variant="secondary"
+                    >
+                      {formatResponseStatus(selectedContact.responseStatus)}
+                    </Badge>
+                  </div>
                 </div>
               </div>
+
+              {selectedContact.lead && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold">Lead Information</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Lead Status
+                        </span>
+                        <Badge
+                          className={getStatusColor(selectedContact.lead.status)}
+                          variant="secondary"
+                        >
+                          {selectedContact.lead.status}
+                        </Badge>
+                      </div>
+                      {selectedContact.lead.interestedAt && (
+                        <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Interested At
+                          </span>
+                          <span className="text-xs font-medium text-right">
+                            {dayjs(selectedContact.lead.interestedAt).format(
+                              'MMM DD, YYYY hh:mm A',
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {selectedContact.lead.consentGivenAt && (
+                        <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Consent Given At
+                          </span>
+                          <span className="text-xs font-medium text-right">
+                            {dayjs(selectedContact.lead.consentGivenAt).format(
+                              'MMM DD, YYYY hh:mm A',
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <Separator />
 
@@ -412,7 +495,14 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                   <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-medium text-muted-foreground">Email</span>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-muted-foreground">Email</span>
+                        {selectedContact.email.sent && selectedContact.email.sentAt && (
+                          <span className="text-xs text-muted-foreground">
+                            {dayjs(selectedContact.email.sentAt).format('MMM DD, YYYY hh:mm A')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {selectedContact.email.sent ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -443,6 +533,20 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                     ) : (
                       <XCircle className="h-4 w-4 text-gray-400" />
                     )}
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="mb-3 text-sm font-semibold">Timestamps</h4>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">Updated At</span>
+                    <span className="text-xs font-medium text-right">
+                      {dayjs(selectedContact.updatedAt).format('MMM DD, YYYY hh:mm A')}
+                    </span>
                   </div>
                 </div>
               </div>
