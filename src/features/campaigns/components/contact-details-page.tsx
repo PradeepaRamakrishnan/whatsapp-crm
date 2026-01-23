@@ -15,7 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type { BorrowerData } from '../lib/borrower-data';
-import { ContactConversation } from './contact-conversation';
+
+// import { ContactConversation } from './contact-conversation';
 
 interface ContactDetailsPageProps {
   contact: BorrowerData;
@@ -272,9 +273,9 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
         </TabsContent>
 
         {/* Conversation Tab */}
-        <TabsContent value="conversation" className="mt-6">
+        {/* <TabsContent value="conversation" className="mt-6">
           <ContactConversation contact={contact} />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );
