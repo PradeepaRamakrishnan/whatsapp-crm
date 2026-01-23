@@ -1,13 +1,14 @@
-import Image from 'next/image';
 import { Suspense } from 'react';
 import { OtpVerificationForm } from '@/features/leads/components/otp-verification-form';
 
+// import Image from 'next/image';
+
 const OtpVerificationPage = () => {
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
+    <div className="grid h-screen lg:grid-cols-2 overflow-hidden">
       {/* Left Side - Brand Visual (Hidden on mobile) */}
       <div
-        className="relative hidden h-full items-center justify-center bg-cover bg-center p-12 lg:flex"
+        className="relative hidden h-full items-center justify-center bg-cover bg-center p-12 lg:flex flex-shrink-0"
         style={{
           backgroundImage: 'url(/assets/images/login-bg.jpg)',
         }}
@@ -112,21 +113,8 @@ const OtpVerificationPage = () => {
         </div>
       </div>
       {/* Right Side - Form Container */}
-      <div className="flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-xl flex flex-col items-center">
-          {/* Mobile-only Logo & Illustration */}
-          <div className="flex items-center justify-center mb-2">
-            <div className="relative w-72">
-              <Image
-                src="/assets/images/samatvalogo.png"
-                alt="Samatva Awareness Logo"
-                width={288}
-                height={80}
-                className="object-contain"
-              />
-            </div>
-          </div>
-
+      <div className="flex h-full flex-col items-center overflow-y-auto px-4 py-12 lg:px-8">
+        <div className="w-full max-w-xl flex flex-col items-center my-auto">
           <Suspense
             fallback={
               <div className="w-full max-w-md animate-pulse space-y-4">
