@@ -1,7 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Calendar, Database, FileText, Mail, Phone } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  Database,
+  FileText,
+  Mail,
+  Phone,
+  XCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -124,7 +133,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Records</CardTitle>
@@ -165,9 +174,9 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {file.stats?.duplicateInOtherFilesEmailCount.toLocaleString() ?? 0}
+              {file.stats?.duplicateEmailInCampaign.toLocaleString() ?? 0}
             </div>
-            <p className="text-xs text-muted-foreground">Found in other files</p>
+            <p className="text-xs text-muted-foreground">Found in campaigns</p>
           </CardContent>
         </Card>
 
@@ -180,9 +189,24 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {file.stats?.duplicateInOtherFilesMobileCount.toLocaleString() ?? 0}
+              {file.stats?.duplicateMobileInCampaign.toLocaleString() ?? 0}
             </div>
-            <p className="text-xs text-muted-foreground">Found in other files</p>
+            <p className="text-xs text-muted-foreground">Found in campaigns</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Excluded</CardTitle>
+            <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-950/30">
+              <XCircle className="h-4 w-4 text-gray-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {file.stats?.excludedCount.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Excluded records</p>
           </CardContent>
         </Card>
       </div>

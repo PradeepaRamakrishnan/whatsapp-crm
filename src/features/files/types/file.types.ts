@@ -36,9 +36,11 @@ export interface FilesResponse {
   meta: FilesMeta;
 }
 
-export interface DuplicateFileInfo {
-  fileId: string;
-  fileName: string;
+export interface CampaignReference {
+  id: string;
+  name: string;
+  status: string;
+  responseStatus: string | null;
 }
 
 export interface FileRecord {
@@ -49,7 +51,8 @@ export interface FileRecord {
   emailId: string;
   additionalData: Record<string, string | number>;
   isValid: boolean;
-  duplicateInFiles: DuplicateFileInfo[];
+  validationErrors: string[] | null;
+  campaigns: CampaignReference[];
   createdAt: string;
   updatedAt: string;
 }
@@ -69,8 +72,9 @@ export interface FileContents {
 export interface FileStats {
   totalRecords: number;
   totalInvalidRecords: number;
-  duplicateInOtherFilesEmailCount: number;
-  duplicateInOtherFilesMobileCount: number;
+  duplicateEmailInCampaign: number;
+  duplicateMobileInCampaign: number;
+  excludedCount: number;
 }
 
 export interface FileDetailData extends FileData {
