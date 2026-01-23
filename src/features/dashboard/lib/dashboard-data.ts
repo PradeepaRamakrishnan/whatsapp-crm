@@ -66,14 +66,14 @@ export const dashboardData = {
         //   title: 'Interested',
         //   url: '/leads/interested',
         // },
-        {
-          title: 'Qualified',
-          url: '/leads/qualified',
-        },
-        {
-          title: 'Ready for Disbursal',
-          url: '/leads/ready-for-disbursal',
-        },
+        // {
+        //   title: 'Qualified',
+        //   url: '/leads/qualified',
+        // },
+        // {
+        //   title: 'Ready for Disbursal',
+        //   url: '/leads/ready-for-disbursal',
+        // },
       ],
     },
     {
