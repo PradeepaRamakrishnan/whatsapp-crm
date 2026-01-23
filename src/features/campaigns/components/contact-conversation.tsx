@@ -6,16 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import type { BorrowerData } from '../lib/borrower-data';
+import type { Lead } from '@/features/leads/types';
 
 interface ContactConversationProps {
-  contact: BorrowerData;
+  contact: Lead;
 }
 
 export function ContactConversation({ contact }: ContactConversationProps) {
   const [emailMessage, setEmailMessage] = useState('');
   const [smsMessage, setSmsMessage] = useState('');
   const [whatsappMessage, setWhatsappMessage] = useState('');
+
+  const settlementAmount = contact.fileContent?.settlementAmount || 0;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -44,7 +46,7 @@ export function ContactConversation({ contact }: ContactConversationProps) {
                   Settlement Offer
                 </p>
                 <p className="text-xs text-emerald-800 dark:text-emerald-200">
-                  Dear customer, we have a special settlement offer for you...
+                  Dear {contact.customerName}, we have a special settlement offer for you...
                 </p>
               </div>
               <span className="text-xs text-muted-foreground mt-1">2 hours ago</span>
@@ -104,7 +106,7 @@ export function ContactConversation({ contact }: ContactConversationProps) {
             <div className="flex flex-col items-end">
               <div className="bg-blue-100 dark:bg-blue-950 rounded-lg p-3 max-w-[85%]">
                 <p className="text-xs text-blue-800 dark:text-blue-200">
-                  Hi! Your loan settlement amount is ₹{contact.loanAmount.toLocaleString('en-IN')}.
+                  Hi! Your loan settlement amount is ₹{settlementAmount.toLocaleString('en-IN')}.
                   Reply YES to proceed.
                 </p>
               </div>
@@ -198,8 +200,8 @@ export function ContactConversation({ contact }: ContactConversationProps) {
                   <p className="text-xs font-medium text-amber-600">Scheduled</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Your settlement amount is ₹{contact.loanAmount.toLocaleString('en-IN')} for{' '}
-                  {contact.installments} installments. Would you like to proceed?
+                  Your settlement amount is ₹{settlementAmount.toLocaleString('en-IN')}. Would you
+                  like to proceed?
                 </p>
               </div>
               <span className="text-xs text-muted-foreground mt-1">Sending in 2 days</span>

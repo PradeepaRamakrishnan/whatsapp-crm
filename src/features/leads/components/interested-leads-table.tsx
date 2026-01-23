@@ -14,6 +14,7 @@ import {
 import { EllipsisIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import slugify from 'slugify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,7 +64,12 @@ export function InterestedLeadsTable() {
         header: 'Name',
         cell: ({ getValue, row }) => (
           <button
-            onClick={() => router.push(`/leads/${row.original.id}`)}
+            // onClick={() => router.push(`/leads/${row.original.id}`)}
+            onClick={() =>
+              router.push(
+                `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
+              )
+            }
             className="font-medium text-primary hover:underline cursor-pointer"
           >
             {String(getValue() || '')}

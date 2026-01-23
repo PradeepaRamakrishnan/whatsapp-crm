@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Info, TrendingUp, Users } from 'lucide-react';
+import { TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllLeads } from '../services';
 import type { LeadsResponse } from '../types';
@@ -30,22 +30,22 @@ export function InterestedLeadsList() {
       color: 'text-blue-600',
       bgColor: 'bg-blue-100 dark:bg-blue-950/30',
     },
-    {
-      title: 'Avg. Response Time',
-      value: leadsResponse?.stats?.avgResponseTime || '0h',
-      icon: Clock,
-      description: 'Time to first contact',
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-950/30',
-    },
-    {
-      title: 'Follow-ups Due',
-      value: leadsResponse?.stats?.followUpsDue?.toString() || '0',
-      icon: Info,
-      description: 'Action required',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-950/30',
-    },
+    // {
+    //   title: 'Avg. Response Time',
+    //   value: leadsResponse?.stats?.avgResponseTime || '0h',
+    //   icon: Clock,
+    //   description: 'Time to first contact',
+    //   color: 'text-green-600',
+    //   bgColor: 'bg-green-100 dark:bg-green-950/30',
+    // },
+    // {
+    //   title: 'Follow-ups Due',
+    //   value: leadsResponse?.stats?.followUpsDue?.toString() || '0',
+    //   icon: Info,
+    //   description: 'Action required',
+    //   color: 'text-purple-600',
+    //   bgColor: 'bg-purple-100 dark:bg-purple-950/30',
+    // },
   ];
 
   return (
