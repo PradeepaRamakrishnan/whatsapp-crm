@@ -1,24 +1,24 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <> */
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import {
-  AlertCircle,
+  // AlertCircle,
   Calendar,
   CheckCircle2,
   CreditCard,
-  DollarSign,
   Eye,
   FileCheck,
   FileText,
   Image,
+  IndianRupee,
   Info,
   Link2,
-  Phone,
   Trash2,
   Upload,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState } from 'react';
+// import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -34,7 +34,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ContactConversation } from '@/features/campaigns/components/contact-conversation';
 import { cn } from '@/lib/utils';
-import { borrowersData, type Document as LeadDocument } from '../lib/data';
+import type { Document as LeadDocument } from '../lib/data';
+import { getLeadsById } from '../services';
+import type { LeadsResponse } from '../types';
 import { ContactDetailsPage } from './contact-detail';
 
 // const getStatusColor = (status: string) => {
@@ -51,7 +53,7 @@ import { ContactDetailsPage } from './contact-detail';
 // };
 
 interface LeadDetailsPageProps {
-  leadId: number;
+  leadId: string;
 }
 
 interface DocumentRequirement {
@@ -165,32 +167,17 @@ const DOCUMENT_GROUPS: DocumentGroup[] = [
 ];
 
 export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeDocTypeRef = useRef<string | null>(null);
 
-  const lead = useMemo(() => {
-    return borrowersData.find((l) => l.id === leadId);
-  }, [leadId]);
+  const { data: leadResponse, isLoading } = useQuery({
+    queryKey: ['lead', leadId],
+    queryFn: () => getLeadsById(leadId),
+  });
 
-  // const [notes, setNotes] = useState<Note[]>(
-  //   lead?.notes || [
-  //     {
-  //       id: '1',
-  //       type: 'message',
-  //       content: 'Initial inquiry received via system.',
-  //       timestamp: lead?.applicationDate || new Date().toISOString(),
-  //       author: 'System',
-  //     },
-  //     {
-  //       id: '2',
-  //       type: 'note',
-  //       content: 'Client mentioned they need the funds for business expansion. High urgency case.',
-  //       timestamp: new Date().toISOString(),
-  //       author: 'Admin',
-  //     },
-  //   ],
-  // );
+  const lead = (leadResponse as LeadsResponse)?.data?.[0] || (leadResponse as LeadsResponse);
+  // console.log(lead, 'lead');
 
   const [documents, setDocuments] = useState<LeadDocument[]>([]);
 
@@ -198,19 +185,10 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   const [uploadFileName, setUploadFileName] = useState('');
   const [draggedDocType, setDraggedDocType] = useState<string | null>(null);
 
-  if (!lead) {
+  if (isLoading) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-        <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">Lead not found</h2>
-          <p className="text-sm text-muted-foreground">
-            The lead you're looking for doesn't exist or has been removed.
-          </p>
-          <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-            Go Back
-          </Button>
-        </div>
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -276,21 +254,12 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold tracking-tight">{lead.name}</h1>
-              {/* <Badge className={cn('border', getStatusColor(lead.status || 'Processing'))} variant="secondary">
-                {lead.status || 'Processing'}
-              </Badge> */}
+              <h1 className="text-3xl font-bold tracking-tight">{lead.customerName}</h1>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" />
-                <span>
-                  Inquiry Date: {new Date(lead.applicationDate).toLocaleDateString('en-IN')}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <FileText className="h-4 w-4" />
-                <span>ID: L-{lead.id}</span>
+                <span>Inquiry Date: {new Date(lead.interestedAt).toLocaleDateString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -301,44 +270,39 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Settlement Amount</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <IndianRupee className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">
-              ₹{lead.loanAmount.toLocaleString('en-IN')}
+              ₹{lead.fileContent?.settlementAmount?.toLocaleString('en-IN') || 0}
             </div>
             <p className="text-xs text-muted-foreground">Primary loan</p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{lead.settlementCount}</div>
+            <div className="text-2xl font-bold">{lead.fileContent?.settlementCount || 0}</div>
             <p className="text-xs text-muted-foreground">Previous settlements</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">DND Status</CardTitle>
-            <Phone className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <Info className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div
-              className={cn(
-                'text-2xl font-bold',
-                lead.dndStatus ? 'text-red-600' : 'text-emerald-600',
-              )}
-            >
-              {lead.dndStatus ? 'Active' : 'Inactive'}
+            <div className="text-2xl font-bold capitalize text-orange-600">
+              {lead.status}
             </div>
-            <p className="text-xs text-muted-foreground">Do Not Disturb</p>
+            <p className="text-xs text-muted-foreground">Current lead status</p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Tabs Section */}
