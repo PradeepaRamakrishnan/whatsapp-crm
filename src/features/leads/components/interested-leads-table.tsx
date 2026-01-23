@@ -56,7 +56,7 @@ export function InterestedLeadsTable({ campaignId: _campaignId }: InterestedLead
       header: 'Name',
       cell: ({ getValue, row }) => (
         <button
-          onClick={() => router.push(`/leads/interested/${row.original.id}`)}
+          onClick={() => router.push(`/leads/${row.original.id}`)}
           className="font-medium text-primary hover:underline cursor-pointer"
         >
           {String(getValue() || '')}
