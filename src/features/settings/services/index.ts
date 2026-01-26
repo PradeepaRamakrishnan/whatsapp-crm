@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import type { FinancialInstitution, FinancialInstitutionsResponse } from '../types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_SETTINGS_API_URL}`,
@@ -12,7 +13,10 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function getAllFinancialInstitutions(page: number, limit: number): Promise<any> {
+export async function getAllFinancialInstitutions(
+  page: number,
+  limit: number,
+): Promise<FinancialInstitutionsResponse> {
   try {
     const cookieStore = await cookies();
 
@@ -35,7 +39,9 @@ export async function getAllFinancialInstitutions(page: number, limit: number): 
   }
 }
 
-export async function createFinancialInstitution(data: Record<string, unknown>): Promise<any> {
+export async function createFinancialInstitution(
+  data: Record<string, unknown>,
+): Promise<FinancialInstitution> {
   try {
     const cookieStore = await cookies();
 
@@ -60,7 +66,7 @@ export async function createFinancialInstitution(data: Record<string, unknown>):
 export async function updateFinancialInstitution(
   id: string,
   data: Record<string, unknown>,
-): Promise<any> {
+): Promise<FinancialInstitution> {
   try {
     const cookieStore = await cookies();
 

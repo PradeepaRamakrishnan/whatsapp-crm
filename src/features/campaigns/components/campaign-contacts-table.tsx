@@ -25,11 +25,16 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import { ChannelEmptyState } from '@/components/shared/channel-empty-state';
 import type { ConversationMessage } from '@/components/shared/conversation-view';
-import { ConversationView } from '@/components/shared/conversation-view';
+import { EmailMessageCard } from '@/components/shared/email-message-card';
+import { MessageInput } from '@/components/shared/message-input';
+import { SMSMessage } from '@/components/shared/sms-message';
+import { WhatsAppMessage } from '@/components/shared/whatsapp-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -55,11 +60,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getCampaignById, getCampaignContacts, getContactMessages } from '../services';
+import { getCampaignContacts, getContactMessages } from '../services';
 import type {
   CampaignContactData,
   CampaignContactsResponse,
-  CampaignDetails,
   InteractionRecord,
   InteractionResponse,
 } from '../types';
@@ -214,26 +218,24 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: campaign } = useQuery<CampaignDetails>({
-    queryKey: ['campaign', campaignId],
-    queryFn: () => getCampaignById(campaignId),
-  });
-
   const { data: messagesResponse } = useQuery<InteractionResponse | InteractionRecord[]>({
     queryKey: ['contact-messages', campaignId, selectedContact?.id],
     queryFn: () =>
-      getContactMessages(campaignId, selectedContact!.contact.id) as Promise<
+      getContactMessages(campaignId, selectedContact?.contact.id || '') as Promise<
         InteractionResponse | InteractionRecord[]
       >,
     enabled: !!selectedContact,
   });
 
-  // console.log(messagesResponse, 'messagesResponse');
-  const emailMessages = React.useMemo(() => {
-    const msgList = Array.isArray(messagesResponse)
+  // Extract messages from response
+  const msgList = React.useMemo(() => {
+    return Array.isArray(messagesResponse)
       ? messagesResponse
       : (messagesResponse as InteractionResponse)?.data || [];
+  }, [messagesResponse]);
 
+  // Process email messages
+  const emailMessages = React.useMemo(() => {
     return msgList
       .filter((m: InteractionRecord) => m.channel === 'email')
       .map((m: InteractionRecord) => ({
@@ -243,8 +245,69 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
         channel: 'email',
         content: m.body || m.subject || '',
         timestamp: m.sentAt || m.createdAt,
-      })) as ConversationMessage[];
-  }, [messagesResponse]);
+        subject: m.subject,
+        from: m.from,
+        to: m.to,
+        readAt: m.readAt,
+        openedAt: m.openedAt,
+        clickedAt: m.clickedAt,
+        error: m.error,
+      })) as Array<
+      ConversationMessage & {
+        subject?: string | null;
+        from?: string;
+        to?: string;
+        readAt?: string | null;
+        openedAt?: string | null;
+        clickedAt?: string | null;
+        error?: string | null;
+      }
+    >;
+  }, [msgList]);
+
+  // Process WhatsApp messages
+  const whatsappMessages = React.useMemo(() => {
+    return msgList
+      .filter((m: InteractionRecord) => m.channel === 'whatsapp')
+      .map((m: InteractionRecord) => ({
+        id: m.id,
+        sender: m.direction === 'inbound' ? 'customer' : 'agent',
+        senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
+        channel: 'whatsapp',
+        content: m.body || '',
+        timestamp: m.sentAt || m.createdAt,
+        deliveredAt: m.deliveredAt,
+        readAt: m.readAt,
+        error: m.error,
+      })) as Array<
+      ConversationMessage & {
+        deliveredAt?: string | null;
+        readAt?: string | null;
+        error?: string | null;
+      }
+    >;
+  }, [msgList]);
+
+  // Process SMS messages
+  const smsMessages = React.useMemo(() => {
+    return msgList
+      .filter((m: InteractionRecord) => m.channel === 'sms')
+      .map((m: InteractionRecord) => ({
+        id: m.id,
+        sender: m.direction === 'inbound' ? 'customer' : 'agent',
+        senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
+        channel: 'sms',
+        content: m.body || '',
+        timestamp: m.sentAt || m.createdAt,
+        deliveredAt: m.deliveredAt,
+        error: m.error,
+      })) as Array<
+      ConversationMessage & {
+        deliveredAt?: string | null;
+        error?: string | null;
+      }
+    >;
+  }, [msgList]);
 
   const contacts = contactsResponse?.data || [];
   const totalRecords = contactsResponse?.meta.total || 0;
@@ -657,75 +720,95 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                 </div>
               </TabsContent>
 
-              <TabsContent value="conversation" className="flex-1 overflow-y-auto mt-0 p-0 min-h-0">
-                <Tabs defaultValue="email" className="flex flex-1 flex-col overflow-hidden">
-                  <TabsList className="mx-4 mt-2 h-9">
-                    <TabsTrigger value="email" className="text-xs">
-                      Email
-                    </TabsTrigger>
-                    <TabsTrigger value="whatsapp" className="text-xs">
-                      WhatsApp
-                    </TabsTrigger>
-                    <TabsTrigger value="sms" className="text-xs">
-                      SMS
-                    </TabsTrigger>
-                  </TabsList>
+              <TabsContent
+                value="conversation"
+                className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
+              >
+                <Tabs defaultValue="email" className="flex flex-1 flex-col overflow-hidden h-full">
+                  <div className="flex items-center gap-1 px-3 py-2 border-b bg-muted/30">
+                    <TabsList className="h-8 p-0.5 bg-muted">
+                      <TabsTrigger value="email" className="text-xs h-7 px-3">
+                        Email
+                      </TabsTrigger>
+                      <TabsTrigger value="whatsapp" className="text-xs h-7 px-3">
+                        WhatsApp
+                      </TabsTrigger>
+                      <TabsTrigger value="sms" className="text-xs h-7 px-3">
+                        SMS
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
 
-                  <TabsContent value="email" className="flex-1 overflow-hidden mt-0 p-0 min-h-0">
-                    <ConversationView
-                      contact={{
-                        id: selectedContact.contact.id,
-                        name: selectedContact.contact.customerName,
-                        phone: selectedContact.contact.mobileNumber,
-                        bankName: campaign?.file.bankName || 'Bank',
-                        outstandingAmount: selectedContact.contact.settlementAmount,
-                      }}
-                      messages={emailMessages}
-                      filterChannel="email"
-                      onSendMessage={(message, channel) => {
-                        // TODO: Implement send message
+                  <TabsContent
+                    value="email"
+                    className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
+                  >
+                    <ScrollArea className="flex-1">
+                      {emailMessages.length > 0 ? (
+                        <div className="flex flex-col gap-2.5 p-3">
+                          {emailMessages.map((message) => (
+                            <EmailMessageCard key={message.id} message={message} />
+                          ))}
+                        </div>
+                      ) : (
+                        <ChannelEmptyState channel="email" />
+                      )}
+                    </ScrollArea>
+                    <MessageInput
+                      placeholder="Type your email message..."
+                      onSend={(message) => {
+                        // TODO: Implement send email
                         void message;
-                        void channel;
-                      }}
-                      onCall={() => {
-                        // TODO: Implement call
-                      }}
-                      onEmail={() => {
-                        // TODO: Implement email
-                      }}
-                      onComplete={() => {
-                        // TODO: Implement complete
-                      }}
-                      onInterested={() => {
-                        // TODO: Implement interested
-                      }}
-                      onNotInterested={() => {
-                        // TODO: Implement not interested
-                      }}
-                      onFollowUp={() => {
-                        // TODO: Implement follow-up
                       }}
                     />
                   </TabsContent>
 
                   <TabsContent
                     value="whatsapp"
-                    className="flex-1 items-center justify-center p-8 text-muted-foreground"
+                    className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
                   >
-                    <div className="text-center">
-                      <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
-                      <p className="text-xs">No WhatsApp messages</p>
-                    </div>
+                    <ScrollArea className="flex-1">
+                      {whatsappMessages.length > 0 ? (
+                        <div className="flex flex-col gap-2 p-3">
+                          {whatsappMessages.map((message) => (
+                            <WhatsAppMessage key={message.id} message={message} />
+                          ))}
+                        </div>
+                      ) : (
+                        <ChannelEmptyState channel="whatsapp" />
+                      )}
+                    </ScrollArea>
+                    <MessageInput
+                      placeholder="Type your WhatsApp message..."
+                      onSend={(message) => {
+                        // TODO: Implement send WhatsApp
+                        void message;
+                      }}
+                    />
                   </TabsContent>
 
                   <TabsContent
                     value="sms"
-                    className="flex-1 items-center justify-center p-8 text-muted-foreground"
+                    className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
                   >
-                    <div className="text-center">
-                      <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
-                      <p className="text-xs">No SMS messages</p>
-                    </div>
+                    <ScrollArea className="flex-1">
+                      {smsMessages.length > 0 ? (
+                        <div className="flex flex-col gap-2 p-3">
+                          {smsMessages.map((message) => (
+                            <SMSMessage key={message.id} message={message} />
+                          ))}
+                        </div>
+                      ) : (
+                        <ChannelEmptyState channel="sms" />
+                      )}
+                    </ScrollArea>
+                    <MessageInput
+                      placeholder="Type your SMS message..."
+                      onSend={(message) => {
+                        // TODO: Implement send SMS
+                        void message;
+                      }}
+                    />
                   </TabsContent>
                 </Tabs>
               </TabsContent>

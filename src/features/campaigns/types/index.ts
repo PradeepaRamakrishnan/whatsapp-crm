@@ -202,7 +202,7 @@ export interface InteractionRecord {
     file: string;
     status: CampaignStatus;
     lastRunAt: string | null;
-    errorDetails: any;
+    errorDetails: Record<string, unknown>;
     interested: number;
     messageSent: MessageSentStats;
     active: boolean;
@@ -230,9 +230,9 @@ export interface InteractionRecord {
     settlementAmount: number;
     mobileNumber: string;
     emailId: string;
-    additionalData: Record<string, any>;
+    additionalData: Record<string, unknown>;
     isValid: boolean;
-    validationErrors: any;
+    validationErrors: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
   };
@@ -253,7 +253,7 @@ export interface InteractionRecord {
   callNotes: string | null;
   recordingUrl: string | null;
   error: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   active: boolean;
   createdAt: string;
   updatedAt: string;

@@ -12,6 +12,7 @@ interface ContactConversationProps {
   contact: Lead;
 }
 
+// biome-ignore lint/correctness/noUnusedFunctionParameters: Required for component API
 export function ContactConversation({ contact }: ContactConversationProps) {
   const [emailMessage, setEmailMessage] = useState('');
   const [smsMessage, setSmsMessage] = useState('');

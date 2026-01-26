@@ -31,7 +31,7 @@ interface ChannelsProps {
   emailEnabled: boolean;
   smsEnabled: boolean;
   whatsappEnabled: boolean;
-  configuration?: Configuration;
+  _configuration?: Configuration;
   scheduleMode: 'now' | 'schedule';
   setScheduleMode: (mode: 'now' | 'schedule') => void;
   scheduledDate: string;
@@ -48,7 +48,7 @@ const Channel = ({
   emailEnabled,
   smsEnabled,
   whatsappEnabled,
-  configuration,
+  _configuration,
   scheduleMode,
   setScheduleMode,
   scheduledDate,

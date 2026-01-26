@@ -1,5 +1,3 @@
-/** biome-ignore lint/security/noDangerouslySetInnerHtml: Required for rendering HTML email templates */
-/** biome-ignore lint/style/useNamingConvention: API response uses snake_case */
 'use client';
 
 import { useQuery } from '@tanstack/react-query';

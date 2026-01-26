@@ -329,7 +329,6 @@ export default function EditConfigurationPage() {
               emailEnabled={emailEnabled}
               smsEnabled={smsEnabled}
               whatsappEnabled={whatsappEnabled}
-              configuration={config}
               scheduleMode={scheduleMode}
               setScheduleMode={setScheduleMode}
               scheduledDate={scheduledDate}

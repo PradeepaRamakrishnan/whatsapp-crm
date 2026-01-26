@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/useNamingConvention: <explanation> */
+/* biome-ignore-all lint/style/useNamingConvention: API response uses snake_case */
 'use client';
 
 import dayjs from 'dayjs';
