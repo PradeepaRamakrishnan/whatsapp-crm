@@ -151,15 +151,24 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const filter = searchParams.get('filter') || 'all';
 
   const updateParams = React.useCallback(
-    (updates: { page?: number; pageSize?: number }) => {
+    (updates: { page?: number; pageSize?: number; filter?: string }) => {
       const params = new URLSearchParams(searchParams.toString());
       if (updates.page !== undefined) {
         params.set('page', String(updates.page));
       }
       if (updates.pageSize !== undefined) {
         params.set('pageSize', String(updates.pageSize));
+      }
+      if (updates.filter !== undefined) {
+        if (updates.filter === 'all') {
+          params.delete('filter');
+        } else {
+          params.set('filter', updates.filter);
+        }
+        params.set('page', '1'); // Reset to page 1 on filter change
       }
       router.replace(`?${params.toString()}`);
     },
@@ -171,8 +180,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['file', fileId, { page, limit: pageSize }],
-    queryFn: () => getFileById(fileId, page, pageSize),
+    queryKey: ['file', fileId, { page, limit: pageSize, filter }],
+    queryFn: () => getFileById(fileId, page, pageSize, filter),
     placeholderData: (previousData) => previousData,
   });
 
@@ -203,7 +212,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   return (
     <div className="w-full">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
-        <div className="flex-1">
+        <div className="flex flex-1 items-center gap-3">
           <Input
             placeholder="Search records..."
             value={(table.getColumn('customerName')?.getFilterValue() as string) ?? ''}
@@ -213,6 +222,23 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             className="max-w-sm w-full"
             disabled={showLoading}
           />
+          <Select
+            value={filter}
+            onValueChange={(val) => {
+              updateParams({ filter: val });
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Records" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Records</SelectItem>
+              <SelectItem value="invalid">Invalid Records</SelectItem>
+              <SelectItem value="duplicate_email">Duplicate Emails</SelectItem>
+              <SelectItem value="duplicate_mobile">Duplicate Mobiles</SelectItem>
+              <SelectItem value="excluded">Excluded</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">

@@ -59,12 +59,13 @@ export async function getFileById(
   id: string,
   page: number,
   limit: number,
+  filter?: string,
 ): Promise<FileDetailData> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
-      url: `/${id}?page=${page}&limit=${limit}`,
+      url: `/${id}?page=${page}&limit=${limit}${filter ? `&filter=${filter}` : ''}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
