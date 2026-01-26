@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/useNamingConvention: <explanation> */
 'use client';
 
 import dayjs from 'dayjs';
@@ -50,6 +51,7 @@ interface ConversationViewProps {
   onInterested?: () => void;
   onNotInterested?: () => void;
   onFollowUp?: () => void;
+  filterChannel?: MessageChannel;
 }
 
 const getChannelIcon = (channel: MessageChannel) => {
@@ -82,13 +84,22 @@ const getChannelColor = (channel: MessageChannel) => {
   }
 };
 
-const getInitials = (name: string) => {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+// FIXED: Added null/undefined checks
+const getInitials = (name?: string) => {
+  if (!name || typeof name !== 'string') {
+    return 'NA';
+  }
+
+  return (
+    name
+      .trim()
+      .split(' ')
+      .filter((n) => n.length > 0)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'NA'
+  );
 };
 
 export function ConversationView({
@@ -101,16 +112,28 @@ export function ConversationView({
   onInterested,
   onNotInterested,
   onFollowUp,
+  filterChannel,
 }: ConversationViewProps) {
-  const [selectedChannel, setSelectedChannel] = React.useState<MessageChannel | 'all'>('all');
+  const [selectedChannel, setSelectedChannel] = React.useState<MessageChannel | 'all'>(
+    filterChannel || 'all',
+  );
   const [messageInput, setMessageInput] = React.useState('');
+
+  // FIXED: Added safety checks for contact
+  if (!contact) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-muted-foreground">No contact selected</p>
+      </div>
+    );
+  }
 
   // Mock data if no messages provided
   const defaultMessages: ConversationMessage[] = [
     {
       id: '1',
       sender: 'customer',
-      senderName: contact.name,
+      senderName: contact.name || 'Customer',
       channel: 'sms',
       content: 'That would be great. What are my options?',
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -128,7 +151,7 @@ export function ConversationView({
     {
       id: '3',
       sender: 'customer',
-      senderName: contact.name,
+      senderName: contact.name || 'Customer',
       channel: 'whatsapp',
       content: 'I would like to know more about option 2.',
       timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
@@ -167,7 +190,7 @@ export function ConversationView({
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background min-h-0">
       {/* Compact Header */}
       <div className="border-b bg-card px-4 py-3">
         <div className="flex items-center justify-between">
@@ -178,15 +201,15 @@ export function ConversationView({
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <h2 className="text-base font-semibold truncate">{contact.name}</h2>
+              <h2 className="text-base font-semibold truncate">{contact.name || 'Unknown'}</h2>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{contact.phone}</span>
+                <span>{contact.phone || 'N/A'}</span>
                 <span>•</span>
-                <span className="truncate">{contact.bankName}</span>
+                <span className="truncate">{contact.bankName || 'N/A'}</span>
                 <span>•</span>
                 <span className="flex items-center gap-0.5">
                   <IndianRupee className="h-3 w-3" />
-                  {contact.outstandingAmount.toLocaleString('en-IN')}
+                  {(contact.outstandingAmount || 0).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
@@ -206,42 +229,44 @@ export function ConversationView({
       </div>
 
       {/* Compact Channel Filters */}
-      <div className="border-b bg-muted/20 px-4 py-2">
-        <div className="flex items-center gap-1">
-          <Button
-            variant={selectedChannel === 'all' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={() => setSelectedChannel('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={selectedChannel === 'whatsapp' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={() => setSelectedChannel('whatsapp')}
-          >
-            WhatsApp
-          </Button>
-          <Button
-            variant={selectedChannel === 'email' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={() => setSelectedChannel('email')}
-          >
-            Email
-          </Button>
-          <Button
-            variant={selectedChannel === 'sms' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={() => setSelectedChannel('sms')}
-          >
-            SMS
-          </Button>
+      {!filterChannel && (
+        <div className="border-b bg-muted/20 px-4 py-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant={selectedChannel === 'all' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setSelectedChannel('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant={selectedChannel === 'whatsapp' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setSelectedChannel('whatsapp')}
+            >
+              WhatsApp
+            </Button>
+            <Button
+              variant={selectedChannel === 'email' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setSelectedChannel('email')}
+            >
+              Email
+            </Button>
+            <Button
+              variant={selectedChannel === 'sms' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setSelectedChannel('sms')}
+            >
+              SMS
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
@@ -269,9 +294,9 @@ export function ConversationView({
                   message.sender === 'agent' ? 'items-end' : 'items-start'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-xs text-muted-foreground">
-                    {message.sender === 'agent' ? 'You' : message.senderName}
+                    {message.sender === 'agent' ? 'You' : message.senderName || 'Customer'}
                   </span>
                   <Badge
                     variant="secondary"
@@ -291,7 +316,15 @@ export function ConversationView({
                       : 'bg-primary text-primary-foreground'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                  {message.channel === 'email' && message.content.includes('<') ? (
+                    <div
+                      className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-full overflow-x-auto"
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: <Used for rendering email HTML content>
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                  )}
                 </div>
                 {message.showActions && message.sender === 'customer' && (
                   <div className="mt-1.5 flex gap-1.5">

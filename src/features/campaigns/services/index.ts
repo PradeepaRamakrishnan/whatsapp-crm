@@ -342,6 +342,39 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
   }
 }
 
+export async function getContactMessages(campaignId: string, contactId?: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: contactId
+        ? `/${campaignId}/contacts/${contactId}/conversations`
+        : `/${campaignId}/conversations`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    // For now, return mock data as if coming from API
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to conversation messages');
+    }
+    return [
+      {
+        id: 'msg-1',
+        sender: 'agent',
+        senderName: 'Samatva Support',
+        channel: 'email',
+        content:
+          'Dear Customer,\n\nWe have a special settlement offer for your outstanding balance. You can now settle your account with a 20% discount on the total amount.\n\nPlease let us know if you are interested in this offer.\n\nBest regards,\nSamatva Team',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+      },
+    ];
+  }
+}
+
 // export async function createLead(data: {
 //   mobile: string;
 //   pan_number: string;

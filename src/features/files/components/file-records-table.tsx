@@ -11,10 +11,22 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { Calendar, Copy, IndianRupee, Mail, Pencil, Phone, Trash2, User } from 'lucide-react';
+import {
+  Calendar,
+  CheckCircle,
+  Copy,
+  IndianRupee,
+  Mail,
+  Pencil,
+  Phone,
+  Trash2,
+  User,
+  XCircle,
+} from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -149,6 +161,22 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     },
   ];
 
+  const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
+    if (responseStatus === 'interested') {
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+    }
+    if (responseStatus === 'not_interested') {
+      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
+    }
+    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+  };
+
+  const formatResponseStatus = (status: 'interested' | 'not_interested' | null): string => {
+    if (status === 'interested') return 'Interested';
+    if (status === 'not_interested') return 'Not Interested';
+    return '-';
+  };
+
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
   const filter = searchParams.get('filter') || 'all';
@@ -190,6 +218,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const records = fileData?.contents.data || [];
   const totalRecords = fileData?.contents.meta.total || 0;
   const totalPages = fileData?.contents.meta.totalPages || 0;
+
+  // console.log(records, 'records');
 
   const table = useReactTable({
     data: records,
@@ -401,6 +431,28 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                     </p>
                   </div>
                 </div>
+                {selectedRecord.contactStatus && (
+                  <div className="flex items-start gap-3 rounded-lg border p-3 ">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-900/30">
+                      {selectedRecord.contactStatus === 'interested' ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium mb-1 text-muted-foreground">
+                        Response Status
+                      </p>
+                      <Badge
+                        className={getResponseStatusColor(selectedRecord.contactStatus)}
+                        variant="secondary"
+                      >
+                        {formatResponseStatus(selectedRecord.contactStatus)}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 && (
