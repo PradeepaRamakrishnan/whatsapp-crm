@@ -22,7 +22,7 @@ build:
   only:
     - main
   tags:
-    - crm
+    - samatva
 
 deploy:production:
   stage: deploy
@@ -35,6 +35,6 @@ deploy:production:
   only:
     - main
   tags:
-    - crm
+    - samatva
   needs:
     - build
