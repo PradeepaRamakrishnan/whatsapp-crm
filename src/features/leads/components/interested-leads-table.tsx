@@ -70,7 +70,7 @@ export function InterestedLeadsTable() {
                 `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
               )
             }
-            className="font-medium text-primary hover:underline cursor-pointer"
+            className="font-medium hover:text-primary hover:underline cursor-pointer"
           >
             {String(getValue() || '')}
           </button>
@@ -231,7 +231,15 @@ export function InterestedLeadsTable() {
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} className="hover:bg-muted/50">
+                  <TableRow
+                    key={row.id}
+                    onClick={() =>
+                      router.push(
+                        `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
+                      )
+                    }
+                    className="hover:bg-muted/50 cursor-pointer"
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

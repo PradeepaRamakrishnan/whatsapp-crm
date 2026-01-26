@@ -1,44 +1,39 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { Suspense } from 'react';
 import { markContactNotInterested } from '@/features/campaigns/services';
 
 function NotInterestedContent() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
+  const campaignId = searchParams.get('campaignId');
+  const contactId = searchParams.get('contactId');
 
-  useEffect(() => {
-    const campaignId = searchParams.get('campaignId');
-    const contactId = searchParams.get('contactId');
+  const { isLoading, isSuccess, error } = useQuery({
+    queryKey: ['markNotInterested', campaignId, contactId],
+    queryFn: () => markContactNotInterested(campaignId as string, contactId as string),
+    enabled: !!campaignId && !!contactId,
+    retry: 1,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: 0,
+  });
 
-    if (!campaignId || !contactId) {
-      setStatus('error');
-      setErrorMessage('Invalid link. Missing required parameters.');
-      toast.error('Invalid link');
-      return;
-    }
-
-    // Call the API to mark contact as not interested
-    const handleNotInterested = async () => {
-      try {
-        await markContactNotInterested(campaignId, contactId);
-        setStatus('success');
-        toast.success('Thank you for your response');
-      } catch (error) {
-        console.error('Failed to mark as not interested:', error);
-        setStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : 'Failed to process your request');
-        toast.error('Failed to process your request');
-      }
-    };
-
-    handleNotInterested();
-  }, [searchParams]);
+  const hasInvalidParams = !campaignId || !contactId;
+  const status = hasInvalidParams
+    ? 'error'
+    : isLoading
+      ? 'loading'
+      : isSuccess
+        ? 'success'
+        : 'error';
+  const errorMessage = hasInvalidParams
+    ? 'Invalid link. Missing required parameters.'
+    : error instanceof Error
+      ? error.message
+      : 'Failed to process your request';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-slate-50/50 to-white dark:from-slate-950/20 dark:via-slate-950/10 dark:to-slate-950 p-4">

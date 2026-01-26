@@ -430,8 +430,56 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
 
                   <div>
                     <h4 className="mb-3 text-sm font-semibold">Campaign Status</h4>
-                    <div className="space-y-2">
+                    <div className="grid gap-2 pb-4">
                       <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-muted-foreground">Email</span>
+                            {selectedContact.email.sent && selectedContact.email.sentAt && (
+                              <span className="text-xs text-muted-foreground">
+                                {dayjs(selectedContact.email.sentAt).format('MMM DD, YYYY hh:mm A')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {selectedContact.email.sent ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-green-600" />
+                          <span className="text-xs font-medium text-muted-foreground">SMS</span>
+                        </div>
+                        {selectedContact.sms.sent ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-emerald-600" />
+                          <span className="text-xs font-medium text-muted-foreground">
+                            WhatsApp
+                          </span>
+                        </div>
+                        {selectedContact.whatsapp.sent ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                    <Separator />
+
+                    <div className="space-y-2  pt-4 ">
+                      {/* <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
                         <span className="text-xs font-medium text-muted-foreground">
                           Processing Status
                         </span>
@@ -441,7 +489,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                         >
                           {selectedContact.status.replace('_', ' ')}
                         </Badge>
-                      </div>
+                      </div> */}
                       <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
                         <span className="text-xs font-medium text-muted-foreground">
                           Response Status
@@ -504,7 +552,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
 
                   <Separator />
 
-                  <div>
+                  {/* <div>
                     <h4 className="mb-3 text-sm font-semibold">Channel Status</h4>
                     <div className="grid gap-2">
                       <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
@@ -552,9 +600,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  <Separator />
+                  </div> */}
 
                   <div>
                     <h4 className="mb-3 text-sm font-semibold">Timestamps</h4>

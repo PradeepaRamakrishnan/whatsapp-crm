@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { markContactInterested } from '@/features/campaigns/services';
+import { markContactNotInterested } from '@/features/campaigns/services';
 import { cn } from '@/lib/utils';
 import { dateOfBirthValidator, panNumberValidator, phoneNumberValidator } from '../lib/validation';
 
@@ -33,8 +33,8 @@ export const InterestedForm = () => {
   const contactId = searchParams.get('contactId');
 
   useQuery({
-    queryKey: ['markInterested', campaignId, contactId],
-    queryFn: () => markContactInterested(campaignId as string, contactId as string),
+    queryKey: ['marknotInterested', campaignId, contactId],
+    queryFn: () => markContactNotInterested(campaignId as string, contactId as string),
     enabled: !!campaignId && !!contactId,
     retry: 1,
     staleTime: Number.POSITIVE_INFINITY,
