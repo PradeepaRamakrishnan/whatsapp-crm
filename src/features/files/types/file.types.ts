@@ -49,6 +49,7 @@ export interface FileRecord {
   settlementAmount: number;
   mobileNumber: string;
   emailId: string;
+  contactStatus?: 'interested' | 'not_interested' | null;
   additionalData: Record<string, string | number>;
   isValid: boolean;
   validationErrors: string[] | null;
