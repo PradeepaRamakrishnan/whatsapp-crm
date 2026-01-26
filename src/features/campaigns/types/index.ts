@@ -192,3 +192,73 @@ export interface Configuration {
 export interface ConfigurationResponse {
   data: Configuration[];
 }
+
+export interface InteractionRecord {
+  id: string;
+  campaign: {
+    id: string;
+    name: string;
+    description: string;
+    file: string;
+    status: CampaignStatus;
+    lastRunAt: string | null;
+    errorDetails: any;
+    interested: number;
+    messageSent: MessageSentStats;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  campaignContact: {
+    id: string;
+    campaign: string;
+    contact: string;
+    status: string;
+    responseStatus: 'interested' | 'not_interested' | null;
+    email: { sent: boolean; sentAt: string | null };
+    sms: { sent: boolean; sentAt: string | null };
+    whatsapp: { sent: boolean; sentAt: string | null };
+    lead: string | null;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  contact: {
+    id: string;
+    file: string;
+    customerName: string;
+    settlementAmount: number;
+    mobileNumber: string;
+    emailId: string;
+    additionalData: Record<string, any>;
+    isValid: boolean;
+    validationErrors: any;
+    createdAt: string;
+    updatedAt: string;
+  };
+  channel: 'email' | 'sms' | 'whatsapp' | 'call';
+  direction: 'inbound' | 'outbound';
+  status: string;
+  subject: string | null;
+  body: string | null;
+  from: string;
+  to: string;
+  sentAt: string | null;
+  deliveredAt: string | null;
+  readAt: string | null;
+  openedAt: string | null;
+  clickedAt: string | null;
+  callDuration: number | null;
+  callOutcome: string | null;
+  callNotes: string | null;
+  recordingUrl: string | null;
+  error: string | null;
+  metadata: Record<string, any>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InteractionResponse {
+  data: InteractionRecord[];
+}

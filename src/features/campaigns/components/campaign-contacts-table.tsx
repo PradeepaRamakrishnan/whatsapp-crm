@@ -25,6 +25,7 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import type { ConversationMessage } from '@/components/shared/conversation-view';
 import { ConversationView } from '@/components/shared/conversation-view';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,8 +55,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getCampaignContacts } from '../services';
-import type { CampaignContactData, CampaignContactsResponse } from '../types';
+import { getCampaignById, getCampaignContacts, getContactMessages } from '../services';
+import type {
+  CampaignContactData,
+  CampaignContactsResponse,
+  CampaignDetails,
+  InteractionRecord,
+  InteractionResponse,
+} from '../types';
 
 dayjs.extend(utc);
 
@@ -207,6 +214,38 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: campaign } = useQuery<CampaignDetails>({
+    queryKey: ['campaign', campaignId],
+    queryFn: () => getCampaignById(campaignId),
+  });
+
+  const { data: messagesResponse } = useQuery<InteractionResponse | InteractionRecord[]>({
+    queryKey: ['contact-messages', campaignId, selectedContact?.id],
+    queryFn: () =>
+      getContactMessages(campaignId, selectedContact!.contact.id) as Promise<
+        InteractionResponse | InteractionRecord[]
+      >,
+    enabled: !!selectedContact,
+  });
+
+  // console.log(messagesResponse, 'messagesResponse');
+  const emailMessages = React.useMemo(() => {
+    const msgList = Array.isArray(messagesResponse)
+      ? messagesResponse
+      : (messagesResponse as InteractionResponse)?.data || [];
+
+    return msgList
+      .filter((m: InteractionRecord) => m.channel === 'email')
+      .map((m: InteractionRecord) => ({
+        id: m.id,
+        sender: m.direction === 'inbound' ? 'customer' : 'agent',
+        senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
+        channel: 'email',
+        content: m.body || m.subject || '',
+        timestamp: m.sentAt || m.createdAt,
+      })) as ConversationMessage[];
+  }, [messagesResponse]);
+
   const contacts = contactsResponse?.data || [];
   const totalRecords = contactsResponse?.meta.total || 0;
   const totalPages = contactsResponse?.meta.totalPages || 0;
@@ -353,7 +392,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
       </div>
 
       <Sheet open={!!selectedContact} onOpenChange={(open) => !open && setSelectedContact(null)}>
-        <SheetContent className="flex flex-col sm:max-w-2xl">
+        <SheetContent className="flex flex-col sm:max-w-4xl">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -618,39 +657,77 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                 </div>
               </TabsContent>
 
-              <TabsContent value="conversation" className="flex-1 overflow-hidden mt-0 p-0">
-                <ConversationView
-                  contact={{
-                    id: selectedContact.contact.id,
-                    name: selectedContact.contact.customerName,
-                    phone: selectedContact.contact.mobileNumber,
-                    bankName: 'Bank', // TODO: Get from campaign or contact data
-                    outstandingAmount: selectedContact.contact.settlementAmount,
-                  }}
-                  onSendMessage={(message, channel) => {
-                    // TODO: Implement send message
-                    void message;
-                    void channel;
-                  }}
-                  onCall={() => {
-                    // TODO: Implement call
-                  }}
-                  onEmail={() => {
-                    // TODO: Implement email
-                  }}
-                  onComplete={() => {
-                    // TODO: Implement complete
-                  }}
-                  onInterested={() => {
-                    // TODO: Implement interested
-                  }}
-                  onNotInterested={() => {
-                    // TODO: Implement not interested
-                  }}
-                  onFollowUp={() => {
-                    // TODO: Implement follow-up
-                  }}
-                />
+              <TabsContent value="conversation" className="flex-1 overflow-y-auto mt-0 p-0 min-h-0">
+                <Tabs defaultValue="email" className="flex flex-1 flex-col overflow-hidden">
+                  <TabsList className="mx-4 mt-2 h-9">
+                    <TabsTrigger value="email" className="text-xs">
+                      Email
+                    </TabsTrigger>
+                    <TabsTrigger value="whatsapp" className="text-xs">
+                      WhatsApp
+                    </TabsTrigger>
+                    <TabsTrigger value="sms" className="text-xs">
+                      SMS
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="email" className="flex-1 overflow-hidden mt-0 p-0 min-h-0">
+                    <ConversationView
+                      contact={{
+                        id: selectedContact.contact.id,
+                        name: selectedContact.contact.customerName,
+                        phone: selectedContact.contact.mobileNumber,
+                        bankName: campaign?.file.bankName || 'Bank',
+                        outstandingAmount: selectedContact.contact.settlementAmount,
+                      }}
+                      messages={emailMessages}
+                      filterChannel="email"
+                      onSendMessage={(message, channel) => {
+                        // TODO: Implement send message
+                        void message;
+                        void channel;
+                      }}
+                      onCall={() => {
+                        // TODO: Implement call
+                      }}
+                      onEmail={() => {
+                        // TODO: Implement email
+                      }}
+                      onComplete={() => {
+                        // TODO: Implement complete
+                      }}
+                      onInterested={() => {
+                        // TODO: Implement interested
+                      }}
+                      onNotInterested={() => {
+                        // TODO: Implement not interested
+                      }}
+                      onFollowUp={() => {
+                        // TODO: Implement follow-up
+                      }}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="whatsapp"
+                    className="flex-1 items-center justify-center p-8 text-muted-foreground"
+                  >
+                    <div className="text-center">
+                      <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                      <p className="text-xs">No WhatsApp messages</p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent
+                    value="sms"
+                    className="flex-1 items-center justify-center p-8 text-muted-foreground"
+                  >
+                    <div className="text-center">
+                      <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                      <p className="text-xs">No SMS messages</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
             </Tabs>
           )}
