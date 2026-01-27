@@ -1,16 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  ArrowLeft,
-  Calendar,
-  Database,
-  FileText,
-  Mail,
-  Phone,
-  XCircle,
-} from 'lucide-react';
+import { AlertCircle, ArrowLeft, Calendar, Database, FileText, Mail, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -167,7 +158,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Duplicate Emails</CardTitle>
+            <CardTitle className="text-sm font-medium">Duplicates</CardTitle>
             <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950/30">
               <Mail className="h-4 w-4 text-amber-600" />
             </div>
@@ -175,21 +166,6 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           <CardContent>
             <div className="text-2xl font-bold">
               {file.stats?.duplicateEmailInCampaign.toLocaleString() ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Found in campaigns</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Duplicate Mobiles</CardTitle>
-            <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-950/30">
-              <Phone className="h-4 w-4 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {file.stats?.duplicateMobileInCampaign.toLocaleString() ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Found in campaigns</p>
           </CardContent>

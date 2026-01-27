@@ -36,11 +36,24 @@ export interface FilesResponse {
   meta: FilesMeta;
 }
 
+export interface ChannelStatus {
+  sent: boolean;
+  sentAt: string | null;
+  deliveredAt: string | null;
+}
+
+export interface CampaignChannels {
+  sms: ChannelStatus;
+  email: ChannelStatus;
+  whatsapp: ChannelStatus;
+}
+
 export interface CampaignReference {
   id: string;
   name: string;
-  status: string;
   responseStatus: string | null;
+  lastRun?: string;
+  channels?: CampaignChannels;
 }
 
 export interface FileRecord {

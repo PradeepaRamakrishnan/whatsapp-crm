@@ -11,18 +11,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import {
-  Calendar,
-  CheckCircle,
-  Copy,
-  IndianRupee,
-  Mail,
-  Pencil,
-  Phone,
-  Trash2,
-  User,
-  XCircle,
-} from 'lucide-react';
+import { Calendar, CheckCircle, Copy, Mail, Pencil, Phone, Trash2, User } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -161,22 +150,6 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     },
   ];
 
-  const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
-    if (responseStatus === 'interested') {
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    }
-    if (responseStatus === 'not_interested') {
-      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
-    }
-    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-  };
-
-  const formatResponseStatus = (status: 'interested' | 'not_interested' | null): string => {
-    if (status === 'interested') return 'Interested';
-    if (status === 'not_interested') return 'Not Interested';
-    return '-';
-  };
-
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
   const filter = searchParams.get('filter') || 'all';
@@ -264,8 +237,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             <SelectContent>
               <SelectItem value="all">All Records</SelectItem>
               <SelectItem value="invalid">Invalid Records</SelectItem>
-              <SelectItem value="duplicate_email">Duplicate Emails</SelectItem>
-              <SelectItem value="duplicate_mobile">Duplicate Mobiles</SelectItem>
+              <SelectItem value="duplicate_email">Duplicates</SelectItem>
               <SelectItem value="excluded">Excluded</SelectItem>
             </SelectContent>
           </Select>
@@ -376,7 +348,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
       <Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
         <SheetContent className="flex flex-col sm:max-w-md">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+            <SheetTitle className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <User className="h-5 w-5 text-primary" />
               </div>
@@ -387,91 +359,140 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
           {selectedRecord && (
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
-              <div className="grid gap-4">
-                <div className="flex items-start gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
-                    <Mail className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">Email Address</p>
-                    <p className="truncate text-sm font-medium">{selectedRecord.emailId || '-'}</p>
-                  </div>
+              {/* Contact Info */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm font-medium">{selectedRecord.emailId || '-'}</p>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-green-50 dark:bg-green-950/30">
-                    <Phone className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">Mobile Number</p>
-                    <p className="text-sm font-medium">{selectedRecord.mobileNumber || '-'}</p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-green-600" />
+                  <p className="text-sm font-medium">{selectedRecord.mobileNumber || '-'}</p>
                 </div>
-
-                <div className="flex items-start gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30">
-                    <IndianRupee className="h-4 w-4 text-amber-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">Settlement Amount</p>
-                    <p className="text-sm font-semibold">
-                      ₹{Number(selectedRecord.settlementAmount).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-950/30">
-                    <Calendar className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">Created At</p>
-                    <p className="text-sm font-medium">
-                      {dayjs(selectedRecord.createdAt).format('MMM DD, YYYY hh:mm A')}
-                    </p>
-                  </div>
-                </div>
-                {selectedRecord.contactStatus && (
-                  <div className="flex items-start gap-3 rounded-lg border p-3 ">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-900/30">
-                      {selectedRecord.contactStatus === 'interested' ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium mb-1 text-muted-foreground">
-                        Response Status
-                      </p>
-                      <Badge
-                        className={getResponseStatusColor(selectedRecord.contactStatus)}
-                        variant="secondary"
-                      >
-                        {formatResponseStatus(selectedRecord.contactStatus)}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 && (
                 <>
                   <Separator />
                   <div>
-                    <h4 className="mb-3 text-sm font-semibold">Used in Campaigns</h4>
-                    <div className="space-y-2">
+                    <h4 className="mb-4 text-sm font-semibold">Campaigns</h4>
+                    <div className="space-y-4">
                       {selectedRecord.campaigns.map((campaign) => (
                         <div
                           key={campaign.id}
-                          className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/20"
+                          className="rounded-lg border p-4 dark:border-slate-700"
                         >
-                          <Copy className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-blue-900 dark:text-blue-100">
-                              {campaign.name}
-                            </p>
-                          </div>
+                          {/* Campaign Name */}
+                          <p className="font-semibold text-base mb-4">{campaign.name}</p>
+
+                          {/* Created At */}
+                          {campaign.lastRun && (
+                            <div className="mb-4 flex items-center gap-2 rounded-md bg-muted/50 p-2">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              <div className="text-xs">
+                                <p className="font-medium text-muted-foreground">Created At</p>
+                                <p className="font-medium">
+                                  {dayjs(campaign.lastRun).format('MMM DD, YYYY hh:mm A')}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Campaign Status */}
+                          {campaign.channels && (
+                            <div className="mb-4">
+                              <p className="mb-3 text-sm font-medium text-muted-foreground">
+                                Campaign Status
+                              </p>
+                              <div className="space-y-2">
+                                {/* Email */}
+                                {campaign.channels.email && (
+                                  <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
+                                    <div className="flex items-center gap-3">
+                                      <Mail className="h-4 w-4 text-blue-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">Email</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.email.sentAt
+                                            ? dayjs(campaign.channels.email.sentAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )
+                                            : '-'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {campaign.channels.email.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* SMS */}
+                                {campaign.channels.sms && (
+                                  <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
+                                    <div className="flex items-center gap-3">
+                                      <Copy className="h-4 w-4 text-green-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">SMS</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.sms.sentAt
+                                            ? dayjs(campaign.channels.sms.sentAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )
+                                            : '-'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {campaign.channels.sms.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* WhatsApp */}
+                                {campaign.channels.whatsapp && (
+                                  <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
+                                    <div className="flex items-center gap-3">
+                                      <Phone className="h-4 w-4 text-green-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">WhatsApp</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.whatsapp.sentAt
+                                            ? dayjs(campaign.channels.whatsapp.sentAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )
+                                            : '-'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {campaign.channels.whatsapp.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Response Status */}
+                          {campaign.responseStatus && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-muted-foreground">
+                                Response Status
+                              </p>
+                              <Badge
+                                className={`text-xs ${
+                                  campaign.responseStatus === 'interested'
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-200'
+                                    : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                                }`}
+                              >
+                                {campaign.responseStatus.charAt(0).toUpperCase() +
+                                  campaign.responseStatus.slice(1)}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
