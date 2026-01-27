@@ -322,6 +322,26 @@ export async function markContactNotInterested(
   }
 }
 
+export async function markContactConsent(campaignId: string, contactId: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/consent?campaignId=${campaignId}&contactId=${contactId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to mark contact as not interested');
+    }
+    throw error;
+  }
+}
+
 export async function unsubscribeContact(campaignId: string, contactId: string): Promise<unknown> {
   try {
     const cookieStore = await cookies();

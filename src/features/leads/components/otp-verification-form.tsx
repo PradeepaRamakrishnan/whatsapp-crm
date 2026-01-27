@@ -7,8 +7,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { markContactConsent } from '@/features/campaigns/services';
 import { otpSchema } from '../lib/validation';
 import { SuccessVerification } from './success-verification';
+// import { toast } from 'sonner';
 
 export const OtpVerificationForm = () => {
   const router = useRouter();
@@ -25,7 +27,15 @@ export const OtpVerificationForm = () => {
     },
     onSubmit: async () => {
       // Logic for successful verification
-      setIsVerified(true);
+      try {
+        if (campaignId && contactId) {
+          await markContactConsent(campaignId as string, contactId as string);
+        }
+      } catch (error) {
+        console.error('Error marking contact consent:', error);
+      } finally {
+        setIsVerified(true);
+      }
     },
   });
 
@@ -35,7 +45,6 @@ export const OtpVerificationForm = () => {
 
   return (
     <>
-      {/* Logo - Only shown when OTP form is visible */}
       <div className="flex items-center justify-center mb-8">
         <div className="relative w-48 sm:w-56">
           <Image

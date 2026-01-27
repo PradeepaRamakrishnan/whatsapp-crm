@@ -1,8 +1,10 @@
 'use client';
 
-import { CheckCircle2, CreditCard, Mail } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import dayjs from 'dayjs';
+import { CheckCircle2, CreditCard, Mail, MessageSquare, Phone, XCircle } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import type { Lead } from '../types';
 
 interface ContactDetailsPageProps {
@@ -38,30 +40,10 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                     {contact.fileContent?.mobileNumber || '-'}
                   </dd>
                 </div>
-
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground mb-3">
-                    Campaign Communications
-                  </dt>
-                  <dd className="space-y-3">
-                    {/* Status Badge */}
-                    <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                      <div className="rounded-full bg-emerald-100 dark:bg-emerald-950 p-1.5 mt-0.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">Lead Status</p>
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900 border text-xs capitalize">
-                            {contact.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 text-emerald-600 capitalize">
-                          Interested since{' '}
-                          {new Date(contact.interestedAt).toLocaleDateString('en-IN')}
-                        </p>
-                      </div>
-                    </div>
+                  <dt className="text-xs font-medium text-muted-foreground">Settlement Amount</dt>
+                  <dd className="text-sm font-medium mt-2">
+                    ₹{contact.fileContent?.settlementAmount?.toLocaleString('en-IN') || 0}
                   </dd>
                 </div>
               </dl>
@@ -83,22 +65,83 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                   <dd className="text-sm font-medium mt-2">{contact.campaign?.name || '-'}</dd>
                 </div>
 
-                <div>
+                {/* <div>
                   <dt className="text-xs font-medium text-muted-foreground">Campaign Status</dt>
                   <dd className="text-sm font-medium mt-2 capitalize">
                     {contact.campaign?.status || '-'}
                   </dd>
-                </div>
+                </div> */}
+
+                <Separator />
 
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Settlement Amount</dt>
-                  <dd className="text-sm font-medium mt-2">
-                    ₹{contact.fileContent?.settlementAmount?.toLocaleString('en-IN') || 0}
-                  </dd>
+                  <dt className="text-sm font-semibold mb-3">Communication Channels</dt>
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-blue-600" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium">Email</span>
+                          {contact.contact?.email?.sentAt && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {dayjs(contact.contact.email.sentAt).format('MMM DD, YYYY hh:mm A')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {contact.contact?.email?.sent ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-green-600" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium">SMS</span>
+                          {contact.contact?.sms?.sentAt && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {dayjs(contact.contact.sms.sentAt).format('MMM DD, YYYY hh:mm A')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {contact.contact?.sms?.sent ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-emerald-600" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium">WhatsApp</span>
+                          {contact.contact?.whatsapp?.sentAt && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {dayjs(contact.contact.whatsapp.sentAt).format(
+                                'MMM DD, YYYY hh:mm A',
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {contact.contact?.whatsapp?.sent ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+                <Separator />
+
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Created At</dt>
+                  <dt className="text-xs font-medium text-muted-foreground">Compaign Date</dt>
                   <dd className="text-sm font-medium mt-2">
                     {new Date(contact.createdAt).toLocaleString('en-IN')}
                   </dd>
