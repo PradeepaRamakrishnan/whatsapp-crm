@@ -2,6 +2,7 @@
 
 import dayjs from 'dayjs';
 import { CheckCircle2, CreditCard, Mail, MessageSquare, Phone, XCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 // import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -44,6 +45,29 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                   <dt className="text-xs font-medium text-muted-foreground">Settlement Amount</dt>
                   <dd className="text-sm font-medium mt-2">
                     ₹{contact.fileContent?.settlementAmount?.toLocaleString('en-IN') || 0}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground mb-3">
+                    Campaign Communications
+                  </dt>
+
+                  <dd className="space-y-3">
+                    {contact.from && (
+                      <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Source Channel
+                        </span>
+
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] capitalize bg-blue-50 text-blue-700 border-blue-200 
+                     dark:bg-blue-950 dark:text-blue-300"
+                        >
+                          {contact.from}
+                        </Badge>
+                      </div>
+                    )}
                   </dd>
                 </div>
               </dl>

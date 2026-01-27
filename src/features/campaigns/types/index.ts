@@ -44,6 +44,12 @@ export interface MessageSentStats {
   whatsapp: number;
 }
 
+export interface ContactMessageSent {
+  total: number;
+  sent: number;
+  pending: number;
+}
+
 export interface CampaignFile {
   id: string;
   name: string;
@@ -68,6 +74,7 @@ export interface CampaignDetails {
   interested: number;
   responseRate: number;
   messageSent: MessageSentStats;
+  contactMessageSent: ContactMessageSent;
   createdAt: string;
   updatedAt: string;
 }

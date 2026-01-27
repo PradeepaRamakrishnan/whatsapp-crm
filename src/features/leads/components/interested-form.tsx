@@ -31,10 +31,12 @@ export const InterestedForm = () => {
 
   const campaignId = searchParams.get('campaignId');
   const contactId = searchParams.get('contactId');
+  const channel = searchParams.get('channel');
 
   useQuery({
-    queryKey: ['markContactInterested', campaignId, contactId],
-    queryFn: () => markContactInterested(campaignId as string, contactId as string),
+    queryKey: ['markContactInterested', campaignId, contactId, channel],
+    queryFn: () =>
+      markContactInterested(campaignId as string, contactId as string, channel as string),
     enabled: !!campaignId && !!contactId,
     retry: 1,
     staleTime: Number.POSITIVE_INFINITY,
@@ -67,6 +69,7 @@ export const InterestedForm = () => {
         const params = new URLSearchParams({ mobile: value.mobile });
         if (campaignId) params.append('campaignId', campaignId);
         if (contactId) params.append('contactId', contactId);
+        if (channel) params.append('channel', channel);
         if (value.date_of_birth) {
           params.append('date_of_birth', value.date_of_birth.toISOString());
         }
