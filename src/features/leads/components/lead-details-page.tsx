@@ -11,7 +11,7 @@ import {
   FileCheck,
   FileText,
   Image,
-  IndianRupee,
+  // IndianRupee,
   Info,
   Link2,
   Trash2,
@@ -177,7 +177,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   });
 
   const lead = (leadResponse as LeadsResponse)?.data?.[0] || (leadResponse as LeadsResponse);
-  // console.log(lead, 'lead');
 
   const [documents, setDocuments] = useState<LeadDocument[]>([]);
 
@@ -265,7 +264,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
           </div>
         </div>
       </div>
-
+      {/* 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -280,7 +279,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
           </CardContent>
         </Card>
 
-        {/* <Card>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-purple-600" />
@@ -302,8 +301,8 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
             </div>
             <p className="text-xs text-muted-foreground">Current lead status</p>
           </CardContent>
-        </Card> */}
-      </div>
+        </Card>
+      </div> */}
 
       {/* Tabs Section */}
       <Tabs defaultValue="overview" className="w-full">
@@ -329,12 +328,12 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="pt-6">
+        <TabsContent value="overview">
           <ContactDetailsPage contact={lead} />
         </TabsContent>
 
         {/* Documents Tab */}
-        <TabsContent value="documents" className="pt-6">
+        <TabsContent value="documents">
           <div className="space-y-6">
             {/* Header */}
             <Card>
@@ -737,7 +736,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="conversation" className="mt-6">
+        <TabsContent value="conversation">
           <ContactConversation contact={lead} />
         </TabsContent>
       </Tabs>

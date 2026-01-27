@@ -1,7 +1,8 @@
 'use client';
 
 import { Award, CheckCircle2, ChevronRight, Clock, Shield } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
 interface SuccessVerificationProps {
@@ -10,14 +11,10 @@ interface SuccessVerificationProps {
 }
 
 export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificationProps) => {
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleProceed = () => {
-    if (campaignId && contactId) {
-      router.push(`/interested-form?campaignId=${campaignId}&contactId=${contactId}`);
-    } else {
-      router.push('/interested-form');
-    }
+    toast.info('Under development');
   };
 
   return (
@@ -57,7 +54,7 @@ export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificati
       </div>
 
       {/* Next Steps */}
-      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+      {/* <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Next Steps:</h3>
         <ul className="space-y-2">
           <li className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
@@ -73,7 +70,7 @@ export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificati
             <span>Get instant approval notification</span>
           </li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Time Estimate */}
       <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">

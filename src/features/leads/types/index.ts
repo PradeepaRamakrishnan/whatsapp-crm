@@ -6,10 +6,24 @@ export interface Lead {
     id: string;
     name: string;
     status: string;
+    fileName?: string;
+    bankName?: string;
   };
   contact: {
     id: string;
     status: string;
+    email?: {
+      sent: boolean;
+      sentAt?: string;
+    };
+    sms?: {
+      sent: boolean;
+      sentAt?: string;
+    };
+    whatsapp?: {
+      sent: boolean;
+      sentAt?: string;
+    };
   };
   fileContent: {
     id: string;
@@ -18,6 +32,18 @@ export interface Lead {
     mobileNumber: string;
     settlementAmount?: number;
     settlementCount?: number;
+  };
+  email?: {
+    sent: boolean;
+    sentAt?: string;
+  };
+  sms?: {
+    sent: boolean;
+    sentAt?: string;
+  };
+  whatsapp?: {
+    sent: boolean;
+    sentAt?: string;
   };
   interestedAt: string;
   consentGivenAt: string | null;
