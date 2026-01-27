@@ -29,10 +29,11 @@ import { ChannelEmptyState } from '@/components/shared/channel-empty-state';
 import type { ConversationMessage } from '@/components/shared/conversation-view';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
 import { MessageInput } from '@/components/shared/message-input';
-import { SMSMessage } from '@/components/shared/sms-message';
-import { WhatsAppMessage } from '@/components/shared/whatsapp-message';
+// import { SMSMessage } from '@/components/shared/sms-message';
+// import { WhatsAppMessage } from '@/components/shared/whatsapp-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -229,15 +230,20 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
 
   // Extract messages from response
   const msgList = React.useMemo(() => {
-    return Array.isArray(messagesResponse)
-      ? messagesResponse
-      : (messagesResponse as InteractionResponse)?.data || [];
+    if (Array.isArray(messagesResponse)) {
+      return messagesResponse;
+    }
+    if (messagesResponse && typeof messagesResponse === 'object' && 'data' in messagesResponse) {
+      const data = (messagesResponse as InteractionResponse).data;
+      return Array.isArray(data) ? data : [];
+    }
+    return [];
   }, [messagesResponse]);
 
   // Process email messages
   const emailMessages = React.useMemo(() => {
     return msgList
-      .filter((m: InteractionRecord) => m.channel === 'email')
+      .filter((m: InteractionRecord) => m.channel === 'email' && m.id)
       .map((m: InteractionRecord) => ({
         id: m.id,
         sender: m.direction === 'inbound' ? 'customer' : 'agent',
@@ -266,48 +272,48 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
   }, [msgList]);
 
   // Process WhatsApp messages
-  const whatsappMessages = React.useMemo(() => {
-    return msgList
-      .filter((m: InteractionRecord) => m.channel === 'whatsapp')
-      .map((m: InteractionRecord) => ({
-        id: m.id,
-        sender: m.direction === 'inbound' ? 'customer' : 'agent',
-        senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
-        channel: 'whatsapp',
-        content: m.body || '',
-        timestamp: m.sentAt || m.createdAt,
-        deliveredAt: m.deliveredAt,
-        readAt: m.readAt,
-        error: m.error,
-      })) as Array<
-      ConversationMessage & {
-        deliveredAt?: string | null;
-        readAt?: string | null;
-        error?: string | null;
-      }
-    >;
-  }, [msgList]);
+  // const whatsappMessages = React.useMemo(() => {
+  //   return msgList
+  //     .filter((m: InteractionRecord) => m.channel === 'whatsapp' && m.id && m.body)
+  //     .map((m: InteractionRecord) => ({
+  //       id: m.id,
+  //       sender: m.direction === 'inbound' ? 'customer' : 'agent',
+  //       senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
+  //       channel: 'whatsapp',
+  //       content: m.body || '',
+  //       timestamp: m.sentAt || m.createdAt,
+  //       deliveredAt: m.deliveredAt,
+  //       readAt: m.readAt,
+  //       error: m.error,
+  //     })) as Array<
+  //     ConversationMessage & {
+  //       deliveredAt?: string | null;
+  //       readAt?: string | null;
+  //       error?: string | null;
+  //     }
+  //   >;
+  // }, [msgList]);
 
   // Process SMS messages
-  const smsMessages = React.useMemo(() => {
-    return msgList
-      .filter((m: InteractionRecord) => m.channel === 'sms')
-      .map((m: InteractionRecord) => ({
-        id: m.id,
-        sender: m.direction === 'inbound' ? 'customer' : 'agent',
-        senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
-        channel: 'sms',
-        content: m.body || '',
-        timestamp: m.sentAt || m.createdAt,
-        deliveredAt: m.deliveredAt,
-        error: m.error,
-      })) as Array<
-      ConversationMessage & {
-        deliveredAt?: string | null;
-        error?: string | null;
-      }
-    >;
-  }, [msgList]);
+  // const smsMessages = React.useMemo(() => {
+  //   return msgList
+  //     .filter((m: InteractionRecord) => m.channel === 'sms' && m.id && m.body)
+  //     .map((m: InteractionRecord) => ({
+  //       id: m.id,
+  //       sender: m.direction === 'inbound' ? 'customer' : 'agent',
+  //       senderName: m.direction === 'inbound' ? m.contact?.customerName || 'Customer' : 'Samatva',
+  //       channel: 'sms',
+  //       content: m.body || '',
+  //       timestamp: m.sentAt || m.createdAt,
+  //       deliveredAt: m.deliveredAt,
+  //       error: m.error,
+  //     })) as Array<
+  //     ConversationMessage & {
+  //       deliveredAt?: string | null;
+  //       error?: string | null;
+  //     }
+  //   >;
+  // }, [msgList]);
 
   const contacts = contactsResponse?.data || [];
   const totalRecords = contactsResponse?.meta.total || 0;
@@ -730,12 +736,12 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                       <TabsTrigger value="email" className="text-xs h-7 px-3">
                         Email
                       </TabsTrigger>
-                      <TabsTrigger value="whatsapp" className="text-xs h-7 px-3">
+                      {/* <TabsTrigger value="whatsapp" className="text-xs h-7 px-3">
                         WhatsApp
                       </TabsTrigger>
                       <TabsTrigger value="sms" className="text-xs h-7 px-3">
                         SMS
-                      </TabsTrigger>
+                      </TabsTrigger> */}
                     </TabsList>
                   </div>
 
@@ -745,10 +751,31 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                   >
                     <ScrollArea className="flex-1">
                       {emailMessages.length > 0 ? (
-                        <div className="flex flex-col gap-2.5 p-3">
-                          {emailMessages.map((message) => (
-                            <EmailMessageCard key={message.id} message={message} />
-                          ))}
+                        <div className="flex flex-col gap-1.5 p-3">
+                          {emailMessages.map((message, index) => {
+                            const isLatestMessage = index === 0;
+                            return (
+                              <Collapsible
+                                key={message.id}
+                                defaultOpen={isLatestMessage}
+                                className="border rounded-lg"
+                              >
+                                <CollapsibleTrigger className="flex items-center justify-between gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors">
+                                  <span className="text-sm font-medium truncate text-left flex-1">
+                                    {message.subject || 'No Subject'}
+                                  </span>
+                                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                      {dayjs(message.timestamp).format('MMM DD h:mm A')}
+                                    </span>
+                                  </div>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="border-t px-3 py-3">
+                                  <EmailMessageCard message={message} />
+                                </CollapsibleContent>
+                              </Collapsible>
+                            );
+                          })}
                         </div>
                       ) : (
                         <ChannelEmptyState channel="email" />
@@ -763,7 +790,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                     />
                   </TabsContent>
 
-                  <TabsContent
+                  {/* <TabsContent
                     value="whatsapp"
                     className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
                   >
@@ -809,7 +836,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
                         void message;
                       }}
                     />
-                  </TabsContent>
+                  </TabsContent> */}
                 </Tabs>
               </TabsContent>
             </Tabs>

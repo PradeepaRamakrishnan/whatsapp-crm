@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import { AlertCircle, ArrowDown, ArrowUp } from 'lucide-react';
 import type { ConversationMessage } from './conversation-view';
-import { MessageDeliveryStatus } from './message-delivery-status';
+// import { MessageDeliveryStatus } from './message-delivery-status';
 
 export interface EmailMessageCardProps {
   message: ConversationMessage & {
@@ -31,24 +31,9 @@ export function EmailMessageCard({ message }: EmailMessageCardProps) {
             <ArrowUp className="h-3 w-3 text-muted-foreground shrink-0" />
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs text-muted-foreground">
-            {dayjs(message.timestamp).format('MMM DD h:mm A')}
-          </span>
-          <MessageDeliveryStatus
-            sent={!!message.timestamp}
-            delivered={true}
-            read={!!message.readAt}
-            opened={!!message.openedAt}
-            clicked={!!message.clickedAt}
-            timestamps={{
-              sent: message.timestamp,
-              read: message.readAt,
-              opened: message.openedAt,
-              clicked: message.clickedAt,
-            }}
-          />
-        </div>
+        <span className="text-xs text-muted-foreground shrink-0">
+          {dayjs(message.timestamp).format('MMM DD h:mm A')}
+        </span>
       </div>
 
       {message.subject && (
