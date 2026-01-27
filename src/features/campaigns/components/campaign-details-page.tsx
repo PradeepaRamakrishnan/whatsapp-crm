@@ -9,8 +9,8 @@ import {
   CheckCircle2,
   Download,
   FileText,
-  Mail,
-  MessageSquare,
+  // Mail,
+  // MessageSquare,
   Pause,
   Play,
   Send,
@@ -149,7 +149,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
       </div>
     );
   }
-
   // Get timeline data
   const timeline = timelineResponse?.data || [];
 
@@ -230,7 +229,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
         </div>
 
         {/* Quick Stats Bar */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
@@ -281,22 +280,11 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {campaign.messageSent.total.toLocaleString()}
+                {campaign.contactMessageSent.sent.toLocaleString()}
               </div>
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Mail className="h-3 w-3" />
-                  <span>Email: {campaign.messageSent.email.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>SMS: {campaign.messageSent.sms.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>WhatsApp: {campaign.messageSent.whatsapp.toLocaleString()}</span>
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {campaign.contactMessageSent.pending} pending
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -392,6 +380,45 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </dl>
             </CardContent>
           </Card>
+
+          {/* Message Delivery Stats */}
+          {/* <Card>
+            <CardHeader>
+              <CardTitle>Message Delivery Statistics</CardTitle>
+              <CardDescription>Breakdown by communication channel</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Email</p>
+                    <p className="text-2xl font-bold">{campaign.messageSent.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="rounded-lg bg-green-100 p-2 dark:bg-green-950/30">
+                    <MessageSquare className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">SMS</p>
+                    <p className="text-2xl font-bold">{campaign.messageSent.sms}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-950/30">
+                    <MessageSquare className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">WhatsApp</p>
+                    <p className="text-2xl font-bold">{campaign.messageSent.whatsapp}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card> */}
         </TabsContent>
 
         {/* Contacts Tab */}

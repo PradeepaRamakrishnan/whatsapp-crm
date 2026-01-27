@@ -46,6 +46,7 @@ export interface Lead {
     sentAt?: string;
   };
   interestedAt: string;
+  from?: string;
   consentGivenAt: string | null;
   createdAt: string;
   updatedAt: string;

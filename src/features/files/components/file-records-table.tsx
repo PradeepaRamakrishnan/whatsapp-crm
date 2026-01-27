@@ -59,6 +59,21 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const [selectedRecord, setSelectedRecord] = React.useState<FileRecord | null>(null);
   const [recordToEdit, setRecordToEdit] = React.useState<FileRecord | null>(null);
 
+  const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
+    if (responseStatus === 'interested') {
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+    }
+    if (responseStatus === 'not_interested') {
+      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
+    }
+    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+  };
+
+  const formatResponseStatus = (responseStatus: 'interested' | 'not_interested' | null) => {
+    if (responseStatus === null) return 'No Response';
+    return responseStatus.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
   const columns: ColumnDef<FileRecord>[] = [
     {
       accessorKey: 'customerName',
@@ -270,7 +285,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border">
-        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-4 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -480,17 +495,15 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                         {campaign.responseStatus && (
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-muted-foreground">
-                              Response Status
+                              Excluded Response
                             </p>
                             <Badge
-                              className={`text-xs ${
-                                campaign.responseStatus === 'interested'
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-200'
-                                  : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
-                              }`}
+                              variant="outline"
+                              className={`font-medium ${getResponseStatusColor(campaign.responseStatus as 'interested' | 'not_interested' | null)}`}
                             >
-                              {campaign.responseStatus.charAt(0).toUpperCase() +
-                                campaign.responseStatus.slice(1)}
+                              {formatResponseStatus(
+                                campaign.responseStatus as 'interested' | 'not_interested' | null,
+                              )}
                             </Badge>
                           </div>
                         )}
