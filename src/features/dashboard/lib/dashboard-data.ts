@@ -39,18 +39,18 @@ export const dashboardData = {
           title: 'Configuration',
           url: '/campaigns/configuration',
         },
-        {
-          title: 'Logs',
-          url: '/campaigns/logs',
-        },
+        // {
+        //   title: 'Logs',
+        //   url: '/campaigns/logs',
+        // },
         {
           title: 'All Campaigns',
           url: '/campaigns/list',
         },
-        {
-          title: 'Archived',
-          url: '/campaigns/archived',
-        },
+        // {
+        //   title: 'Archived',
+        //   url: '/campaigns/archived',
+        // },
       ],
     },
     {
