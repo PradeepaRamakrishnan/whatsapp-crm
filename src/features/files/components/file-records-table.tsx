@@ -11,10 +11,21 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { Calendar, CheckCircle, Copy, Mail, Pencil, Phone, Trash2, User } from 'lucide-react';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Copy,
+  Mail,
+  Pencil,
+  Phone,
+  Trash2,
+  User,
+} from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -390,6 +401,17 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
           {selectedRecord && (
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+              {/* Excluded Alert */}
+              {selectedRecord.isExcluded && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Excluded Record</AlertTitle>
+                  <AlertDescription>
+                    This record has been excluded and will not be included in campaigns.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 && (
                 <div>
                   <h4 className="mb-4 text-sm font-semibold">Campaigns</h4>
@@ -495,7 +517,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                         {campaign.responseStatus && (
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-muted-foreground">
-                              Excluded Reason
+                              Response Status
                             </p>
                             <Badge
                               variant="outline"

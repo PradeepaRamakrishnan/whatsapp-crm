@@ -3,9 +3,9 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import {
-  Calendar,
+  // Calendar,
   CheckCircle2,
-  IndianRupee,
+  // IndianRupee,
   Mail,
   MessageSquare,
   Phone,
@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
+  // SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
@@ -82,9 +82,32 @@ export function CampaignContactDetailsSheet({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
               <User className="h-5 w-5 text-primary" />
             </div>
-            <span>{selectedContact?.contact.customerName}</span>
+            <div>
+              <div>{selectedContact?.contact.customerName}</div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                <div>
+                  <Mail className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {selectedContact?.contact.emailId || '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                <div>
+                  <Phone className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {selectedContact?.contact.mobileNumber || '-'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </SheetTitle>
-          <SheetDescription>Contact details and status</SheetDescription>
+          {/* <SheetDescription>Contact details and status</SheetDescription> */}
         </SheetHeader>
 
         {selectedContact && (
@@ -96,57 +119,7 @@ export function CampaignContactDetailsSheet({
 
             <TabsContent value="details" className="flex-1 overflow-y-auto px-4 pb-4 mt-4">
               <div className="flex flex-col gap-6">
-                <div className="grid gap-4">
-                  <div className="flex items-start gap-3 rounded-lg border p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/30">
-                      <Mail className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-muted-foreground">Email Address</p>
-                      <p className="truncate text-sm font-medium">
-                        {selectedContact.contact.emailId || '-'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 rounded-lg border p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-green-50 dark:bg-green-950/30">
-                      <Phone className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-muted-foreground">Mobile Number</p>
-                      <p className="text-sm font-medium">
-                        {selectedContact.contact.mobileNumber || '-'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 rounded-lg border p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30">
-                      <IndianRupee className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-muted-foreground">Settlement Amount</p>
-                      <p className="text-sm font-semibold">
-                        ₹{Number(selectedContact.contact.settlementAmount).toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 rounded-lg border p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-950/30">
-                      <Calendar className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-muted-foreground">Created At</p>
-                      <p className="text-sm font-medium">
-                        {dayjs(selectedContact.createdAt).format('MMM DD, YYYY hh:mm A')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
+                {/* <Separator /> */}
 
                 <div>
                   <h4 className="mb-3 text-sm font-semibold">Campaign Status</h4>
