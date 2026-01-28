@@ -268,4 +268,5 @@ export interface InteractionRecord {
 
 export interface InteractionResponse {
   data: InteractionRecord[];
+  total: number;
 }

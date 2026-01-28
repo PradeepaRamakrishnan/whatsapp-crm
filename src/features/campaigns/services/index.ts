@@ -9,6 +9,7 @@ import type {
   CampaignTimelineResponse,
   Configuration,
   ConfigurationResponse,
+  InteractionResponse,
 } from '../types';
 import type { TemplateChannel, TemplateData } from '../types/template.types';
 
@@ -363,14 +364,31 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
   }
 }
 
-export async function getContactMessages(campaignId: string, contactId?: string): Promise<unknown> {
+interface GetContactMessagesOptions {
+  page?: number;
+  limit?: number;
+  channel?: 'email' | 'sms' | 'whatsapp';
+}
+
+export async function getContactMessages(
+  campaignId: string,
+  contactId: string,
+  options?: GetContactMessagesOptions,
+): Promise<InteractionResponse> {
   try {
     const cookieStore = await cookies();
+
+    const params = new URLSearchParams();
+    if (options?.page) params.set('page', String(options.page));
+    if (options?.limit) params.set('limit', String(options.limit));
+    if (options?.channel) params.set('channel', options.channel);
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const url = `/${campaignId}/contacts/${contactId}/conversations${queryString}`;
+
     const response = await axiosClient({
       method: 'GET',
-      url: contactId
-        ? `/${campaignId}/contacts/${contactId}/conversations`
-        : `/${campaignId}/conversations`,
+      url,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -380,19 +398,78 @@ export async function getContactMessages(campaignId: string, contactId?: string)
   } catch (error: unknown) {
     // For now, return mock data as if coming from API
     if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to conversation messages');
+      throw new Error(error.response?.data?.message || 'Failed to fetch conversation messages');
     }
-    return [
-      {
-        id: 'msg-1',
-        sender: 'agent',
-        senderName: 'Samatva Support',
-        channel: 'email',
-        content:
-          'Dear Customer,\n\nWe have a special settlement offer for your outstanding balance. You can now settle your account with a 20% discount on the total amount.\n\nPlease let us know if you are interested in this offer.\n\nBest regards,\nSamatva Team',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-      },
-    ];
+    return {
+      data: [
+        {
+          id: 'msg-1',
+          campaign: {
+            id: campaignId,
+            name: '',
+            description: '',
+            file: '',
+            status: 'active' as const,
+            lastRunAt: null,
+            errorDetails: {},
+            interested: 0,
+            messageSent: { total: 0, email: 0, sms: 0, whatsapp: 0 },
+            active: true,
+            createdAt: '',
+            updatedAt: '',
+          },
+          campaignContact: {
+            id: '',
+            campaign: campaignId,
+            contact: contactId,
+            status: '',
+            responseStatus: null,
+            email: { sent: false, sentAt: null },
+            sms: { sent: false, sentAt: null },
+            whatsapp: { sent: false, sentAt: null },
+            lead: null,
+            active: true,
+            createdAt: '',
+            updatedAt: '',
+          },
+          contact: {
+            id: contactId,
+            file: '',
+            customerName: 'Customer',
+            settlementAmount: 0,
+            mobileNumber: '',
+            emailId: '',
+            additionalData: {},
+            isValid: true,
+            validationErrors: {},
+            createdAt: '',
+            updatedAt: '',
+          },
+          channel: 'email',
+          direction: 'outbound' as const,
+          status: 'sent',
+          subject: 'Settlement Offer',
+          body: 'Dear Customer,\n\nWe have a special settlement offer for your outstanding balance. You can now settle your account with a 20% discount on the total amount.\n\nPlease let us know if you are interested in this offer.\n\nBest regards,\nSamatva Team',
+          from: 'support@samatva.com',
+          to: '',
+          sentAt: new Date(Date.now() - 3600000).toISOString(),
+          deliveredAt: null,
+          readAt: null,
+          openedAt: null,
+          clickedAt: null,
+          callDuration: null,
+          callOutcome: null,
+          callNotes: null,
+          recordingUrl: null,
+          error: null,
+          metadata: {},
+          active: true,
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+      total: 1,
+    };
   }
 }
 
@@ -407,7 +484,7 @@ export async function sendReplyEmail(
     const response = await axiosClient({
       method: 'POST',
       url: `/${campaignId}/contacts/${contactId}/reply`,
-      data: { subject, body },
+      data: { subject, body, channel: 'email' },
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -417,6 +494,56 @@ export async function sendReplyEmail(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to send reply email');
+    }
+    throw error;
+  }
+}
+
+export async function sendReplySMS(
+  campaignId: string,
+  contactId: string,
+  body: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/reply`,
+      data: { body, channel: 'sms' },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to send SMS reply');
+    }
+    throw error;
+  }
+}
+
+export async function sendReplyWhatsApp(
+  campaignId: string,
+  contactId: string,
+  body: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/reply`,
+      data: { body, channel: 'whatsapp' },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to send WhatsApp reply');
     }
     throw error;
   }
