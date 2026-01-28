@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
@@ -107,12 +109,14 @@ export const columns: ColumnDef<FileData>[] = [
     cell: ({ row }) => {
       const file = row.original;
       return (
-        <FileActions
-          fileId={file.id}
-          fileName={file.name}
-          currentStatus={file.status}
-          variant="dropdown"
-        />
+        <div onClick={(e) => e.stopPropagation()}>
+          <FileActions
+            fileId={file.id}
+            fileName={file.name}
+            currentStatus={file.status}
+            variant="dropdown"
+          />
+        </div>
       );
     },
   },

@@ -246,7 +246,7 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
       </div>
 
       <div className="overflow-hidden rounded-lg border">
-        <Table className="[&_th]:px-6 [&_th]:py-4 [&_td]:px-6 [&_td]:py-5 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
