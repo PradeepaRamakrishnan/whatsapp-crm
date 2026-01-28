@@ -292,7 +292,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className=" border-b w-full bg-transparent p-0">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contacts">Compaign Recipients</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>

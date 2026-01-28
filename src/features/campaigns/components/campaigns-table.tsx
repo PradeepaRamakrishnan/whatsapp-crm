@@ -235,7 +235,7 @@ export function CampaignsTable() {
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border">
-        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

@@ -94,7 +94,9 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     {
       accessorKey: 'emailId',
       header: 'Email',
-      cell: ({ row }) => <div className="text-sm">{row.getValue('emailId')}</div>,
+      cell: ({ row }) => (
+        <div className="text-sm text-muted-foreground">{row.getValue('emailId')}</div>
+      ),
     },
     {
       accessorKey: 'mobileNumber',
@@ -296,7 +298,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border">
-        <Table className="[&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-4 [&_th]:font-normal [&_th]:bg-muted [&_td]:font-medium">
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
