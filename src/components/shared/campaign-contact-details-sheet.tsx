@@ -277,10 +277,7 @@ export function CampaignContactDetailsSheet({
               value="conversation"
               className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
             >
-              <CampaignConversation
-                campaignId={campaignId}
-                contactId={selectedContact.contact.id}
-              />
+              <CampaignConversation campaignId={campaignId} contactId={selectedContact.id} />
             </TabsContent>
           </Tabs>
         )}

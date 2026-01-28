@@ -31,7 +31,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           <Toaster position="bottom-right" richColors={true} toastOptions={{ duration: 5000 }} />
         </ThemeProvider>
       </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={false} position="right" buttonPosition="top-left" />
     </PersistQueryClientProvider>
   );
 };

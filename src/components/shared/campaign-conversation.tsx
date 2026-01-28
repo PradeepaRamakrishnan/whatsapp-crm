@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import * as React from 'react';
+import { useMemo } from 'react';
 import { ChannelEmptyState } from '@/components/shared/channel-empty-state';
 import type { ConversationMessage } from '@/components/shared/conversation-view';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
@@ -45,7 +45,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     },
   });
 
-  const msgList = React.useMemo(() => {
+  const msgList = useMemo(() => {
     if (Array.isArray(messagesResponse)) {
       return messagesResponse;
     }
@@ -56,7 +56,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     return [];
   }, [messagesResponse]);
 
-  const emailMessages = React.useMemo(() => {
+  const emailMessages = useMemo(() => {
     return msgList
       .filter((m: InteractionRecord) => m.channel === 'email' && m.id)
       .map((m: InteractionRecord) => ({
