@@ -259,7 +259,14 @@ export interface InteractionRecord {
   callOutcome: string | null;
   callNotes: string | null;
   recordingUrl: string | null;
-  error: string | null;
+  error:
+    | string
+    | {
+        code: string;
+        message: string;
+        timestamp: string;
+      }
+    | null;
   metadata: Record<string, unknown>;
   active: boolean;
   createdAt: string;
@@ -268,4 +275,10 @@ export interface InteractionRecord {
 
 export interface InteractionResponse {
   data: InteractionRecord[];
+  meta: {
+    total: number;
+    page: string | number;
+    limit: string | number;
+    totalPages: number;
+  };
 }

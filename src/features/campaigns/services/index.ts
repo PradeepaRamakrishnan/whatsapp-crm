@@ -363,14 +363,24 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
   }
 }
 
-export async function getContactMessages(campaignId: string, contactId?: string): Promise<unknown> {
+export async function getContactMessages(
+  campaignId: string,
+  contactId?: string,
+  channel?: 'email' | 'sms' | 'whatsapp',
+): Promise<unknown> {
   try {
     const cookieStore = await cookies();
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('limit', '50');
+    if (channel) params.set('channel', channel);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
     const response = await axiosClient({
       method: 'GET',
       url: contactId
-        ? `/${campaignId}/contacts/${contactId}/conversations`
-        : `/${campaignId}/conversations`,
+        ? `/${campaignId}/contacts/${contactId}/conversations${queryString}`
+        : `/${campaignId}/conversations${queryString}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -378,21 +388,10 @@ export async function getContactMessages(campaignId: string, contactId?: string)
 
     return response.data;
   } catch (error: unknown) {
-    // For now, return mock data as if coming from API
     if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to conversation messages');
+      throw new Error(error.response?.data?.message || 'Failed to fetch conversation messages');
     }
-    return [
-      {
-        id: 'msg-1',
-        sender: 'agent',
-        senderName: 'Samatva Support',
-        channel: 'email',
-        content:
-          'Dear Customer,\n\nWe have a special settlement offer for your outstanding balance. You can now settle your account with a 20% discount on the total amount.\n\nPlease let us know if you are interested in this offer.\n\nBest regards,\nSamatva Team',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-      },
-    ];
+    throw error;
   }
 }
 
@@ -407,7 +406,7 @@ export async function sendReplyEmail(
     const response = await axiosClient({
       method: 'POST',
       url: `/${campaignId}/contacts/${contactId}/reply`,
-      data: { subject, body },
+      data: { subject, body, channel: 'email' },
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -417,6 +416,56 @@ export async function sendReplyEmail(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to send reply email');
+    }
+    throw error;
+  }
+}
+
+export async function sendReplySMS(
+  campaignId: string,
+  contactId: string,
+  body: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/reply`,
+      data: { body, channel: 'sms' },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to send SMS reply');
+    }
+    throw error;
+  }
+}
+
+export async function sendReplyWhatsApp(
+  campaignId: string,
+  contactId: string,
+  body: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/reply`,
+      data: { body, channel: 'whatsapp' },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to send WhatsApp reply');
     }
     throw error;
   }
