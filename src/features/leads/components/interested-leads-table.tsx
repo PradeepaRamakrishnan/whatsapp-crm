@@ -81,7 +81,9 @@ export function InterestedLeadsTable() {
         id: 'email',
         header: 'Email',
         cell: ({ row }) => (
-          <div className="text-sm">{row.original.fileContent?.emailId || '-'}</div>
+          <div className="text-sm text-muted-foreground">
+            {row.original.fileContent?.emailId || '-'}
+          </div>
         ),
         size: 220,
       }),
@@ -98,7 +100,9 @@ export function InterestedLeadsTable() {
       columnHelper.accessor('campaign.name', {
         id: 'campaign',
         header: 'Campaign',
-        cell: ({ row }) => <div className="text-sm">{row.original.campaign?.name || '-'}</div>,
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">{row.original.campaign?.name || '-'}</div>
+        ),
         size: 150,
       }),
       columnHelper.accessor('fileContent.settlementAmount', {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type ColumnDef,
   flexRender,
@@ -25,7 +25,18 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +65,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getFileById } from '../services';
+import { deleteFileRecord, getFileById } from '../services';
 import type { FileRecord } from '../types/file.types';
 import { FileRecordEdit } from './file-record-edit';
 
@@ -69,6 +80,21 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [selectedRecord, setSelectedRecord] = React.useState<FileRecord | null>(null);
   const [recordToEdit, setRecordToEdit] = React.useState<FileRecord | null>(null);
+  const [recordToDelete, setRecordToDelete] = React.useState<FileRecord | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteFileRecord(fileId, recordToDelete?.id || ''),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['file', fileId] });
+      setRecordToDelete(null);
+      toast.success('Record deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete record');
+    },
+  });
 
   const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
     if (responseStatus === 'interested') {
@@ -169,6 +195,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={(e) => {
               e.stopPropagation();
+              setRecordToDelete(row.original);
             }}
           >
             <Trash2 className="h-4 w-4" />
@@ -570,6 +597,34 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         record={recordToEdit}
         onOpenChange={(open) => !open && setRecordToEdit(null)}
       />
+
+      <AlertDialog
+        open={!!recordToDelete}
+        onOpenChange={(open) => !open && setRecordToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Record</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the record for &quot;{recordToDelete?.customerName}
+              &quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteMutation.mutate();
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

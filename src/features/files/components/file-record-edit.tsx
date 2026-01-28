@@ -66,8 +66,8 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
 
   return (
     <Sheet open={!!record} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
-        <SheetHeader className="pb-6">
+      <SheetContent className="sm:max-w-lg overflow-y-auto ">
+        <SheetHeader>
           <SheetTitle className="text-xl font-bold tracking-tight">Edit Customer Record</SheetTitle>
           <SheetDescription className="text-sm">
             Make changes to the customer information below. Click save when you&apos;re done.
@@ -80,7 +80,7 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-6"
+          className="space-y-6 p-4 "
         >
           <form.Field
             name="customerName"
