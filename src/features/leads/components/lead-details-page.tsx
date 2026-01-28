@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 // import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { CampaignConversation } from '@/components/shared/campaign-conversation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -32,7 +33,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContactConversation } from '@/features/campaigns/components/contact-conversation';
 import { cn } from '@/lib/utils';
 import type { Document as LeadDocument } from '../lib/data';
 import { getLeadsById } from '../services';
@@ -306,25 +306,10 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
 
       {/* Tabs Section */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="inline-flex h-11 items-center justify-start gap-1 rounded-lg bg-slate-100 dark:bg-slate-800/50 p-1 w-auto">
-          <TabsTrigger
-            value="overview"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger
-            value="documents"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          >
-            Documents
-          </TabsTrigger>
-          <TabsTrigger
-            value="conversation"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          >
-            Conversation
-          </TabsTrigger>
+        <TabsList className=" border-b w-full bg-transparent p-0">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="conversation">Conversation</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -333,8 +318,8 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         </TabsContent>
 
         {/* Documents Tab */}
-        <TabsContent value="documents">
-          <div className="space-y-6">
+        <TabsContent value="documents" className="mt-4">
+          <div className="space-y-6 ">
             {/* Header */}
             <Card>
               <CardHeader>
@@ -737,7 +722,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         </TabsContent>
 
         <TabsContent value="conversation">
-          <ContactConversation contact={lead} />
+          <CampaignConversation campaignId={lead.campaign.id} contactId={lead.contact.id} />
         </TabsContent>
       </Tabs>
 

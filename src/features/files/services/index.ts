@@ -137,6 +137,7 @@ export async function deleteFile(id: string): Promise<void> {
   }
 }
 
+// ... existing code ...
 export async function updateFileRecord(
   fileId: string,
   recordId: string,
@@ -156,6 +157,25 @@ export async function updateFileRecord(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to update record');
+    }
+    throw error;
+  }
+}
+
+export async function deleteFileRecord(fileId: string, recordId: string): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'DELETE',
+      url: `/${fileId}/contents/${recordId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete record');
     }
     throw error;
   }
