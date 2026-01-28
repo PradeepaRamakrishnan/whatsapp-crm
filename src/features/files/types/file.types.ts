@@ -65,6 +65,7 @@ export interface FileRecord {
   contactStatus?: 'interested' | 'not_interested' | null;
   additionalData: Record<string, string | number>;
   isValid: boolean;
+  isExcluded: boolean;
   validationErrors: string[] | null;
   campaigns: CampaignReference[];
   createdAt: string;
