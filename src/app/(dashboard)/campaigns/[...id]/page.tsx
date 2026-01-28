@@ -4,7 +4,6 @@ import {
   getCampaignById,
   getCampaignContacts,
   getCampaignTimeline,
-  getContactMessages,
 } from '@/features/campaigns/services';
 
 export const metadata = {
@@ -40,11 +39,6 @@ const CampaignDetailRoute = async ({ params }: CampaignDetailRouteProps) => {
     await queryClient.prefetchQuery({
       queryKey: ['campaign-contacts', campaignId, { page: 1, limit: 10 }],
       queryFn: () => getCampaignContacts(campaignId, 1, 10),
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: ['campaign-conversation', campaignId],
-      queryFn: () => getContactMessages(campaignId),
     });
 
     // Prefetch campaign timeline
