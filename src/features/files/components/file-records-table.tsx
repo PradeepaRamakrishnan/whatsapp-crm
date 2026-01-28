@@ -495,7 +495,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                         {campaign.responseStatus && (
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-muted-foreground">
-                              Excluded Response
+                              Excluded Reason
                             </p>
                             <Badge
                               variant="outline"
