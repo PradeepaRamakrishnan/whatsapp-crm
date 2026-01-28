@@ -1,9 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import * as React from 'react';
+import { useMemo } from 'react';
 import { ChannelEmptyState } from '@/components/shared/channel-empty-state';
 import type { ConversationMessage } from '@/components/shared/conversation-view';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
@@ -11,7 +11,7 @@ import { MessageInput } from '@/components/shared/message-input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getContactMessages } from '@/features/campaigns/services';
+import { getContactMessages, sendReplyEmail } from '@/features/campaigns/services';
 import type { InteractionRecord, InteractionResponse } from '@/features/campaigns/types';
 
 dayjs.extend(utc);
@@ -22,6 +22,8 @@ interface CampaignConversationProps {
 }
 
 export function CampaignConversation({ campaignId, contactId }: CampaignConversationProps) {
+  const queryClient = useQueryClient();
+
   const { data: messagesResponse, isLoading } = useQuery<InteractionResponse | InteractionRecord[]>(
     {
       queryKey: ['contact-messages', campaignId, contactId],
@@ -33,7 +35,17 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     },
   );
 
-  const msgList = React.useMemo(() => {
+  const { mutate: sendEmail, isPending: isSending } = useMutation({
+    mutationFn: (data: { subject: string; body: string }) =>
+      sendReplyEmail(campaignId, contactId, data.subject, data.body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['contact-messages', campaignId, contactId],
+      });
+    },
+  });
+
+  const msgList = useMemo(() => {
     if (Array.isArray(messagesResponse)) {
       return messagesResponse;
     }
@@ -44,7 +56,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     return [];
   }, [messagesResponse]);
 
-  const emailMessages = React.useMemo(() => {
+  const emailMessages = useMemo(() => {
     return msgList
       .filter((m: InteractionRecord) => m.channel === 'email' && m.id)
       .map((m: InteractionRecord) => ({
@@ -127,9 +139,12 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
         </ScrollArea>
         <MessageInput
           placeholder="Type your email message..."
+          disabled={isSending}
           onSend={(message) => {
-            // TODO: Implement send email
-            void message;
+            const lines = message.trim().split('\n');
+            const subject = lines[0] || 'No Subject';
+            const body = lines.slice(1).join('\n') || lines[0];
+            sendEmail({ subject, body });
           }}
         />
       </TabsContent>
