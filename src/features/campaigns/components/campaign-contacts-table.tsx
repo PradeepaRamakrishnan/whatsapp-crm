@@ -467,7 +467,30 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <User className="h-5 w-5 text-primary" />
               </div>
-              <span>{selectedContact?.contact.customerName}</span>
+              <div>
+                <div>{selectedContact?.contact.customerName}</div>
+                <div className="flex items-center gap-2 mt-1 ">
+                  <div>
+                    <Mail className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {selectedContact?.contact.emailId || '-'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1 ">
+                  <div>
+                    <Phone className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {selectedContact?.contact.mobileNumber || '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </SheetTitle>
             <SheetDescription>Contact details and status</SheetDescription>
           </SheetHeader>
