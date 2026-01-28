@@ -165,7 +165,7 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                 <Separator />
 
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Compaign Date</dt>
+                  <dt className="text-xs font-medium text-muted-foreground">Campaign Date</dt>
                   <dd className="text-sm font-medium mt-2">
                     {new Date(contact.createdAt).toLocaleString('en-IN')}
                   </dd>

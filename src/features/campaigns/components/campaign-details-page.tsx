@@ -232,7 +232,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Compaign Recipients</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Recipients</CardTitle>
               <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
                 <Users className="h-4 w-4 text-blue-600" />
               </div>
@@ -294,7 +294,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
         <TabsList className=" border-b w-full bg-transparent p-0">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="contacts">Compaign Recipients</TabsTrigger>
+          <TabsTrigger value="contacts">Campaign Recipients</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 

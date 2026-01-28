@@ -45,7 +45,7 @@ export const columns: ColumnDef<FileData>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('name')}</div>,
+    cell: ({ row }) => <div className="font-medium capitalize">{row.getValue('name')}</div>,
   },
   {
     accessorKey: 'bankName',
