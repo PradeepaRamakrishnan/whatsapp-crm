@@ -112,7 +112,7 @@ export function CampaignContactDetailsSheet({
 
         {selectedContact && (
           <Tabs defaultValue="details" className="flex flex-1 flex-col overflow-hidden">
-            <TabsList className="mx-4 mt-4">
+            <TabsList className="mx-4 mt-4 ">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="conversation">Conversation</TabsTrigger>
             </TabsList>

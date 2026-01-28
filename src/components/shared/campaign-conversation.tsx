@@ -108,30 +108,33 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
         <ScrollArea className="flex-1">
           {emailMessages.length > 0 ? (
             <div className="flex flex-col gap-1.5 p-3">
-              {emailMessages.map((message, index) => {
-                const isLatestMessage = index === 0;
-                return (
-                  <Collapsible
-                    key={message.id}
-                    defaultOpen={isLatestMessage}
-                    className="border rounded-lg"
-                  >
-                    <CollapsibleTrigger className="flex items-center justify-between gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors">
-                      <span className="text-sm font-medium truncate text-left flex-1">
-                        {message.subject || 'No Subject'}
-                      </span>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {dayjs(message.timestamp).format('MMM DD h:mm A')}
+              {emailMessages
+                .slice()
+                .reverse()
+                .map((message, index, arr) => {
+                  const isLatestMessage = index === arr.length - 1;
+                  return (
+                    <Collapsible
+                      key={message.id}
+                      defaultOpen={isLatestMessage}
+                      className="border rounded-lg"
+                    >
+                      <CollapsibleTrigger className="flex items-center justify-between gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors">
+                        <span className="text-sm font-medium truncate text-left flex-1">
+                          {message.subject || 'No Subject'}
                         </span>
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="border-t px-3 py-3">
-                      <EmailMessageCard message={message} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {dayjs(message.timestamp).format('MMM DD h:mm A')}
+                          </span>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="border-t px-3 py-3">
+                        <EmailMessageCard message={message} />
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
             </div>
           ) : (
             <ChannelEmptyState channel="email" />
