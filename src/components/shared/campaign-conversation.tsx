@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import * as React from 'react';
@@ -11,7 +11,7 @@ import { MessageInput } from '@/components/shared/message-input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getContactMessages } from '@/features/campaigns/services';
+import { getContactMessages, sendReplyEmail } from '@/features/campaigns/services';
 import type { InteractionRecord, InteractionResponse } from '@/features/campaigns/types';
 
 dayjs.extend(utc);
@@ -22,6 +22,8 @@ interface CampaignConversationProps {
 }
 
 export function CampaignConversation({ campaignId, contactId }: CampaignConversationProps) {
+  const queryClient = useQueryClient();
+
   const { data: messagesResponse, isLoading } = useQuery<InteractionResponse | InteractionRecord[]>(
     {
       queryKey: ['contact-messages', campaignId, contactId],
@@ -32,6 +34,16 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
       enabled: !!contactId,
     },
   );
+
+  const { mutate: sendEmail, isPending: isSending } = useMutation({
+    mutationFn: (data: { subject: string; body: string }) =>
+      sendReplyEmail(campaignId, contactId, data.subject, data.body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['contact-messages', campaignId, contactId],
+      });
+    },
+  });
 
   const msgList = React.useMemo(() => {
     if (Array.isArray(messagesResponse)) {
@@ -127,9 +139,12 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
         </ScrollArea>
         <MessageInput
           placeholder="Type your email message..."
+          disabled={isSending}
           onSend={(message) => {
-            // TODO: Implement send email
-            void message;
+            const lines = message.trim().split('\n');
+            const subject = lines[0] || 'No Subject';
+            const body = lines.slice(1).join('\n') || lines[0];
+            sendEmail({ subject, body });
           }}
         />
       </TabsContent>
