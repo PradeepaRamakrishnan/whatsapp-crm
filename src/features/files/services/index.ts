@@ -35,12 +35,26 @@ export async function createFile(formData: FormData) {
   }
 }
 
-export async function getAllFiles(page: number, limit: number): Promise<FilesResponse> {
+export async function getAllFiles(
+  page: number,
+  limit: number,
+  search?: string,
+): Promise<FilesResponse> {
   try {
     const cookieStore = await cookies();
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      active: 'true',
+    });
+
+    if (search) {
+      queryParams.append('filter', search);
+    }
+
     const response = await axiosClient({
       method: 'GET',
-      url: `/?page=${page}&limit=${limit}`,
+      url: `/?${queryParams.toString()}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -122,8 +136,9 @@ export async function deleteFile(id: string): Promise<void> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
-      method: 'DELETE',
+      method: 'PATCH',
       url: `/${id}`,
+      data: { isActive: false },
       headers: {
         Cookie: cookieStore.toString(),
       },

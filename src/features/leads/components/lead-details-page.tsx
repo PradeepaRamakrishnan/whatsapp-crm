@@ -179,6 +179,8 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   const lead = (leadResponse as LeadsResponse)?.data?.[0] || (leadResponse as LeadsResponse);
 
   const [documents, setDocuments] = useState<LeadDocument[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<LeadDocument | null>(null);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
@@ -200,24 +202,28 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       setUploadFileName(file.name);
       setIsUploadModalOpen(true);
     }
   };
 
   const confirmUpload = () => {
+    if (!selectedFile) return;
+
     const newDoc: LeadDocument = {
       id: Date.now().toString(),
       name: uploadFileName,
       type: activeDocTypeRef.current || 'other',
-      url: '#',
+      url: URL.createObjectURL(selectedFile),
       uploadDate: new Date().toISOString(),
-      size: '1.2 MB', // Mock size
+      size: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
     };
 
     setDocuments([newDoc, ...documents]);
     setIsUploadModalOpen(false);
     setUploadFileName('');
+    setSelectedFile(null);
     activeDocTypeRef.current = null;
   };
 
@@ -241,6 +247,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     const file = e.dataTransfer.files?.[0];
     if (file) {
       activeDocTypeRef.current = docType;
+      setSelectedFile(file);
       setUploadFileName(file.name);
       setIsUploadModalOpen(true);
     }
@@ -448,7 +455,11 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                         {frontDoc.name}
                                       </p>
                                       <div className="flex items-center justify-center gap-2 pt-2">
-                                        <Button size="sm" variant="outline">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => setPreviewDoc(frontDoc)}
+                                        >
                                           <Eye className="mr-1.5 h-3.5 w-3.5" />
                                           View
                                         </Button>
@@ -530,7 +541,11 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                         {backDoc.name}
                                       </p>
                                       <div className="flex items-center justify-center gap-2 pt-2">
-                                        <Button size="sm" variant="outline">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => setPreviewDoc(backDoc)}
+                                        >
                                           <Eye className="mr-1.5 h-3.5 w-3.5" />
                                           View
                                         </Button>
@@ -660,7 +675,11 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
                                     {new Date(uploadedDoc.uploadDate).toLocaleDateString('en-IN')}
                                   </p>
                                   <div className="flex items-center justify-center gap-3 pt-3">
-                                    <Button size="sm" variant="outline">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setPreviewDoc(uploadedDoc)}
+                                    >
                                       <Eye className="mr-2 h-4 w-4" />
                                       View Document
                                     </Button>
@@ -749,6 +768,54 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
             </Button>
             <Button onClick={confirmUpload}>Finish Upload</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Preview Modal */}
+      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
+        <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 border-b shrink-0">
+            <div className="flex items-center justify-between pr-8">
+              <div>
+                <DialogTitle>{previewDoc?.name}</DialogTitle>
+                <DialogDescription>
+                  Uploaded on{' '}
+                  {previewDoc && new Date(previewDoc.uploadDate).toLocaleDateString('en-IN')}
+                </DialogDescription>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <a
+                  href={previewDoc?.url}
+                  download={previewDoc?.name}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Download
+                </a>
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 min-h-0">
+            {previewDoc?.url.startsWith('blob:') || previewDoc?.url.includes('image') ? (
+              <img
+                src={previewDoc.url}
+                alt={previewDoc.name}
+                className="max-w-full max-h-full object-contain shadow-lg rounded-sm"
+              />
+            ) : (
+              <div className="text-center p-12">
+                <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                <p className="text-slate-600 dark:text-slate-400 font-medium">
+                  Preview not available for this file type.
+                </p>
+                <Button variant="link" asChild className="mt-2">
+                  <a href={previewDoc?.url} target="_blank" rel="noreferrer">
+                    Open in new tab
+                  </a>
+                </Button>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
