@@ -352,7 +352,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer"
+                  className={`cursor-pointer ${row.original.isExcluded ? 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30' : ''}`}
                   onClick={() => setSelectedRecord(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -429,21 +429,31 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
           </SheetHeader>
 
           {selectedRecord && (
-            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 mt-4 pb-4">
               {/* Excluded Alert */}
               {selectedRecord.isExcluded && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Excluded Record</AlertTitle>
-                  <AlertDescription>
-                    This record has been excluded and will not be included in campaigns.
+                  <AlertDescription className="space-y-3 mt-2">
+                    <p>This record has been excluded and will not be included in campaigns.</p>
+
+                    <Separator className="bg-destructive/20" />
+
+                    <div className="pt-1">
+                      <p className="font-semibold mb-1.5">Reason:</p>
+                      <p>
+                        This record has previously shown interest, indicated no interest, or entered
+                        the consent process in a previous campaign.
+                      </p>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
 
-              {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 && (
-                <div>
-                  <h4 className="mb-4 text-sm font-semibold">Campaigns</h4>
+              <div>
+                <h4 className="my-4 text-sm font-semibold">Campaigns</h4>
+                {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 ? (
                   <div className="space-y-4">
                     {selectedRecord.campaigns.map((campaign) => (
                       <div
@@ -561,8 +571,16 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                    <Copy className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                    <p className="text-sm font-medium text-muted-foreground">Campaigns not found</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This record has not been used in any campaigns yet.
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {selectedRecord.additionalData &&
                 Object.keys(selectedRecord.additionalData).length > 0 && (
