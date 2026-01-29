@@ -39,6 +39,7 @@ interface FileActionsProps {
   currentStatus: FileStatus;
   variant?: 'dropdown' | 'buttons';
   onSuccess?: () => void;
+  redirectOnDelete?: boolean;
 }
 
 export function FileActions({
@@ -47,6 +48,7 @@ export function FileActions({
   currentStatus,
   variant = 'dropdown',
   onSuccess,
+  redirectOnDelete = true,
 }: FileActionsProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -75,7 +77,9 @@ export function FileActions({
       queryClient.invalidateQueries({ queryKey: ['files'] });
       setShowDeleteDialog(false);
       onSuccess?.();
-      router.push('/files/list');
+      if (redirectOnDelete) {
+        router.push('/files/list');
+      }
     },
     onError: (error) => {
       toast.error(error?.message || 'Failed to delete file');
@@ -211,17 +215,13 @@ export function FileActions({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+
               <AlertDialogAction
+                className="bg-red-500 hover:bg-red-600 text-white"
                 onClick={() => deleteMutation.mutate()}
                 disabled={deleteMutation.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleteMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-2 h-4 w-4" />
-                )}
-                Delete
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -242,7 +242,13 @@ export function FileActions({
         <DropdownMenuContent align="end">
           {!isReviewed && (
             <>
-              <DropdownMenuItem onClick={() => setShowConfirmDialog(true)} disabled={isLoading}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmDialog(true);
+                }}
+                disabled={isLoading}
+              >
                 {markAsReviewedMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -254,7 +260,10 @@ export function FileActions({
             </>
           )}
           <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteDialog(true);
+            }}
             disabled={isLoading}
             className="text-destructive focus:text-destructive"
           >
@@ -353,8 +362,15 @@ export function FileActions({
       </Dialog>
 
       {/* Delete Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          // Prevent row click when dialog is closing if needed, but mainly we want to stop propagation on the dialog content click
+          // if user clicks inside the dialog
+          setShowDeleteDialog(open);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete File</AlertDialogTitle>
             <AlertDialogDescription>
@@ -364,17 +380,18 @@ export function FileActions({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+
             <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              Delete
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

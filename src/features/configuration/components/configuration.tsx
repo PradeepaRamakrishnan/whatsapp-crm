@@ -306,30 +306,25 @@ const ConfigurationPage = () => {
             <DialogDescription>Template preview for {selectedTemplate?.bank}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="text-xs font-medium text-muted-foreground mb-2 uppercase">
-                {selectedTemplate?.type} Content
+            {selectedTemplate?.type === 'email' ? (
+              <div
+                className="text-sm bg-background rounded p-3 border overflow-auto"
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized email template content
+                dangerouslySetInnerHTML={{
+                  // biome-ignore lint/style/useNamingConvention: React API requirement
+                  __html: selectedTemplate?.content || '',
+                }}
+              />
+            ) : (
+              <div className="text-sm whitespace-pre-wrap font-mono bg-background rounded p-3 border">
+                {selectedTemplate?.content || 'No content available'}
               </div>
-              {selectedTemplate?.type === 'email' ? (
-                <div
-                  className="text-sm bg-background rounded p-3 border overflow-auto"
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized email template content
-                  dangerouslySetInnerHTML={{
-                    // biome-ignore lint/style/useNamingConvention: React API requirement
-                    __html: selectedTemplate?.content || '',
-                  }}
-                />
-              ) : (
-                <div className="text-sm whitespace-pre-wrap font-mono bg-background rounded p-3 border">
-                  {selectedTemplate?.content || 'No content available'}
-                </div>
-              )}
-            </div>
+            )}
             <div className="flex items-center gap-2">
               <Badge variant="outline">{selectedTemplate?.bank}</Badge>
-              <Badge variant="outline" className="capitalize">
+              {/* <Badge variant="outline" className="capitalize">
                 {selectedTemplate?.type}
-              </Badge>
+              </Badge> */}
             </div>
           </div>
         </DialogContent>

@@ -1,8 +1,11 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: Stop propagation for table row */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: Stop propagation for actions */
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
 import {
   type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -109,12 +112,15 @@ const columns: ColumnDef<FileData>[] = [
     cell: ({ row }) => {
       const file = row.original;
       return (
-        <FileActions
-          fileId={file.id}
-          fileName={file.name}
-          currentStatus={file.status}
-          variant="dropdown"
-        />
+        <div onClick={(e) => e.stopPropagation()}>
+          <FileActions
+            fileId={file.id}
+            fileName={file.name}
+            currentStatus={file.status}
+            variant="dropdown"
+            redirectOnDelete={false}
+          />
+        </div>
       );
     },
   },
@@ -123,7 +129,10 @@ const columns: ColumnDef<FileData>[] = [
 export function PendingFilesTable() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
+    const search = searchParams.get('search');
+    return search ? [{ id: 'name', value: search }] : [];
+  });
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const page = Number(searchParams.get('page')) || 1;
@@ -143,9 +152,29 @@ export function PendingFilesTable() {
     [searchParams, router],
   );
 
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const nameFilter = (columnFilters.find((c) => c.id === 'name')?.value as string) || '';
+      const params = new URLSearchParams(searchParams.toString());
+      const currentSearch = params.get('search') || '';
+
+      if (nameFilter === currentSearch) return;
+
+      if (nameFilter) {
+        params.set('search', nameFilter);
+        params.set('page', '1');
+      } else {
+        params.delete('search');
+      }
+      router.replace(`?${params.toString()}`);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [columnFilters, searchParams, router]);
+
   const { data: filesResponse } = useQuery<FilesResponse>({
-    queryKey: ['files', { page, limit: pageSize }],
-    queryFn: () => getAllFiles(page, pageSize),
+    queryKey: ['files', { page, limit: pageSize, search: searchParams.get('search') }],
+    queryFn: () => getAllFiles(page, pageSize, searchParams.get('search') || undefined),
     placeholderData: (previousData) => previousData,
   });
 
@@ -162,12 +191,15 @@ export function PendingFilesTable() {
     columns,
     pageCount: totalPages,
     manualPagination: true,
+    manualFiltering: true,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      columnFilters,
       pagination: {
         pageIndex: page - 1,
         pageSize: pageSize,
@@ -187,7 +219,7 @@ export function PendingFilesTable() {
           />
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-end py-4 justify-end ">
           <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
             Rows per page
           </label>

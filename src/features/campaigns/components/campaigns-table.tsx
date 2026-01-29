@@ -1,8 +1,11 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -12,14 +15,31 @@ import {
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { Archive } from 'lucide-react';
+import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
 import slugify from 'slugify';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -37,7 +57,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getAllCampaigns } from '../services';
+import { deleteCampaign, getAllCampaigns } from '../services';
 import type { CampaignData, CampaignStatus, CampaignsResponse } from '../types';
 
 dayjs.extend(utc);
@@ -66,6 +86,84 @@ const statusLabels: Record<CampaignStatus, string> = {
   failed: 'Failed',
   completed: 'Completed',
 };
+
+function CampaignActions({ id, name }: { id: string; name: string }) {
+  const [open, setOpen] = React.useState(false);
+  const queryClient = useQueryClient();
+
+  // Close dropdown when dialog opens to prevent UI issues
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => deleteCampaign(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success('Campaign deleted successfully');
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete campaign');
+      console.error(error);
+    },
+  });
+
+  return (
+    <>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+              setIsDropdownOpen(false);
+            }}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-semibold">&quot;{name}&quot;</span>? This action cannot be
+              undone and will permanently delete the campaign and its associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={(e) => {
+                e.preventDefault();
+                mutate();
+              }}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
 
 export const columns: ColumnDef<CampaignData>[] = [
   {
@@ -130,25 +228,17 @@ export const columns: ColumnDef<CampaignData>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: () => (
-      <div className="flex gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Archive"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Archive className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => <CampaignActions id={row.original.id} name={row.original.name} />,
   },
 ];
 
 export function CampaignsTable() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
+    const search = searchParams.get('search');
+    return search ? [{ id: 'name', value: search }] : [];
+  });
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const page = Number(searchParams.get('page')) || 1;
@@ -168,9 +258,29 @@ export function CampaignsTable() {
     [searchParams, router],
   );
 
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const nameFilter = (columnFilters.find((c) => c.id === 'name')?.value as string) || '';
+      const params = new URLSearchParams(searchParams.toString());
+      const currentSearch = params.get('search') || '';
+
+      if (nameFilter === currentSearch) return;
+
+      if (nameFilter) {
+        params.set('search', nameFilter);
+        params.set('page', '1');
+      } else {
+        params.delete('search');
+      }
+      router.replace(`?${params.toString()}`);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [columnFilters, searchParams, router]);
+
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
-    queryKey: ['campaigns', { page, limit: pageSize }],
-    queryFn: () => getAllCampaigns(page, pageSize),
+    queryKey: ['campaigns', { page, limit: pageSize, search: searchParams.get('search') }],
+    queryFn: () => getAllCampaigns(page, pageSize, searchParams.get('search') || undefined),
     placeholderData: (previousData) => previousData,
   });
 
@@ -183,12 +293,15 @@ export function CampaignsTable() {
     columns,
     pageCount: totalPages,
     manualPagination: true,
+    manualFiltering: true,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      columnFilters,
       pagination: {
         pageIndex: page - 1,
         pageSize: pageSize,

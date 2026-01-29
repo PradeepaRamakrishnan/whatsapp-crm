@@ -21,13 +21,26 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function getAllCampaigns(page: number, limit: number): Promise<CampaignsResponse> {
+export async function getAllCampaigns(
+  page: number,
+  limit: number,
+  search?: string,
+): Promise<CampaignsResponse> {
   try {
     const cookieStore = await cookies();
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      active: 'true',
+    });
+
+    if (search) {
+      queryParams.append('name', search);
+    }
 
     const response = await axiosClient({
       method: 'GET',
-      url: `/?page=${page}&limit=${limit}`,
+      url: `/?${queryParams.toString()}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -210,6 +223,27 @@ export async function resumeCampaign(id: string): Promise<unknown> {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to resume campaign');
+    }
+    throw error;
+  }
+}
+
+export async function deleteCampaign(id: string): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/${id}`,
+      data: { active: false },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete campaign');
     }
     throw error;
   }

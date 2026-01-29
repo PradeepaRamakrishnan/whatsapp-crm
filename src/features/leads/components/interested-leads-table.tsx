@@ -1,7 +1,9 @@
 /** biome-ignore-all lint/a11y/useButtonType: <> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -11,11 +13,28 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { EllipsisIcon } from 'lucide-react';
+import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import slugify from 'slugify';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -33,25 +52,129 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getAllLeads } from '../services';
+import { deleteLead, getAllLeads } from '../services';
 import type { Lead, LeadsResponse } from '../types';
+
+function LeadActions({ id, name }: { id: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => deleteLead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Lead deleted successfully');
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete lead');
+      console.error(error);
+    },
+  });
+
+  return (
+    <>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+              setIsDropdownOpen(false);
+            }}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete lead for{' '}
+              <span className="font-semibold">&quot;{name}&quot;</span>? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={(e) => {
+                e.preventDefault();
+                mutate();
+              }}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
 
 export function InterestedLeadsTable() {
   const router = useRouter();
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
   const searchParams = useSearchParams();
-
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const urlSearch = searchParams.get('search') || '';
+
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: page - 1,
+    pageSize: pageSize,
+  });
+
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState(urlSearch);
+
+  const updateParams = useCallback(
+    (updates: { page?: number; pageSize?: number; search?: string }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (updates.page !== undefined) params.set('page', String(updates.page));
+      if (updates.pageSize !== undefined) params.set('pageSize', String(updates.pageSize));
+      if (updates.search !== undefined) {
+        if (updates.search) {
+          params.set('search', updates.search);
+          params.set('page', '1');
+        } else {
+          params.delete('search');
+        }
+      }
+      router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router],
+  );
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (globalFilter === urlSearch) return;
+      updateParams({ search: globalFilter });
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [globalFilter, urlSearch, updateParams]);
 
   const { data: leadsResponse, isLoading } = useQuery<LeadsResponse>({
-    queryKey: ['leads', { page, limit: pageSize }],
-    queryFn: () => getAllLeads(page, pageSize),
+    queryKey: ['leads', { page, limit: pageSize, search: urlSearch }],
+    queryFn: () => getAllLeads(page, pageSize, urlSearch || undefined),
   });
 
   // console.log('leadsResponse', leadsResponse);
@@ -141,11 +264,9 @@ export function InterestedLeadsTable() {
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
-        cell: () => (
-          <div className="text-right">
-            <Button variant="ghost" size="icon">
-              <EllipsisIcon className="h-4 w-4" />
-            </Button>
+        cell: ({ row }) => (
+          <div className="text-right" onClick={(e) => e.stopPropagation()}>
+            <LeadActions id={row.original.id} name={row.original.customerName} />
           </div>
         ),
         size: 80,
@@ -164,8 +285,16 @@ export function InterestedLeadsTable() {
     enableSorting: true,
     enableSortingRemoval: false,
     manualPagination: true,
+    manualFiltering: true,
     pageCount: leadsResponse?.meta?.totalPages || 0,
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      const nextState = typeof updater === 'function' ? updater(pagination) : updater;
+      setPagination(nextState);
+      updateParams({
+        page: nextState.pageIndex + 1,
+        pageSize: nextState.pageSize,
+      });
+    },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -193,7 +322,8 @@ export function InterestedLeadsTable() {
           <Select
             value={String(pagination.pageSize)}
             onValueChange={(val) => {
-              setPagination((prev) => ({ ...prev, pageSize: Number(val), pageIndex: 0 }));
+              const size = Number(val) || 10;
+              updateParams({ pageSize: size, page: 1 });
             }}
           >
             <SelectTrigger size="sm" className="w-20">
