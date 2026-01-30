@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **Language** | TypeScript 5 |
 | **Styling** | Tailwind CSS 4, shadcn/ui components |
 | **Linting** | Biome 2.3.11 |
+| **Compiler** | React Compiler (babel-plugin-react-compiler) |
 | **State Management** | TanStack Query v5 with persistence |
 | **Forms** | TanStack Form with Zod validation |
 | **Tables** | TanStack Table |
@@ -22,6 +23,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **Date Handling** | Day.js |
 
 ## Commands
+
+**Package Manager**: This project uses `pnpm`. Install with `npm install -g pnpm` if needed.
 
 ### Development
 ```bash
@@ -34,17 +37,39 @@ pnpm start        # Start production server
 ```bash
 pnpm lint         # Check code with Biome
 pnpm lint:fix     # Auto-fix issues with Biome
+pnpm type-check   # Check TypeScript types without emitting files
 ```
 
 ### Git Hooks
 Pre-commit hook runs `lint-staged` which automatically formats and checks staged files with Biome.
 
+## Environment Setup
+
+The application requires 6 microservices to run locally. Set environment variables in `.env`:
+
+```env
+NEXT_PUBLIC_AUTH_API_URL=http://localhost:3001/auth
+NEXT_PUBLIC_USERS_API_URL=http://localhost:3002/users
+NEXT_PUBLIC_FILES_API_URL=http://localhost:3003/files
+NEXT_PUBLIC_CAMPAIGNS_API_URL=http://localhost:3004/campaigns
+NEXT_PUBLIC_SETTINGS_API_URL=http://localhost:3005/settings
+NEXT_PUBLIC_LEADS_API_URL=http://localhost:3006/leads
+```
+
+For production builds, create `.env.production` with the actual service URLs (e.g., `https://api.example.com/auth`). This file is not in version control and must be provided during deployment.
+
+**Optional:**
+- `NEXT_PUBLIC_APP_URL` - Used for metadata base URL (defaults to `http://localhost:3000` if not set)
+
+All variables use the `NEXT_PUBLIC_` prefix and are safe to expose to the browser.
+
 ### Testing
 ```bash
-pnpm test              # Run all tests once
-pnpm test:watch        # Watch mode (recommended for development)
-pnpm test:ui           # Visual UI for tests
-pnpm test:coverage     # Generate coverage report
+pnpm test                    # Run all tests once
+pnpm test:watch              # Watch mode (recommended for development)
+pnpm test:ui                 # Visual UI for tests
+pnpm test:coverage           # Generate coverage report
+pnpm test -- file.test.ts    # Run a single test file
 ```
 
 ## Testing
@@ -141,7 +166,18 @@ Current coverage focuses on the **auth** feature:
 - **Don't mock everything** - Test real logic, mock only boundaries
 - **One assertion per test** - Makes failures easier to diagnose
 
-See `TESTING.md` for detailed testing guide and examples.
+### Running Specific Tests
+
+```bash
+# Run a single test file
+pnpm test -- src/features/auth/lib/validation.test.ts
+
+# Run tests matching a pattern
+pnpm test -- validation
+
+# Run in watch mode for a specific file
+pnpm test:watch -- validation.test.ts
+```
 
 ## Architecture
 
@@ -290,6 +326,41 @@ const [selectedRecord, setSelectedRecord] = React.useState<RecordType | null>(nu
 - Public route exceptions
 - Auto-redirect logic for authenticated/unauthenticated users
 - TODO comment indicates future role-based access control planned
+
+## Development Workflow
+
+### Common Development Tasks
+
+**Debug a failing test:**
+```bash
+pnpm test:ui              # Visual test runner, easier to debug
+pnpm test:watch           # Re-run on file changes
+```
+
+**Check all code quality issues:**
+```bash
+pnpm lint && pnpm type-check    # Biome + TypeScript checks
+```
+
+**Fix formatting before commit:**
+```bash
+pnpm lint:fix             # Auto-fixes Biome issues
+```
+
+### Data Flow Patterns
+
+1. **Server Actions (Files feature)** - Use Next.js server actions with `'use server'` directive to handle file operations with cookie context
+2. **API Services (Other features)** - Standard axios clients for login, campaigns, leads, settings; services are client-side
+3. **State Management** - TanStack Query caches API responses; Auth Context manages current user state globally
+4. **Client-Side Validation** - Zod schemas validate forms before submission; server endpoints also validate
+
+### Debugging Tips
+
+- **Check auth issues**: Verify session via middleware (`src/proxy.ts`) and Auth Context state
+- **API connection problems**: Ensure `.env` contains correct microservice URLs and services are running on specified ports
+- **Styling issues**: Check Tailwind classes in Biome config (100 char line width, specific class formats)
+- **Type errors**: Run `pnpm type-check` to catch TypeScript issues before runtime
+- **Test failures**: Use `pnpm test:ui` for interactive debugging, check mock setup in test files
 
 ## Deployment
 
