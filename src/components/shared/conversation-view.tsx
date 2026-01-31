@@ -30,6 +30,8 @@ export interface ConversationMessage {
   channel: MessageChannel;
   content: string;
   timestamp: string;
+  deliveredAt?: string | null;
+  bouncedAt?: string | null;
   showActions?: boolean;
 }
 

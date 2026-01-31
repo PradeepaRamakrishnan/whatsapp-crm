@@ -41,6 +41,8 @@ function transformMessage(m: InteractionRecord, channel: string = 'email') {
     readAt: m.readAt,
     openedAt: m.openedAt,
     clickedAt: m.clickedAt,
+    deliveredAt: m.deliveredAt,
+    bouncedAt: m.bouncedAt,
     error: m.error,
   };
 }

@@ -49,6 +49,19 @@ export function EmailMessageCard({ message }: EmailMessageCardProps) {
         </div>
       )}
 
+      <div className="text-[11px] mb-2 space-y-0.5">
+        {message?.deliveredAt && (
+          <p className="text-emerald-600 dark:text-emerald-400 font-medium">
+            Delivered: {dayjs(message?.deliveredAt).format('MMM DD, YYYY hh:mm A')}
+          </p>
+        )}
+        {message?.bouncedAt && (
+          <p className="text-rose-600 dark:text-rose-400 font-medium">
+            Bounced: {dayjs(message?.bouncedAt).format('MMM DD, YYYY hh:mm A')}
+          </p>
+        )}
+      </div>
+
       {message.error && (
         <div className="flex items-start gap-1.5 bg-destructive/10 border border-destructive/20 p-2 rounded mb-2">
           <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive mt-0.5" />

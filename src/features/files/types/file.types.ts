@@ -39,7 +39,9 @@ export interface FilesResponse {
 export interface ChannelStatus {
   sent: boolean;
   sentAt: string | null;
+  delivered: boolean;
   deliveredAt: string | null;
+  bouncedAt?: string | null;
 }
 
 export interface CampaignChannels {
