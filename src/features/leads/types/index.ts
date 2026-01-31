@@ -1,3 +1,12 @@
+export interface Document {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  uploadDate: string;
+  size: string;
+}
+
 export interface Lead {
   id: string;
   customerName: string;
@@ -15,6 +24,8 @@ export interface Lead {
     email?: {
       sent: boolean;
       sentAt?: string;
+      deliveredAt?: string;
+      bouncedAt?: string;
     };
     sms?: {
       sent: boolean;
@@ -50,6 +61,7 @@ export interface Lead {
   consentGivenAt: string | null;
   createdAt: string;
   updatedAt: string;
+  documents?: Document[];
 }
 
 export interface LeadsMeta {

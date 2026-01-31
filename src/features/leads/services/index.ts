@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import type { Document as LeadDocument } from '../lib/data';
 import type { LeadsResponse } from '../types';
 
 const axiosClient = axios.create({
@@ -83,6 +84,46 @@ export async function getLeadsById(id: string): Promise<LeadsResponse> {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch leads by id');
+    }
+    throw error;
+  }
+}
+
+export async function uploadDocument(
+  leadId: string,
+  type: string,
+  name: string,
+  file: File,
+  campaignId?: string,
+  contactId?: string,
+): Promise<LeadDocument> {
+  try {
+    const cookieStore = await cookies();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const params = new URLSearchParams({
+      leadId,
+      type,
+      name,
+    });
+    if (campaignId) params.append('campaignId', campaignId);
+    if (contactId) params.append('contactId', contactId);
+
+    const response = await axiosClient({
+      method: 'POST',
+      url: `${process.env.NEXT_PUBLIC_USERS_API_URL}/upload?${params.toString()}`,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to upload document');
     }
     throw error;
   }
