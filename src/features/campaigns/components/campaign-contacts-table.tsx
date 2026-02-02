@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { CheckCircle2, Mail, MessageSquare, XCircle } from 'lucide-react';
+import { CheckCircle2, Mail, MessageSquare } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getCampaignContacts } from '../services';
 import type { CampaignContactData, CampaignContactsResponse } from '../types';
 
@@ -103,25 +104,66 @@ export const columns: ColumnDef<CampaignContactData>[] = [
   {
     id: 'channels',
     header: 'Channels',
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        {row.original.email.sent ? (
-          <Mail className="h-4 w-4 text-blue-600" />
-        ) : (
-          <Mail className="h-4 w-4 text-gray-300" />
-        )}
-        {row.original.sms.sent ? (
-          <MessageSquare className="h-4 w-4 text-green-600" />
-        ) : (
-          <MessageSquare className="h-4 w-4 text-gray-300" />
-        )}
-        {row.original.whatsapp.sent ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-        ) : (
-          <XCircle className="h-4 w-4 text-gray-300" />
-        )}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const { email, sms, whatsapp } = row.original;
+
+      const renderStatusTooltip = (
+        icon: React.ReactNode,
+        status: { sent: boolean; sentAt?: string; deliveredAt?: string; bouncedAt?: string },
+        label: string,
+      ) => (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="cursor-help">{icon}</div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              <div className="space-y-1">
+                <p className="font-semibold">{label}</p>
+                {status.sentAt && <p>Sent: {dayjs(status.sentAt).format('MMM DD, hh:mm A')}</p>}
+                {status?.deliveredAt && (
+                  <p className="text-emerald-500">
+                    Delivered: {dayjs(status?.deliveredAt).format('MMM DD, hh:mm A')}
+                  </p>
+                )}
+                {status?.bouncedAt && (
+                  <p className="text-rose-500">
+                    Bounced: {dayjs(status?.bouncedAt).format('MMM DD, hh:mm A')}
+                  </p>
+                )}
+                {!status.sent && !status.sentAt && (
+                  <p className="text-muted-foreground">Not sent</p>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+
+      return (
+        <div className="flex items-center gap-2">
+          {renderStatusTooltip(
+            <Mail className={`h-4 w-4 ${email.sent ? 'text-blue-600' : 'text-gray-300'}`} />,
+            email,
+            'Email',
+          )}
+          {renderStatusTooltip(
+            <MessageSquare
+              className={`h-4 w-4 ${sms.sent ? 'text-green-600' : 'text-gray-300'}`}
+            />,
+            sms,
+            'SMS',
+          )}
+          {renderStatusTooltip(
+            <CheckCircle2
+              className={`h-4 w-4 ${whatsapp.sent ? 'text-emerald-600' : 'text-gray-300'}`}
+            />,
+            whatsapp,
+            'WhatsApp',
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: 'createdAt',

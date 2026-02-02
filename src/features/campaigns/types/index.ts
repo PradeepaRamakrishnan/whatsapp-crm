@@ -100,12 +100,20 @@ export interface CampaignContactData {
   email: {
     sent: boolean;
     sentAt?: string;
+    deliveredAt?: string;
+    bouncedAt?: string;
   };
   sms: {
     sent: boolean;
+    sentAt?: string;
+    deliveredAt?: string;
+    bouncedAt?: string;
   };
   whatsapp: {
     sent: boolean;
+    sentAt?: string;
+    deliveredAt?: string;
+    bouncedAt?: string;
   };
   lead?: {
     id: string;
@@ -222,9 +230,24 @@ export interface InteractionRecord {
     contact: string;
     status: string;
     responseStatus: 'interested' | 'not_interested' | null;
-    email: { sent: boolean; sentAt: string | null };
-    sms: { sent: boolean; sentAt: string | null };
-    whatsapp: { sent: boolean; sentAt: string | null };
+    email: {
+      sent: boolean;
+      sentAt: string | null;
+      deliveredAt?: string | null;
+      bouncedAt?: string | null;
+    };
+    sms: {
+      sent: boolean;
+      sentAt: string | null;
+      deliveredAt?: string | null;
+      bouncedAt?: string | null;
+    };
+    whatsapp: {
+      sent: boolean;
+      sentAt: string | null;
+      deliveredAt?: string | null;
+      bouncedAt?: string | null;
+    };
     lead: string | null;
     active: boolean;
     createdAt: string;
@@ -252,6 +275,7 @@ export interface InteractionRecord {
   to: string;
   sentAt: string | null;
   deliveredAt: string | null;
+  bouncedAt: string | null;
   readAt: string | null;
   openedAt: string | null;
   clickedAt: string | null;

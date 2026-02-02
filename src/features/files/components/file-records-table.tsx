@@ -82,6 +82,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const [recordToEdit, setRecordToEdit] = React.useState<FileRecord | null>(null);
   const [recordToDelete, setRecordToDelete] = React.useState<FileRecord | null>(null);
 
+  // console.log(selectedRecord, 'data')
+
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -485,66 +487,162 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                             <div className="space-y-2">
                               {/* Email */}
                               {campaign.channels.email && (
-                                <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center gap-3">
-                                    <Mail className="h-4 w-4 text-blue-600" />
-                                    <div>
-                                      <p className="text-sm font-medium">Email</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {campaign.channels.email.sentAt
-                                          ? dayjs(campaign.channels.email.sentAt).format(
-                                              'MMM DD, YYYY hh:mm A',
-                                            )
-                                          : '-'}
-                                      </p>
+                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <Mail className="h-4 w-4 text-blue-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">Email</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.email.sentAt
+                                            ? `Sent: ${dayjs(campaign.channels.email.sentAt).format('MMM DD, YYYY hh:mm A')}`
+                                            : '-'}
+                                        </p>
+                                      </div>
                                     </div>
+                                    {campaign.channels.email.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
                                   </div>
-                                  {campaign.channels.email.sent && (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+
+                                  {(campaign.channels?.email?.deliveredAt ||
+                                    campaign.channels?.email?.bouncedAt) && (
+                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
+                                      {campaign.channels?.email?.deliveredAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Delivered:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(campaign?.channels?.email?.deliveredAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                      {campaign.channels?.email?.bouncedAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Bounced:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(campaign?.channels?.email?.bouncedAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
 
                               {/* SMS */}
                               {campaign.channels.sms && (
-                                <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center gap-3">
-                                    <Copy className="h-4 w-4 text-green-600" />
-                                    <div>
-                                      <p className="text-sm font-medium">SMS</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {campaign.channels.sms.sentAt
-                                          ? dayjs(campaign.channels.sms.sentAt).format(
-                                              'MMM DD, YYYY hh:mm A',
-                                            )
-                                          : '-'}
-                                      </p>
+                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <Copy className="h-4 w-4 text-green-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">SMS</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.sms.sentAt
+                                            ? `Sent: ${dayjs(campaign.channels.sms.sentAt).format('MMM DD, YYYY hh:mm A')}`
+                                            : '-'}
+                                        </p>
+                                      </div>
                                     </div>
+                                    {campaign.channels.sms.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
                                   </div>
-                                  {campaign.channels.sms.sent && (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+
+                                  {(campaign.channels?.sms?.deliveredAt ||
+                                    campaign.channels?.sms?.bouncedAt) && (
+                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
+                                      {campaign.channels?.sms?.deliveredAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Delivered:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(campaign?.channels?.sms?.deliveredAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                      {campaign.channels?.sms?.bouncedAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Bounced:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(campaign?.channels?.sms?.bouncedAt).format(
+                                                'MMM DD, YYYY hh:mm A',
+                                              )}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
 
                               {/* WhatsApp */}
                               {campaign.channels.whatsapp && (
-                                <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center gap-3">
-                                    <Phone className="h-4 w-4 text-green-600" />
-                                    <div>
-                                      <p className="text-sm font-medium">WhatsApp</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {campaign.channels.whatsapp.sentAt
-                                          ? dayjs(campaign.channels.whatsapp.sentAt).format(
-                                              'MMM DD, YYYY hh:mm A',
-                                            )
-                                          : '-'}
-                                      </p>
+                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <Phone className="h-4 w-4 text-green-600" />
+                                      <div>
+                                        <p className="text-sm font-medium">WhatsApp</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {campaign.channels.whatsapp.sentAt
+                                            ? `Sent: ${dayjs(campaign.channels.whatsapp.sentAt).format('MMM DD, YYYY hh:mm A')}`
+                                            : '-'}
+                                        </p>
+                                      </div>
                                     </div>
+                                    {campaign.channels.whatsapp.sent && (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    )}
                                   </div>
-                                  {campaign.channels.whatsapp.sent && (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+
+                                  {(campaign.channels?.whatsapp?.deliveredAt ||
+                                    campaign.channels?.whatsapp?.bouncedAt) && (
+                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
+                                      {campaign.channels?.whatsapp?.deliveredAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Delivered:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(
+                                                campaign?.channels?.whatsapp?.deliveredAt,
+                                              ).format('MMM DD, YYYY hh:mm A')}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                      {campaign.channels?.whatsapp?.bouncedAt && (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Bounced:{' '}
+                                            <span className="font-medium text-foreground">
+                                              {dayjs(
+                                                campaign?.channels?.whatsapp?.bouncedAt,
+                                              ).format('MMM DD, YYYY hh:mm A')}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
