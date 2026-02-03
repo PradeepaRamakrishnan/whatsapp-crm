@@ -7,6 +7,7 @@ import { CampaignConversation } from '@/components/shared/campaign-conversation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getLeadsById } from '../services';
 import type { LeadsResponse } from '../types';
+// import type { LeadsResponse } from '../types';
 import { ContactDetailsPage } from './contact-detail';
 import { LeadDocuments } from './lead-documents';
 
@@ -26,6 +27,14 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-6 text-muted-foreground">
+        Lead not found.
       </div>
     );
   }
