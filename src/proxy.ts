@@ -7,7 +7,7 @@ const publicRoutes = ['/interested', '/not-interested', '/users/upload'];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip auth check for public routes
+  // Skip auth check for public routes and static assets
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }

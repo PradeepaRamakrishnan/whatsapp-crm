@@ -1,10 +1,10 @@
-require('dotenv').config({ path: '.env.production' });
+require('dotenv').config({ path: '.env' });
 
 module.exports = {
   apps: [
     {
       name: 'samatva-crm',
-      script: 'npm',
+      script: 'pnpm',
       args: 'start',
       env: process.env,
       instances: 1,
