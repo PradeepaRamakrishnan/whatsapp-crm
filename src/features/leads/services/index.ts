@@ -2,7 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
-import type { LeadsResponse } from '../types';
+import type { Document, Lead, LeadsResponse } from '../types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_LEADS_API_URL}`,
@@ -83,6 +83,100 @@ export async function getLeadsById(id: string): Promise<LeadsResponse> {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch leads by id');
+    }
+    throw error;
+  }
+}
+
+export async function uploadDocument(leadId: string, formData: FormData): Promise<Document> {
+  try {
+    const cookieStore = await cookies();
+    const baseUrl = process.env.NEXT_PUBLIC_LEADS_API_URL;
+
+    const response = await fetch(`${baseUrl}/${leadId}/documents`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Cookie: cookieStore.toString(),
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to upload document');
+    }
+
+    return response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('An unexpected error occurred during upload');
+  }
+}
+
+export async function generateUploadLink(
+  leadId: string,
+): Promise<{ message: string; link: string; token: string; expiresAt: string }> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${leadId}/generate-document-link`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to generate upload link');
+    }
+    throw error;
+  }
+}
+
+export async function getDocuments(
+  leadId: string,
+): Promise<{ leadId: string; documents: Document[] }> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/${leadId}/documents`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch documents');
+    }
+    throw error;
+  }
+}
+
+export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/${id}`,
+      data,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update lead');
     }
     throw error;
   }

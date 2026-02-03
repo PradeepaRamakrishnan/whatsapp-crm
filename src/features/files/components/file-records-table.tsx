@@ -505,37 +505,34 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                                     )}
                                   </div>
 
-                                  {(campaign.channels?.email?.deliveredAt ||
-                                    campaign.channels?.email?.bouncedAt) && (
-                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
-                                      {campaign.channels?.email?.deliveredAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Delivered:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(campaign?.channels?.email?.deliveredAt).format(
-                                                'MMM DD, YYYY hh:mm A',
-                                              )}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                      {campaign.channels?.email?.bouncedAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Bounced:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(campaign?.channels?.email?.bouncedAt).format(
-                                                'MMM DD, YYYY hh:mm A',
-                                              )}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+                                  <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
+                                    {campaign.channels?.email?.deliveredAt && (
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Delivered:{' '}
+                                          <span className="font-medium text-foreground">
+                                            {dayjs(campaign?.channels?.email?.deliveredAt).format(
+                                              'MMM DD, YYYY hh:mm A',
+                                            )}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    )}
+                                    {campaign.channels?.email?.bouncedAt && (
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Bounced:{' '}
+                                          <span className="font-medium text-foreground">
+                                            {dayjs(campaign?.channels?.email?.bouncedAt).format(
+                                              'MMM DD, YYYY hh:mm A',
+                                            )}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
 
@@ -558,38 +555,6 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                                       <CheckCircle className="h-4 w-4 text-green-600" />
                                     )}
                                   </div>
-
-                                  {(campaign.channels?.sms?.deliveredAt ||
-                                    campaign.channels?.sms?.bouncedAt) && (
-                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
-                                      {campaign.channels?.sms?.deliveredAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Delivered:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(campaign?.channels?.sms?.deliveredAt).format(
-                                                'MMM DD, YYYY hh:mm A',
-                                              )}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                      {campaign.channels?.sms?.bouncedAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Bounced:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(campaign?.channels?.sms?.bouncedAt).format(
-                                                'MMM DD, YYYY hh:mm A',
-                                              )}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
                                 </div>
                               )}
 

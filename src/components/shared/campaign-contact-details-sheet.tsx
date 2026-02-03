@@ -128,7 +128,7 @@ export function CampaignContactDetailsSheet({
                         )}
                       </div>
                       <div className="flex flex-col gap-1 pl-6 ml-1 border-l-2 border-muted-foreground/20">
-                        {selectedContact.email.deliveredAt && (
+                        {selectedContact?.email?.deliveredAt && (
                           <div className="flex items-center gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             <p className="text-[11px] text-muted-foreground">

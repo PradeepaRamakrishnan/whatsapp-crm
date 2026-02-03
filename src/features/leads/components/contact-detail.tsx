@@ -1,7 +1,15 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { CheckCircle2, CreditCard, Mail, MessageSquare, Phone, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  CheckCircle2,
+  CreditCard,
+  Mail,
+  MessageSquare,
+  Phone,
+  XCircle,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 // import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,24 +109,55 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                 <div>
                   <dt className="text-sm font-semibold mb-3">Communication Channels</dt>
                   <div className="grid gap-2">
-                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-medium">Email</span>
-                          {contact.contact?.email?.sentAt && (
-                            <span className="text-[10px] text-muted-foreground">
-                              {dayjs(contact.contact.email.sentAt).format('MMM DD, YYYY hh:mm A')}
-                            </span>
+                    {contact?.contact.email && (
+                      <div className=" rounded-md bg-muted/50 px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Mail className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <p className="text-sm font-medium">Email</p>
+                              <p className="text-xs text-muted-foreground">
+                                {contact.contact.email.sentAt
+                                  ? `Sent: ${dayjs(contact.contact.email.sentAt).format('MMM DD, YYYY hh:mm A')}`
+                                  : '-'}
+                              </p>
+                            </div>
+                          </div>
+                          {contact.contact.email.sent && (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1 mt-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
+                          {contact.contact?.email?.deliveredAt && (
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              <p className="text-[11px] text-muted-foreground">
+                                Delivered:{' '}
+                                <span className="font-medium text-foreground">
+                                  {dayjs(contact.contact?.email?.deliveredAt).format(
+                                    'MMM DD, YYYY hh:mm A',
+                                  )}
+                                </span>
+                              </p>
+                            </div>
+                          )}
+                          {contact.contact?.email?.bouncedAt && (
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                              <p className="text-[11px] text-muted-foreground">
+                                Bounced:{' '}
+                                <span className="font-medium text-foreground">
+                                  {dayjs(contact?.contact?.email?.bouncedAt).format(
+                                    'MMM DD, YYYY hh:mm A',
+                                  )}
+                                </span>
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
-                      {contact.contact?.email?.sent ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-gray-400" />
-                      )}
-                    </div>
+                    )}
 
                     <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
                       <div className="flex items-center gap-2">
