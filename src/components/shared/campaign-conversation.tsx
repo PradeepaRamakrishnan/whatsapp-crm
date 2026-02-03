@@ -2,8 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
 import utc from 'dayjs/plugin/utc';
-import { useEffect, useRef } from 'react';
+import { Lock, Mail, MessageSquare } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
 import { MessageInput } from '@/components/shared/message-input';
 import { SMSMessageCard } from '@/components/shared/sms-message-card';
@@ -11,7 +14,7 @@ import { WhatsAppMessageCard } from '@/components/shared/whatsapp-message-card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   getContactMessages,
   sendReplyEmail,
@@ -21,6 +24,8 @@ import {
 import type { InteractionRecord, InteractionResponse } from '@/features/campaigns/types';
 
 dayjs.extend(utc);
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
 
 interface CampaignConversationProps {
   campaignId: string;
@@ -47,9 +52,55 @@ function transformMessage(m: InteractionRecord, channel: string = 'email') {
   };
 }
 
+function groupMessagesByDate(messages: any[]) {
+  const groups: { [key: string]: any[] } = {};
+  messages.forEach((msg) => {
+    const date = dayjs(msg.timestamp).format('YYYY-MM-DD');
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(msg);
+  });
+  return groups;
+}
+
+function DateSeparator({ date, isWhatsApp = false }: { date: string; isWhatsApp?: boolean }) {
+  let label = dayjs(date).format('DD/MM/YYYY');
+  if (dayjs(date).isToday()) label = 'Today';
+  else if (dayjs(date).isYesterday()) label = 'Yesterday';
+
+  return (
+    <div className="flex items-center justify-center my-4 sticky top-2 z-10 py-2">
+      <div
+        className={`px-4 py-1.5 rounded-lg text-xs font-medium shadow-xs border transition-all ${
+          isWhatsApp
+            ? 'bg-white text-[#54656f] border-none dark:bg-zinc-800 dark:text-zinc-400'
+            : 'bg-muted/90 text-muted-foreground border-muted-foreground/10 backdrop-blur-md'
+        }`}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function WhatsAppEncryptionNotice() {
+  return (
+    <div className="flex items-center justify-center my-4 px-6 md:px-12">
+      <div className="bg-[#fff9c2] dark:bg-amber-900/30 border border-transparent rounded-lg px-4 py-3 text-center max-w-lg shadow-sm">
+        <p className="text-[12px] leading-relaxed text-[#54656f] dark:text-amber-200/70 flex items-center justify-center gap-1.5">
+          <Lock className="h-3 w-3 inline-block -mt-0.5" />
+          <span>
+            Messages and calls are end-to-end encrypted. Only people in this chat can read, listen
+            to, or share them. Click to learn more
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function MessageSkeleton() {
   return (
-    <div className="border rounded-lg p-3 space-y-3">
+    <div className="bg-card border rounded-xl p-4 space-y-3">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-1/2" />
     </div>
@@ -59,8 +110,8 @@ function MessageSkeleton() {
 function ErrorState({ error }: { error: Error | null }) {
   if (!error) return null;
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center space-y-2">
+    <div className="flex items-center justify-center h-full p-6">
+      <div className="text-center space-y-3 p-6 rounded-2xl bg-destructive/5 border border-destructive/10 max-w-sm">
         <p className="text-sm font-semibold text-destructive">Failed to load messages</p>
         <p className="text-xs text-muted-foreground">{error.message}</p>
       </div>
@@ -70,11 +121,12 @@ function ErrorState({ error }: { error: Error | null }) {
 
 export function CampaignConversation({ campaignId, contactId }: CampaignConversationProps) {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'email' | 'whatsapp' | 'sms'>('email');
   const emailScrollRef = useRef<HTMLDivElement>(null);
   const smsScrollRef = useRef<HTMLDivElement>(null);
   const whatsappScrollRef = useRef<HTMLDivElement>(null);
 
-  // Email query
+  // Queries
   const {
     data: emailResponse,
     isLoading: isLoadingEmail,
@@ -86,7 +138,6 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     enabled: !!contactId,
   });
 
-  // SMS query
   const {
     data: smsResponse,
     isLoading: isLoadingSms,
@@ -97,7 +148,6 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     enabled: !!contactId,
   });
 
-  // WhatsApp query
   const {
     data: whatsappResponse,
     isLoading: isLoadingWhatsapp,
@@ -109,230 +159,257 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     enabled: !!contactId,
   });
 
-  // Email mutation
+  // Mutations
   const { mutate: sendEmail, isPending: isSending } = useMutation({
     mutationFn: (data: { subject: string; body: string }) =>
       sendReplyEmail(campaignId, contactId, data.subject, data.body),
-    onSuccess: () => {
+    onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ['contact-messages', campaignId, contactId, 'email'],
-      });
-    },
+      }),
   });
 
-  // SMS mutation
   const { mutate: sendSms, isPending: isSendingSms } = useMutation({
     mutationFn: (data: { body: string }) => sendReplySMS(campaignId, contactId, data.body),
-    onSuccess: () => {
+    onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ['contact-messages', campaignId, contactId, 'sms'],
-      });
-    },
+      }),
   });
 
-  // WhatsApp mutation
   const { mutate: sendWhatsapp, isPending: isSendingWhatsapp } = useMutation({
     mutationFn: (data: { body: string }) => sendReplyWhatsApp(campaignId, contactId, data.body),
-    onSuccess: () => {
+    onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ['contact-messages', campaignId, contactId, 'whatsapp'],
-      });
-    },
+      }),
   });
 
-  // Transform and reverse messages
-  const emailMessages = emailResponse?.data
-    ? [...emailResponse.data].reverse().map((m) => transformMessage(m, 'email'))
-    : [];
+  // Transform messages
+  const emailGroups = useMemo(() => {
+    const messages = emailResponse?.data
+      ? [...emailResponse.data].reverse().map((m) => transformMessage(m, 'email'))
+      : [];
+    return groupMessagesByDate(messages);
+  }, [emailResponse]);
 
-  const smsMessages = smsResponse?.data
-    ? [...smsResponse.data].reverse().map((m) => transformMessage(m, 'sms'))
-    : [];
+  const smsGroups = useMemo(() => {
+    const messages = smsResponse?.data
+      ? [...smsResponse.data].reverse().map((m) => transformMessage(m, 'sms'))
+      : [];
+    return groupMessagesByDate(messages);
+  }, [smsResponse]);
 
-  const whatsappMessages = whatsappResponse?.data
-    ? [...whatsappResponse.data].reverse().map((m) => transformMessage(m, 'whatsapp'))
-    : [];
+  const whatsappGroups = useMemo(() => {
+    const messages = whatsappResponse?.data
+      ? [...whatsappResponse.data].reverse().map((m) => transformMessage(m, 'whatsapp'))
+      : [];
+    return groupMessagesByDate(messages);
+  }, [whatsappResponse]);
 
-  // Auto scroll to bottom when messages load
-  useEffect(() => {
-    if (emailScrollRef.current) {
-      setTimeout(() => {
-        emailScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }, 100);
-    }
-  }, []);
+  const emailCount = Object.values(emailGroups).flat().length;
+  const smsCount = Object.values(smsGroups).flat().length;
+  const whatsappCount = Object.values(whatsappGroups).flat().length;
 
-  useEffect(() => {
-    if (smsScrollRef.current) {
-      setTimeout(() => {
-        smsScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }, 100);
-    }
-  }, []);
+  // const scrollToBottom = useCallback((ref: React.RefObject<HTMLDivElement>) => {
+  //   if (ref.current) {
+  //     ref.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (whatsappScrollRef.current) {
-      setTimeout(() => {
-        whatsappScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }, 100);
-    }
-  }, []);
+  // // Scroll to bottom when messages change or tab changes
+  // useEffect(() => {
+  //   if (activeTab === 'email') scrollToBottom(emailScrollRef);
+  // }, [activeTab, scrollToBottom]);
+
+  // useEffect(() => {
+  //   if (activeTab === 'sms') scrollToBottom(smsScrollRef);
+  // }, [activeTab, scrollToBottom]);
+
+  // useEffect(() => {
+  //   if (activeTab === 'whatsapp') scrollToBottom(whatsappScrollRef);
+  // }, [activeTab, scrollToBottom]);
 
   return (
-    <Tabs defaultValue="email" className="flex flex-1 flex-col overflow-hidden h-full">
-      <div className="flex items-center gap-1 px-3 py-2 border-b bg-muted/30">
-        <TabsList className="h-8 p-0.5 bg-muted">
-          <TabsTrigger value="email" className="text-xs h-7 px-3">
-            Email ({emailMessages.length})
-          </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="text-xs h-7 px-3">
-            WhatsApp ({whatsappMessages.length})
-          </TabsTrigger>
-          <TabsTrigger value="sms" className="text-xs h-7 px-3">
-            SMS ({smsMessages.length})
-          </TabsTrigger>
-        </TabsList>
+    <div className="flex flex-1 flex-col overflow-hidden h-full">
+      {/* Navigation Buttons */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-card z-10 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('email')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-semibold whitespace-nowrap ${
+              activeTab === 'email'
+                ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm'
+                : 'bg-muted/30 border-muted-foreground/10 text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Email</span>
+            <span className="opacity-60 font-medium">({emailCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('whatsapp')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-semibold whitespace-nowrap ${
+              activeTab === 'whatsapp'
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm'
+                : 'bg-muted/30 border-muted-foreground/10 text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+            <span>WhatsApp</span>
+            <span className="opacity-60 font-medium">({whatsappCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('sms')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-semibold whitespace-nowrap ${
+              activeTab === 'sms'
+                ? 'bg-sky-50 text-sky-600 border-sky-200 shadow-sm'
+                : 'bg-muted/30 border-muted-foreground/10 text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-sky-500" />
+            <span>SMS</span>
+            <span className="opacity-60 font-medium">({smsCount})</span>
+          </button>
+        </div>
       </div>
 
-      {/* Email Tab */}
-      <TabsContent value="email" className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0">
-        <ScrollArea className="flex-1">
-          {isLoadingEmail ? (
-            <div className="flex flex-col gap-1.5 p-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static loading placeholders
-                <MessageSkeleton key={`email-skeleton-${i}`} />
-              ))}
-            </div>
-          ) : emailError ? (
-            <ErrorState error={emailError} />
-          ) : emailMessages.length > 0 ? (
-            <div className="flex flex-col gap-1.5 p-3" ref={emailScrollRef}>
-              {emailMessages.map((message, index) => {
-                const isFirstMessage = index === emailMessages.length - 1;
-                return (
-                  <Collapsible
-                    key={message.id}
-                    defaultOpen={isFirstMessage}
-                    className="border rounded-lg"
-                  >
-                    <CollapsibleTrigger className="flex items-center justify-between gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors">
-                      <span className="text-sm font-medium truncate text-left flex-1">
-                        {message.subject || 'No Subject'}
-                      </span>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {dayjs(message.timestamp).format('MMM DD h:mm A')}
-                        </span>
+      {/* Content Area */}
+      {['email', 'whatsapp', 'sms'].map((tab) => {
+        if (tab !== activeTab) return null;
+
+        const groups =
+          tab === 'email' ? emailGroups : tab === 'whatsapp' ? whatsappGroups : smsGroups;
+        const isLoading =
+          tab === 'email' ? isLoadingEmail : tab === 'whatsapp' ? isLoadingWhatsapp : isLoadingSms;
+        const error = tab === 'email' ? emailError : tab === 'whatsapp' ? whatsappError : smsError;
+        const scrollRef =
+          tab === 'email' ? emailScrollRef : tab === 'whatsapp' ? whatsappScrollRef : smsScrollRef;
+        const isSendingLocal =
+          tab === 'email' ? isSending : tab === 'whatsapp' ? isSendingWhatsapp : isSendingSms;
+        const isWhatsApp = tab === 'whatsapp';
+
+        return (
+          <div key={tab} className={`flex-1 flex flex-col overflow-hidden relative `}>
+            {/* WhatsApp Background Doodle Pattern */}
+            {isWhatsApp && (
+              <div
+                className="absolute inset-0 opacity-[0.6] pointer-events-none dark:opacity-[0.1]"
+                style={{
+                  backgroundImage: `url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '400px',
+                  mixBlendMode: 'multiply',
+                }}
+              />
+            )}
+
+            <ScrollArea className="flex-1 relative z-10">
+              <div className="p-4 lg:p-6 max-w-4xl mx-auto w-full">
+                {isLoading ? (
+                  <div className="flex flex-col gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <MessageSkeleton key={`${tab}-skeleton`} />
+                    ))}
+                  </div>
+                ) : error ? (
+                  <ErrorState error={error} />
+                ) : Object.keys(groups).length > 0 ? (
+                  <div ref={scrollRef} className="flex flex-col">
+                    {isWhatsApp && <WhatsAppEncryptionNotice />}
+                    {Object.entries(groups).map(([date, msgs]) => (
+                      <div key={date}>
+                        <DateSeparator date={date} isWhatsApp={isWhatsApp} />
+                        <div className="flex flex-col gap-1">
+                          {msgs.map((message, index) => {
+                            if (tab === 'email') {
+                              const isLastInGroup = index === msgs.length - 1;
+                              return (
+                                <Collapsible
+                                  key={message.id}
+                                  defaultOpen={isLastInGroup}
+                                  className="mb-2 border rounded-xl bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200"
+                                >
+                                  <CollapsibleTrigger className="flex items-center justify-between gap-4 w-full px-5 py-4 hover:bg-muted/20 text-left transition-colors">
+                                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                                        {message.sender === 'agent'
+                                          ? 'Samatva Support'
+                                          : message.senderName}
+                                      </span>
+                                      <span className="text-sm font-semibold truncate leading-tight">
+                                        {message.subject || 'No Subject'}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                      <span className="text-[10px] text-muted-foreground whitespace-nowrap bg-muted px-2 py-0.5 rounded-full font-medium">
+                                        {dayjs(message.timestamp).format('h:mm A')}
+                                      </span>
+                                    </div>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="border-t bg-muted/5">
+                                    <div className="p-5 italic text-muted-foreground">
+                                      {/* biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields */}
+                                      <EmailMessageCard message={message} />
+                                    </div>
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              );
+                            }
+                            if (isWhatsApp)
+                              return <WhatsAppMessageCard key={message.id} message={message} />;
+                            return <SMSMessageCard key={message.id} message={message} />;
+                          })}
+                        </div>
                       </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="border-t px-3 py-3">
-                      {/* biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields */}
-                      <EmailMessageCard message={message as any} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-2">
-                <p className="text-sm font-semibold">No messages found</p>
-                <p className="text-xs text-muted-foreground">No email messages for this contact</p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
+                    <div className="p-6 rounded-full bg-muted/40 mb-4 animate-in zoom-in-50 duration-300">
+                      {tab === 'email' ? (
+                        <Mail className="w-8 h-8 text-primary/60" />
+                      ) : (
+                        <MessageSquare className="w-8 h-8 text-primary/60" />
+                      )}
+                    </div>
+                    <p className="text-base font-bold text-foreground">No conversation found</p>
+                    <p className="text-sm mt-1 max-w-[200px] text-center opacity-70">
+                      Send the first message to start the conversation.
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-        </ScrollArea>
-        <MessageInput
-          placeholder="Type your email message..."
-          disabled={isSending}
-          onSend={(message) => {
-            const lines = message.trim().split('\n');
-            const subject = lines[0] || 'No Subject';
-            const body = lines.slice(1).join('\n') || lines[0];
-            sendEmail({ subject, body });
-          }}
-        />
-      </TabsContent>
+            </ScrollArea>
 
-      {/* WhatsApp Tab */}
-      <TabsContent
-        value="whatsapp"
-        className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
-      >
-        <ScrollArea className="flex-1">
-          {isLoadingWhatsapp ? (
-            <div className="flex flex-col gap-1.5 p-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static loading placeholders
-                <MessageSkeleton key={`whatsapp-skeleton-${i}`} />
-              ))}
-            </div>
-          ) : whatsappError ? (
-            <ErrorState error={whatsappError} />
-          ) : whatsappMessages.length > 0 ? (
-            <div className="flex flex-col gap-1.5 p-3" ref={whatsappScrollRef}>
-              {whatsappMessages.map((message) => (
-                // biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields
-                <WhatsAppMessageCard key={message.id} message={message as any} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-2">
-                <p className="text-sm font-semibold">No messages found</p>
-                <p className="text-xs text-muted-foreground">
-                  No WhatsApp messages for this contact
-                </p>
+            <div className="border-t bg-background p-4 relative z-10 items-center justify-center flex">
+              <div className="max-w-4xl w-full">
+                <MessageInput
+                  placeholder={`Send ${tab === 'whatsapp' ? 'a WhatsApp message' : tab === 'sms' ? 'an SMS' : 'an Email'}...`}
+                  disabled={isSendingLocal}
+                  onSend={(msg) => {
+                    if (tab === 'email') {
+                      const lines = msg.trim().split('\n');
+                      const subject = lines[0] || 'No Subject';
+                      const body = lines.slice(1).join('\n') || lines[0];
+                      sendEmail({ subject, body });
+                    } else if (tab === 'whatsapp') {
+                      sendWhatsapp({ body: msg });
+                    } else {
+                      sendSms({ body: msg });
+                    }
+                  }}
+                />
               </div>
             </div>
-          )}
-        </ScrollArea>
-        <MessageInput
-          placeholder="Type your WhatsApp message..."
-          disabled={isSendingWhatsapp}
-          onSend={(message) => {
-            sendWhatsapp({ body: message });
-          }}
-        />
-      </TabsContent>
-
-      {/* SMS Tab */}
-      <TabsContent value="sms" className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0">
-        <ScrollArea className="flex-1">
-          {isLoadingSms ? (
-            <div className="flex flex-col gap-1.5 p-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static loading placeholders
-                <MessageSkeleton key={`sms-skeleton-${i}`} />
-              ))}
-            </div>
-          ) : smsError ? (
-            <ErrorState error={smsError} />
-          ) : smsMessages.length > 0 ? (
-            <div className="flex flex-col gap-1.5 p-3" ref={smsScrollRef}>
-              {smsMessages.map((message) => (
-                // biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields
-                <SMSMessageCard key={message.id} message={message as any} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-2">
-                <p className="text-sm font-semibold">No messages found</p>
-                <p className="text-xs text-muted-foreground">No SMS messages for this contact</p>
-              </div>
-            </div>
-          )}
-        </ScrollArea>
-        <MessageInput
-          placeholder="Type your SMS message..."
-          disabled={isSendingSms}
-          onSend={(message) => {
-            sendSms({ body: message });
-          }}
-        />
-      </TabsContent>
-    </Tabs>
+          </div>
+        );
+      })}
+    </div>
   );
 }

@@ -1,32 +1,22 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import * as React from 'react';
 import {
-  //   Cell,
-  //   Legend,
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
-  //   Pie,
-  //   PieChart,
+  //   Cell,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  //   Brush,
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getLeadsChartData } from '../services';
-
-// Mock data for campaign distribution
-// const campaignTypeData = [
-//   { name: 'Email', value: 1907, color: '#3b82f6' },
-//   { name: 'WhatsApp', value: 1636, color: '#10b981' },
-//   { name: 'SMS', value: 1303, color: '#f59e0b' },
-//   { name: 'AI Calling', value: 1156, color: '#8b5cf6' },
-// ];
-
-import * as React from 'react';
 
 export function OverviewCharts() {
   const { data: leadChartDataResponse = [], isLoading } = useQuery({
@@ -47,38 +37,75 @@ export function OverviewCharts() {
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
   const year = new Date().getFullYear();
 
+  const campaignData = [
+    { month: 'Jan', email: 245, whatsapp: 189, sms: 134, ai: 98 },
+    { month: 'Feb', email: 289, whatsapp: 234, sms: 178, ai: 145 },
+    { month: 'Mar', email: 321, whatsapp: 267, sms: 201, ai: 178 },
+    { month: 'Apr', email: 298, whatsapp: 289, sms: 234, ai: 212 },
+    { month: 'May', email: 356, whatsapp: 312, sms: 267, ai: 245 },
+    { month: 'Jun', email: 398, whatsapp: 345, sms: 289, ai: 278 },
+  ];
+
   return (
-    <div className=" min-w-0">
-      {/* Leads Details Chart */}
+    <div className="grid gap-4 md:grid-cols-2 min-w-0">
+      {/* Campaign Performance Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaign Performance</CardTitle>
+          <CardDescription>Monthly campaign activity by channel</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={campaignData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+                className="text-muted-foreground"
+              />
+              <YAxis
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+                className="text-muted-foreground"
+              />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="email" stroke="#3b82f6" strokeWidth={2} name="Email" />
+              <Line
+                type="monotone"
+                dataKey="whatsapp"
+                stroke="#10b981"
+                strokeWidth={2}
+                name="WhatsApp"
+              />
+              <Line type="monotone" dataKey="sms" stroke="#f59e0b" strokeWidth={2} name="SMS" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Leads Details Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Leads Details</CardTitle>
           <CardDescription>
-            Daily lead generation progress for {monthName} {year}{' '}
-            {leadChartData.length > 15 ? '(Scroll to view details)' : ''}
+            Daily lead generation for {monthName} {year}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="h-[350px] w-full animate-pulse rounded bg-muted" />
+            <div className="h-[300px] w-full animate-pulse rounded bg-muted" />
           ) : (
-            <div className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-muted">
-              <div style={{ minWidth: leadChartData.length > 15 ? '1500px' : '100%' }}>
-                <ResponsiveContainer width="100%" height={375}>
-                  <AreaChart
+            <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
+              <div style={{ minWidth: leadChartData.length > 10 ? '800px' : '100%' }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
                     data={leadChartData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
-                    <defs>
-                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      className="stroke-muted"
                       vertical={false}
+                      className="stroke-muted"
                     />
                     <XAxis
                       dataKey="date"
@@ -86,14 +113,6 @@ export function OverviewCharts() {
                       className="text-muted-foreground"
                       axisLine={false}
                       tickLine={false}
-                      label={{
-                        value: `Days of ${monthName} ${year}`,
-                        position: 'insideBottom',
-                        offset: -25,
-                        fill: 'currentColor',
-                        fontSize: 14,
-                        fontWeight: 500,
-                      }}
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
@@ -102,6 +121,7 @@ export function OverviewCharts() {
                       tickLine={false}
                     />
                     <Tooltip
+                      cursor={{ fill: 'transparent' }}
                       contentStyle={{
                         backgroundColor: 'white',
                         borderRadius: '8px',
@@ -109,51 +129,20 @@ export function OverviewCharts() {
                         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                       }}
                     />
-                    <Area
-                      type="monotone"
+                    <Bar
                       dataKey="count"
-                      stroke="#f97316"
-                      fillOpacity={1}
-                      fill="url(#colorLeads)"
-                      strokeWidth={2}
+                      fill="#f97316"
+                      radius={[4, 4, 0, 0]}
+                      barSize={leadChartData.length <= 5 ? 40 : undefined}
                       name="Leads"
                     />
-                  </AreaChart>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Campaign Distribution Chart */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Campaign Distribution</CardTitle>
-          <CardDescription>Total campaigns by channel type</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={campaignTypeData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {campaignTypeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend verticalAlign="bottom" height={36} />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }
