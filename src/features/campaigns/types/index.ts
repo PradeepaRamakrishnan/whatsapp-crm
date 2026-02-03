@@ -14,6 +14,20 @@ export interface CampaignData {
   errorDetails?: CampaignErrorDetails;
   createdAt: string;
   updatedAt: string;
+  messageSent?: {
+    total: number;
+    email: number;
+    sms: number;
+    whatsapp: number;
+  };
+  interested?: number;
+  responseRate?: number;
+  totalContacts?: number;
+  contactMessageSent?: {
+    total: number;
+    sent: number;
+    pending: number;
+  };
 }
 
 export interface CampaignsMeta {

@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { AlertCircle, ArrowDown, ArrowUp } from 'lucide-react';
+import { AlertCircle, CheckCheck } from 'lucide-react';
 import type { ConversationMessage } from './conversation-view';
 
 export interface SMSMessageCardProps {
@@ -16,45 +16,51 @@ export function SMSMessageCard({ message }: SMSMessageCardProps) {
   const isInbound = message.sender === 'customer';
 
   return (
-    <div className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="font-semibold text-sm truncate">{message.senderName}</span>
-          {isInbound ? (
-            <ArrowDown className="h-3 w-3 text-muted-foreground shrink-0" />
-          ) : (
-            <ArrowUp className="h-3 w-3 text-muted-foreground shrink-0" />
-          )}
-        </div>
-        <span className="text-xs text-muted-foreground shrink-0">
-          {dayjs(message.timestamp).format('MMM DD h:mm A')}
-        </span>
-      </div>
+    <div className={`flex mb-2 ${isInbound ? 'justify-start' : 'justify-end'}`}>
+      <div
+        className={`relative max-w-[85%] px-3 py-2 rounded-2xl shadow-xs ${
+          isInbound
+            ? 'bg-muted dark:bg-zinc-800 text-foreground rounded-bl-sm'
+            : 'bg-gray-100 rounded-br-sm'
+        }`}
+      >
+        {!isInbound && (
+          <div className="text-[10px] opacity-70 mb-1 font-medium flex items-center gap-1">
+            <span>SMS</span>
+          </div>
+        )}
 
-      {(message.from || message.to) && (
-        <div className="text-xs text-muted-foreground mb-2 flex flex-wrap gap-x-3 gap-y-0.5">
-          {message.from && <span>{message.from}</span>}
-          {message.to && <span>→ {message.to}</span>}
-        </div>
-      )}
-
-      {message.error && (
-        <div className="flex items-start gap-1.5 bg-destructive/10 border border-destructive/20 p-2 rounded mb-2">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive mt-0.5" />
-          <p className="text-xs text-destructive">
-            {typeof message.error === 'string'
-              ? message.error
-              : // biome-ignore lint/suspicious/noExplicitAny: Error can be object with message property
-                (message.error as any)?.message || 'Unknown error'}
+        {message.content && (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {message.content}
           </p>
-        </div>
-      )}
+        )}
 
-      {message.content && (
-        <div className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
-          {message.content}
+        {message.error && (
+          <div
+            className={`flex items-start gap-1.5 mt-2 pt-2 border-t ${isInbound ? 'border-foreground/10' : 'border-white/20'}`}
+          >
+            <AlertCircle
+              className={`h-3 w-3 shrink-0 mt-0.5 ${isInbound ? 'text-rose-500' : 'text-white'}`}
+            />
+            <p
+              className={`text-[11px] ${isInbound ? 'text-rose-600 dark:text-rose-400' : 'text-white'}`}
+            >
+              {typeof message.error === 'string'
+                ? message.error
+                : (message.error as any)?.message || 'Unknown error'}
+            </p>
+          </div>
+        )}
+
+        <div
+          className={`flex items-center justify-end gap-1 mt-1 ${isInbound ? 'text-muted-foreground' : 'text-white/70'}`}
+        >
+          <span className="text-[10px]">{dayjs(message.timestamp).format('h:mm A')}</span>
+          {!isInbound && !message.error && <CheckCheck className="h-3 w-3" />}
+          {!isInbound && message.error && <AlertCircle className="h-3 w-3 text-white" />}
         </div>
-      )}
+      </div>
     </div>
   );
 }

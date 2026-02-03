@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, CheckCheck } from 'lucide-react';
 import type { ConversationMessage } from './conversation-view';
 
 export interface WhatsAppMessageCardProps {
@@ -16,38 +16,37 @@ export function WhatsAppMessageCard({ message }: WhatsAppMessageCardProps) {
   const isInbound = message.sender === 'customer';
 
   return (
-    <div className={`flex mb-1.5 ${isInbound ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex mb-1 ${isInbound ? 'justify-start' : 'justify-end'}`}>
       <div
-        className={`relative max-w-[75%] px-2.5 py-1.5 rounded-lg shadow-sm ${
+        className={`relative max-w-[85%] px-2.5 py-1.5 rounded-lg shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] ${
           isInbound
             ? 'bg-white dark:bg-zinc-800 rounded-tl-none'
-            : 'bg-[#d9fdd3] dark:bg-[#005c4b] rounded-tr-none'
+            : 'bg-[#dcf8c6] dark:bg-[#005c4b] rounded-tr-none'
         }`}
       >
         {message.content && (
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-gray-900 dark:text-gray-100">
+          <p className="text-[13.5px] leading-[1.4] whitespace-pre-wrap break-words text-[#111b21] dark:text-gray-100 pr-1">
             {message.content}
           </p>
         )}
 
         {message.error && (
-          <div className="flex items-start gap-1.5 mt-1.5 pt-1.5 border-t border-gray-200 dark:border-gray-600">
+          <div className="flex items-start gap-1.5 mt-2 pt-2 border-t border-black/5 dark:border-white/10">
             <AlertCircle className="h-3 w-3 shrink-0 text-red-500 mt-0.5" />
             <p className="text-[11px] text-red-600 dark:text-red-400">
               {typeof message.error === 'string'
                 ? message.error
-                : // biome-ignore lint/suspicious/noExplicitAny: Error can be object with message property
-                  (message.error as any)?.message || 'Unknown error'}
+                : (message.error as any)?.message || 'Unknown error'}
             </p>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-1 mt-0.5">
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-end gap-1 mt-0.5 -mr-1">
+          <span className="text-[10px] text-[#667781] dark:text-gray-400">
             {dayjs(message.timestamp).format('h:mm A')}
           </span>
           {!isInbound && !message.error && (
-            <Check className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+            <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb] dark:text-[#aebac1]" />
           )}
           {!isInbound && message.error && <AlertCircle className="h-3 w-3 text-red-500" />}
         </div>
