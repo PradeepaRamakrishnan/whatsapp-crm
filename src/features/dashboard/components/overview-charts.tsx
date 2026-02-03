@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   //   Cell,
   Legend,
@@ -98,14 +98,21 @@ export function OverviewCharts() {
             <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
               <div style={{ minWidth: leadChartData.length > 10 ? '800px' : '100%' }}>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
+                  <AreaChart
                     data={leadChartData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
                   >
+                    <defs>
+                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#b9d1d3" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#b9d1d3" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      vertical={false}
+                      vertical={true}
                       className="stroke-muted"
+                      strokeOpacity={0.4}
                     />
                     <XAxis
                       dataKey="date"
@@ -113,30 +120,44 @@ export function OverviewCharts() {
                       className="text-muted-foreground"
                       axisLine={false}
                       tickLine={false}
+                      dy={10}
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       className="text-muted-foreground"
                       axisLine={false}
                       tickLine={false}
+                      dx={-10}
                     />
                     <Tooltip
-                      cursor={{ fill: 'transparent' }}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded-lg border bg-background p-3 shadow-xl ring-1 ring-black/5">
+                              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                                Date: {label} {monthName}
+                              </p>
+                              <p className="text-lg font-bold text-[#82a0a2]">
+                                {payload[0].value} Leads
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
                       }}
                     />
-                    <Bar
+                    <Area
+                      type="natural"
                       dataKey="count"
-                      fill="#f97316"
-                      radius={[4, 4, 0, 0]}
-                      barSize={leadChartData.length <= 5 ? 40 : undefined}
-                      name="Leads"
+                      stroke="#82a0a2"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorLeads)"
+                      animationDuration={1500}
+                      dot={{ r: 4, fill: '#82a0a2', strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
                     />
-                  </BarChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
