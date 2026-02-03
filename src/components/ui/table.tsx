@@ -12,7 +12,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm [&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-2.5 [&_th]:font-medium [&_th]:bg-muted/50 [&_td]:font-normal", className)}
+        className={cn("w-full caption-bottom text-sm [&_th]:px-6 [&_th]:py-3 [&_td]:px-6 [&_td]:py-4 [&_th]:font-medium [&_th]:bg-muted/50 [&_td]:font-normal", className)}
         {...props}
       />
     </div>
@@ -57,7 +57,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-gray-50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-gray-30 data-[state=selected]:bg-muted border-b transition-colors",
         className
       )}
       {...props}

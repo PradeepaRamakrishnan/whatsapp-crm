@@ -10,7 +10,7 @@ export const dashboardData = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '/dashboard',
+      url: '/overview',
       icon: LayoutDashboard,
     },
   ],
