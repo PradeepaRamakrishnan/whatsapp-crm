@@ -5,10 +5,10 @@ import utc from 'dayjs/plugin/utc';
 import { CheckCircle2, Mail, MessageSquare, Phone, User, XCircle } from 'lucide-react';
 import { CampaignConversation } from '@/components/shared/campaign-conversation';
 import { Badge } from '@/components/ui/badge';
-// import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { CampaignContactData } from '@/features/campaigns/types';
+import { cn } from '@/lib/utils';
 
 dayjs.extend(utc);
 
@@ -53,13 +53,13 @@ export function CampaignContactDetailsSheet({
                 {selectedContact?.contact.customerName}
               </SheetTitle>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground ">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
                   <span className="truncate font-medium">
                     {selectedContact?.contact.emailId || '-'}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground ">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Phone className="h-3.5 w-3.5 text-green-500" />
                   <span className="truncate font-medium">
                     {selectedContact?.contact.mobileNumber || '-'}
@@ -80,9 +80,7 @@ export function CampaignContactDetailsSheet({
             <TabsContent value="details" className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
               <div className="flex flex-col gap-8">
                 <div>
-                  <h4 className="text-sm font-semibold  tracking-wider  mb-4">
-                    Campaign Engagement
-                  </h4>
+                  <h4 className="text-sm font-semibold tracking-wider mb-4">Campaign Engagement</h4>
                   <div className="grid gap-3">
                     {/* Email */}
                     <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-blue-200">
@@ -104,38 +102,58 @@ export function CampaignContactDetailsSheet({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-muted-foreground">
-                            {selectedContact.email.sent ? 'SENT' : 'NOT SENT'}
+                          <span
+                            className={cn(
+                              'text-[10px] font-semibold',
+                              selectedContact.email.bouncedAt
+                                ? 'text-rose-600'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {selectedContact.email.bounced === true
+                              ? 'SENT ERROR'
+                              : selectedContact.email.sent
+                                ? 'SENT'
+                                : 'NOT SENT'}
                           </span>
-                          {selectedContact.email.sent ? (
+                          {selectedContact.email.bounced === true ? (
+                            <XCircle className="h-5 w-5 text-rose-500" />
+                          ) : selectedContact.email.sent ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                           ) : (
                             <XCircle className="h-5 w-5 text-muted/30" />
                           )}
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-blue-100 dark:border-blue-900/40 ml-4 pb-1">
-                        {selectedContact?.email?.deliveredAt && (
-                          <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
-                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400  tracking-tight">
-                              Delivered
-                            </span>
-                            <span className="text-[10px] font-semibold text-foreground truncate">
-                              {dayjs(selectedContact?.email?.deliveredAt).format('hh:mm A, MMM DD')}
-                            </span>
-                          </div>
-                        )}
-                        {selectedContact?.email?.bouncedAt && (
-                          <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
-                            <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400  tracking-tight">
-                              Bounced
-                            </span>
-                            <span className="text-[10px] font-bold text-foreground truncate">
-                              {dayjs(selectedContact?.email?.bouncedAt).format('hh:mm A, MMM DD')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                      {(selectedContact.email.deliveredAt ||
+                        selectedContact.email.bounced ||
+                        selectedContact.email.bouncedAt) && (
+                        <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-blue-100 dark:border-blue-900/40 ml-4 pb-1">
+                          {selectedContact.email.deliveredAt && (
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                Delivered
+                              </span>
+                              <span className="text-[10px] font-semibold text-foreground truncate">
+                                {dayjs(selectedContact.email.deliveredAt).format('hh:mm A, MMM DD')}
+                              </span>
+                            </div>
+                          )}
+                          {(selectedContact.email.bounced || selectedContact.email.bouncedAt) && (
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                              <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                                Bounced
+                              </span>
+                              <span className="text-[10px] font-bold text-foreground truncate">
+                                {dayjs(
+                                  selectedContact.email.bouncedAt ||
+                                    selectedContact.email.error?.timestamp,
+                                ).format('hh:mm A, MMM DD')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* SMS */}
@@ -158,16 +176,58 @@ export function CampaignContactDetailsSheet({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-muted-foreground">
-                            {selectedContact.sms.sent ? 'SENT' : 'NOT SENT'}
+                          <span
+                            className={cn(
+                              'text-[10px] font-semibold',
+                              selectedContact.sms.bounced || selectedContact.sms.bouncedAt
+                                ? 'text-rose-600'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {selectedContact.sms.bounced || selectedContact.sms.bouncedAt
+                              ? 'SENT ERROR'
+                              : selectedContact.sms.sent
+                                ? 'SENT'
+                                : 'NOT SENT'}
                           </span>
-                          {selectedContact.sms.sent ? (
+                          {selectedContact.sms.bounced || selectedContact.sms.bouncedAt ? (
+                            <XCircle className="h-5 w-5 text-rose-500" />
+                          ) : selectedContact.sms.sent ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                           ) : (
                             <XCircle className="h-5 w-5 text-muted/30" />
                           )}
                         </div>
                       </div>
+                      {(selectedContact.sms.deliveredAt ||
+                        selectedContact.sms.bounced ||
+                        selectedContact.sms.bouncedAt) && (
+                        <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-green-100 dark:border-green-900/40 ml-4 pb-1">
+                          {selectedContact.sms.deliveredAt && (
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                Delivered
+                              </span>
+                              <span className="text-[10px] font-semibold text-foreground truncate">
+                                {dayjs(selectedContact.sms.deliveredAt).format('hh:mm A, MMM DD')}
+                              </span>
+                            </div>
+                          )}
+                          {(selectedContact.sms.bounced || selectedContact.sms.bouncedAt) && (
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                              <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                                Bounced
+                              </span>
+                              <span className="text-[10px] font-bold text-foreground truncate">
+                                {dayjs(
+                                  selectedContact.sms.bouncedAt ||
+                                    selectedContact.sms.error?.timestamp,
+                                ).format('hh:mm A, MMM DD')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* WhatsApp */}
@@ -192,10 +252,24 @@ export function CampaignContactDetailsSheet({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-muted-foreground">
-                            {selectedContact.whatsapp.sent ? 'SENT' : 'NOT SENT'}
+                          <span
+                            className={cn(
+                              'text-[10px] font-semibold',
+                              selectedContact.whatsapp.bounced || selectedContact.whatsapp.bouncedAt
+                                ? 'text-rose-600'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {selectedContact.whatsapp.bounced || selectedContact.whatsapp.bouncedAt
+                              ? 'SENT ERROR'
+                              : selectedContact.whatsapp.sent
+                                ? 'SENT'
+                                : 'NOT SENT'}
                           </span>
-                          {selectedContact.whatsapp.sent ? (
+                          {selectedContact.whatsapp.bounced ||
+                          selectedContact.whatsapp.bouncedAt ? (
+                            <XCircle className="h-5 w-5 text-rose-500" />
+                          ) : selectedContact.whatsapp.sent ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                           ) : (
                             <XCircle className="h-5 w-5 text-muted/30" />
@@ -203,11 +277,12 @@ export function CampaignContactDetailsSheet({
                         </div>
                       </div>
                       {(selectedContact?.whatsapp?.deliveredAt ||
+                        selectedContact?.whatsapp?.bounced ||
                         selectedContact?.whatsapp?.bouncedAt) && (
                         <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-emerald-100 dark:border-emerald-900/40 ml-4 pb-1">
                           {selectedContact.whatsapp.deliveredAt && (
                             <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
-                              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400  tracking-tight">
+                              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
                                 Delivered
                               </span>
                               <span className="text-[10px] font-semibold text-foreground truncate">
@@ -217,15 +292,17 @@ export function CampaignContactDetailsSheet({
                               </span>
                             </div>
                           )}
-                          {selectedContact.whatsapp.bouncedAt && (
+                          {(selectedContact.whatsapp.bounced ||
+                            selectedContact.whatsapp.bouncedAt) && (
                             <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
-                              <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                              <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 tracking-tight">
                                 Bounced
                               </span>
                               <span className="text-[10px] font-bold text-foreground truncate">
-                                {dayjs(selectedContact.whatsapp.bouncedAt).format(
-                                  'hh:mm A, MMM DD',
-                                )}
+                                {dayjs(
+                                  selectedContact.whatsapp.bouncedAt ||
+                                    selectedContact.whatsapp.error?.timestamp,
+                                ).format('hh:mm A, MMM DD')}
                               </span>
                             </div>
                           )}

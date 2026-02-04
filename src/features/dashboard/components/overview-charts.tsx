@@ -6,7 +6,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  //   Cell,
   Legend,
   Line,
   LineChart,
@@ -16,6 +15,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCampaignPerformanceStats } from '../../campaigns/services';
 import { getLeadsChartData } from '../services';
 
 export function OverviewCharts() {
@@ -24,27 +24,58 @@ export function OverviewCharts() {
     queryFn: () => getLeadsChartData(),
   });
 
-  // Transform YYYY-MM-DD to just Day number
   const leadChartData = React.useMemo(() => {
-    return leadChartDataResponse.map((item) => ({
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    const fullMonthData = Array.from({ length: daysInMonth }, (_, i) => ({
+      date: (i + 1).toString(),
+      count: 0,
+    }));
+
+    if (!leadChartDataResponse || leadChartDataResponse.length === 0) {
+      return fullMonthData;
+    }
+
+    const dataMap = new Map(
+      leadChartDataResponse.map((item) => {
+        const day = item.date.includes('-')
+          ? parseInt(item.date.split('-')[2], 10).toString()
+          : item.date;
+        return [day, item.count];
+      }),
+    );
+
+    return fullMonthData.map((item) => ({
       ...item,
-      // Parse DD from YYYY-MM-DD
-      date: item.date.includes('-') ? parseInt(item.date.split('-')[2], 10).toString() : item.date,
+      count: dataMap.has(item.date) ? dataMap.get(item.date) : 0,
     }));
   }, [leadChartDataResponse]);
 
-  // Current Month Label
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
   const year = new Date().getFullYear();
 
-  const campaignData = [
-    { month: 'Jan', email: 245, whatsapp: 189, sms: 134, ai: 98 },
-    { month: 'Feb', email: 289, whatsapp: 234, sms: 178, ai: 145 },
-    { month: 'Mar', email: 321, whatsapp: 267, sms: 201, ai: 178 },
-    { month: 'Apr', email: 298, whatsapp: 289, sms: 234, ai: 212 },
-    { month: 'May', email: 356, whatsapp: 312, sms: 267, ai: 245 },
-    { month: 'Jun', email: 398, whatsapp: 345, sms: 289, ai: 278 },
-  ];
+  const { data: campaignDataResponse = [] } = useQuery({
+    queryKey: ['campaign-stats'],
+    queryFn: () => getCampaignPerformanceStats(),
+  });
+
+  const campaignData = React.useMemo(() => {
+    // Show only 6 months - Jan to Jun
+    const months6 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+    const dataMap = new Map(campaignDataResponse.map((item) => [item.month, item]));
+
+    return months6.map((month) => {
+      const existingData = dataMap.get(month);
+      return {
+        month,
+        email: existingData?.email ? Number(existingData.email) : 0,
+        sms: existingData?.sms ? Number(existingData.sms) : 0,
+        whatsapp: existingData?.whatsapp ? Number(existingData.whatsapp) : 0,
+      };
+    });
+  }, [campaignDataResponse]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 min-w-0">
@@ -56,28 +87,101 @@ export function OverviewCharts() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={campaignData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <LineChart data={campaignData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={true}
+                stroke="currentColor"
+                opacity={0.1}
+              />
               <XAxis
                 dataKey="month"
                 tick={{ fill: 'currentColor', fontSize: 12 }}
-                className="text-muted-foreground"
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
                 tick={{ fill: 'currentColor', fontSize: 12 }}
-                className="text-muted-foreground"
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="email" stroke="#3b82f6" strokeWidth={2} name="Email" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                }}
+                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length > 0) {
+                    return (
+                      <div className="rounded-lg border bg-background p-3 shadow-xl">
+                        <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
+                        <div className="space-y-1">
+                          {payload.map((entry) => (
+                            <div
+                              key={entry.name}
+                              className="flex items-center justify-between gap-4"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="h-2.5 w-2.5 rounded-full"
+                                  style={{ backgroundColor: entry.color }}
+                                />
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {entry.name}
+                                </span>
+                              </div>
+                              <span className="text-sm font-bold" style={{ color: entry.color }}>
+                                {entry.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="line" />
+
+              {/* Email Line - Blue */}
+              <Line
+                type="monotone"
+                dataKey="email"
+                stroke="#3b82f6"
+                strokeWidth={2.5}
+                name="Email"
+                dot={{ fill: '#3b82f6', r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#3b82f6' }}
+                connectNulls={true}
+              />
+
+              {/* SMS Line - Orange */}
+              <Line
+                type="monotone"
+                dataKey="sms"
+                stroke="#f59e0b"
+                strokeWidth={2.5}
+                name="SMS"
+                dot={{ fill: '#f59e0b', r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#f59e0b' }}
+                connectNulls={true}
+              />
+
+              {/* WhatsApp Line - Green */}
               <Line
                 type="monotone"
                 dataKey="whatsapp"
                 stroke="#10b981"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 name="WhatsApp"
+                dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#10b981' }}
+                connectNulls={true}
               />
-              <Line type="monotone" dataKey="sms" stroke="#f59e0b" strokeWidth={2} name="SMS" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -111,34 +215,37 @@ export function OverviewCharts() {
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={true}
-                      className="stroke-muted"
-                      strokeOpacity={0.4}
+                      stroke="currentColor"
+                      opacity={0.1}
                     />
                     <XAxis
                       dataKey="date"
                       tick={{ fill: 'currentColor', fontSize: 12 }}
-                      className="text-muted-foreground"
                       axisLine={false}
                       tickLine={false}
-                      dy={10}
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
-                      className="text-muted-foreground"
                       axisLine={false}
                       tickLine={false}
-                      dx={-10}
                     />
                     <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           return (
-                            <div className="rounded-lg border bg-background p-3 shadow-xl ring-1 ring-black/5">
-                              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                            <div className="rounded-lg border bg-background p-3 shadow-xl">
+                              <p className="text-xs font-medium text-muted-foreground mb-1">
                                 Date: {label} {monthName}
                               </p>
                               <p className="text-lg font-bold text-[#82a0a2]">
-                                {payload[0].value} Leads
+                                {Number(payload[0].value).toLocaleString()} Leads
                               </p>
                             </div>
                           );
@@ -154,7 +261,7 @@ export function OverviewCharts() {
                       fillOpacity={1}
                       fill="url(#colorLeads)"
                       animationDuration={1500}
-                      dot={{ r: 4, fill: '#82a0a2', strokeWidth: 2, stroke: '#fff' }}
+                      dot={{ r: 4, fill: '#82a0a2', strokeWidth: 0 }}
                       activeDot={{ r: 6, strokeWidth: 0 }}
                     />
                   </AreaChart>

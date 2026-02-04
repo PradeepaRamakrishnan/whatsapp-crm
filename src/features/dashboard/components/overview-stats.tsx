@@ -23,6 +23,15 @@ export function OverviewStats() {
 
   const stats = [
     {
+      title: 'Total Files',
+      value: counts?.totalFiles?.toLocaleString() ?? '...',
+      change: '-2.1%',
+      trend: 'down',
+      icon: Users,
+      color: 'text-amber-500',
+      description: 'Active borrower files',
+    },
+    {
       title: 'Total Campaigns',
       value: counts?.totalCampaigns?.toLocaleString() ?? '...',
       change: '+12.5%',
@@ -48,15 +57,6 @@ export function OverviewStats() {
       icon: Target,
       color: 'text-indigo-500',
       description: 'Campaign to lead conversion',
-    },
-    {
-      title: 'Total Files',
-      value: counts?.totalFiles?.toLocaleString() ?? '...',
-      change: '-2.1%',
-      trend: 'down',
-      icon: Users,
-      color: 'text-amber-500',
-      description: 'Active borrower files',
     },
   ];
 

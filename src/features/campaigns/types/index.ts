@@ -58,6 +58,19 @@ export interface MessageSentStats {
   whatsapp: number;
 }
 
+export interface ChannelStatus {
+  sent: boolean;
+  sentAt?: string | null;
+  deliveredAt?: string | null;
+  bouncedAt?: string | null;
+  bounced?: boolean;
+  error?: {
+    code?: string[];
+    message?: string;
+    timestamp?: string;
+  } | null;
+}
+
 export interface ContactMessageSent {
   total: number;
   sent: number;
@@ -111,24 +124,9 @@ export interface CampaignContactData {
   };
   status: string;
   responseStatus: 'interested' | 'not_interested' | null;
-  email: {
-    sent: boolean;
-    sentAt?: string;
-    deliveredAt?: string;
-    bouncedAt?: string;
-  };
-  sms: {
-    sent: boolean;
-    sentAt?: string;
-    deliveredAt?: string;
-    bouncedAt?: string;
-  };
-  whatsapp: {
-    sent: boolean;
-    sentAt?: string;
-    deliveredAt?: string;
-    bouncedAt?: string;
-  };
+  email: ChannelStatus;
+  sms: ChannelStatus;
+  whatsapp: ChannelStatus;
   lead?: {
     id: string;
     interestedAt: string;
@@ -244,24 +242,9 @@ export interface InteractionRecord {
     contact: string;
     status: string;
     responseStatus: 'interested' | 'not_interested' | null;
-    email: {
-      sent: boolean;
-      sentAt: string | null;
-      deliveredAt?: string | null;
-      bouncedAt?: string | null;
-    };
-    sms: {
-      sent: boolean;
-      sentAt: string | null;
-      deliveredAt?: string | null;
-      bouncedAt?: string | null;
-    };
-    whatsapp: {
-      sent: boolean;
-      sentAt: string | null;
-      deliveredAt?: string | null;
-      bouncedAt?: string | null;
-    };
+    email: ChannelStatus;
+    sms: ChannelStatus;
+    whatsapp: ChannelStatus;
     lead: string | null;
     active: boolean;
     createdAt: string;
@@ -319,4 +302,11 @@ export interface InteractionResponse {
     limit: string | number;
     totalPages: number;
   };
+}
+
+export interface CampaignPerformanceStat {
+  month: string;
+  email: number;
+  sms: number;
+  whatsapp: number;
 }
