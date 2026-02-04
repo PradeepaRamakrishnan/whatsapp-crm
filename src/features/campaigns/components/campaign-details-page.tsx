@@ -301,137 +301,85 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
         {/* Overview Tab */}
         <TabsContent value="overview" className="mt-6 space-y-6">
           {/* Campaign Summary */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="rounded-2xl border-none shadow-sm bg-muted/30">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base font-bold">Campaign Details</CardTitle>
-                </div>
-                <CardDescription>Core settings and identity</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b border-muted-foreground/5 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground">Internal Name</span>
-                    <span className="text-sm font-bold text-foreground">{campaign.name}</span>
-                  </div>
-                  <div className="flex items-start justify-between py-2 border-b border-muted-foreground/5 last:border-0 gap-4">
-                    <span className="text-xs font-medium text-muted-foreground shrink-0">
-                      Objective
-                    </span>
-                    <span className="text-sm font-semibold text-foreground text-right">
-                      {campaign.description}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-muted-foreground/5 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Current Status
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'text-[10px] uppercase tracking-wider font-bold',
-                        getStatusColor(campaign.status),
-                      )}
-                    >
-                      {campaign.status}
-                    </Badge>
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaign Summary</CardTitle>
+              <CardDescription>Basic campaign information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Campaign Name</dt>
+                    <dd className="text-sm font-medium">{campaign.name}</dd>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-2xl border-none shadow-sm bg-muted/30">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base font-bold">Data Insights</CardTitle>
-                </div>
-                <CardDescription>Source file and record analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b border-muted-foreground/5 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Source Provider
-                    </span>
-                    <span className="text-sm font-bold text-foreground uppercase">
-                      {campaign.file.bankName}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-muted-foreground/5 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground">Source File</span>
-                    <span className="text-sm font-semibold text-primary underline underline-offset-4 decoration-primary/30 cursor-pointer">
-                      {campaign.file.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-muted-foreground/5 last:border-0">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Verification Status
-                    </span>
-                    <div className="flex items-center gap-1 text-emerald-600 font-bold text-xs">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>{campaign.file.status.toUpperCase()}</span>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Description</dt>
+                    <dd className="text-sm font-medium">{campaign.description}</dd>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-2 rounded-2xl border-none shadow-sm bg-gradient-to-br from-background to-muted/20">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600">
-                    <Activity className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base font-bold">Record Distribution</CardTitle>
-                </div>
-                <CardDescription>Quality analysis of imported contacts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 sm:grid-cols-3">
-                  <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-background border border-muted-foreground/10">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Total Records
-                    </span>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-extrabold text-foreground">
-                        {campaign.fileContentStats.totalRecords.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">units</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-emerald-50/30 border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/40">
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                      Valid Contacts
-                    </span>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-500">
-                        {campaign.fileContentStats.validRecords.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-emerald-600/70 font-medium">Verified</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-rose-50/30 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/40">
-                    <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                      Invalid Flags
-                    </span>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-500">
-                        {campaign.fileContentStats.invalidRecords.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-rose-600/70 font-medium">Actionable</span>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Status</dt>
+                    <dd className="text-sm font-medium capitalize">{campaign.status}</dd>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">File Name</dt>
+                    <dd className="text-sm font-medium">{campaign.file.name}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Bank Name</dt>
+                    <dd className="text-sm font-medium uppercase">{campaign.file.bankName}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">File Status</dt>
+                    <dd className="text-sm font-medium capitalize">{campaign.file.status}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Total Records</dt>
+                    <dd className="text-sm font-medium">
+                      {campaign.fileContentStats.totalRecords.toLocaleString()}
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Valid Records</dt>
+                    <dd className="text-sm font-medium text-emerald-600">
+                      {campaign.fileContentStats.validRecords.toLocaleString()}
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div className="flex-1">
+                    <dt className="text-xs font-medium text-muted-foreground">Invalid Records</dt>
+                    <dd className="text-sm font-medium text-red-600">
+                      {campaign.fileContentStats.invalidRecords.toLocaleString()}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
 
           {/* Message Delivery Stats */}
           {/* <Card>
