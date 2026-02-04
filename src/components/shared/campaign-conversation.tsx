@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: <explanation> */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,7 +7,7 @@ import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import utc from 'dayjs/plugin/utc';
 import { Lock, Mail, MessageSquare } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
 import { MessageInput } from '@/components/shared/message-input';
 import { SMSMessageCard } from '@/components/shared/sms-message-card';
@@ -211,24 +212,33 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
   const smsCount = Object.values(smsGroups).flat().length;
   const whatsappCount = Object.values(whatsappGroups).flat().length;
 
-  // const scrollToBottom = useCallback((ref: React.RefObject<HTMLDivElement>) => {
-  //   if (ref.current) {
-  //     ref.current.scrollIntoView({ behavior: 'smooth' });
-  //   }
-  // }, []);
+  const scrollToBottom = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
-  // // Scroll to bottom when messages change or tab changes
-  // useEffect(() => {
-  //   if (activeTab === 'email') scrollToBottom(emailScrollRef);
-  // }, [activeTab, scrollToBottom]);
+  // Scroll to bottom when messages change or tab changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === 'email') scrollToBottom(emailScrollRef);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, scrollToBottom, emailGroups]);
 
-  // useEffect(() => {
-  //   if (activeTab === 'sms') scrollToBottom(smsScrollRef);
-  // }, [activeTab, scrollToBottom]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === 'sms') scrollToBottom(smsScrollRef);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, scrollToBottom, smsGroups]);
 
-  // useEffect(() => {
-  //   if (activeTab === 'whatsapp') scrollToBottom(whatsappScrollRef);
-  // }, [activeTab, scrollToBottom]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === 'whatsapp') scrollToBottom(whatsappScrollRef);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, scrollToBottom, whatsappGroups]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden h-full">
@@ -320,7 +330,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                 ) : error ? (
                   <ErrorState error={error} />
                 ) : Object.keys(groups).length > 0 ? (
-                  <div ref={scrollRef} className="flex flex-col">
+                  <div className="flex flex-col">
                     {isWhatsApp && <WhatsAppEncryptionNotice />}
                     {Object.entries(groups).map(([date, msgs]) => (
                       <div key={date}>
@@ -368,6 +378,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                         </div>
                       </div>
                     ))}
+                    <div ref={scrollRef} className="h-px" />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">

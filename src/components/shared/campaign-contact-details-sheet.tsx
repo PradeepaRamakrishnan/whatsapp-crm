@@ -5,31 +5,12 @@ import utc from 'dayjs/plugin/utc';
 import { CheckCircle2, Mail, MessageSquare, Phone, User, XCircle } from 'lucide-react';
 import { CampaignConversation } from '@/components/shared/campaign-conversation';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { CampaignContactData } from '@/features/campaigns/types';
 
 dayjs.extend(utc);
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'pending':
-      return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300';
-    case 'processing':
-      return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300';
-    case 'completed':
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'failed':
-      return 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-300';
-    case 'interested':
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'not_interested':
-      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
-    default:
-      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-  }
-};
 
 const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
   if (responseStatus === 'interested') {
@@ -62,36 +43,31 @@ export function CampaignContactDetailsSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col sm:max-w-4xl">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <User className="h-5 w-5 text-primary" />
+        <SheetHeader className="border-b pb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm border border-primary/20">
+              <User className="h-7 w-7 text-primary" />
             </div>
-            <div>
-              <div>{selectedContact?.contact.customerName}</div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                <div>
-                  <Mail className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
+            <div className="flex-1 min-w-0">
+              <SheetTitle className="text-xl font-bold tracking-tight">
+                {selectedContact?.contact.customerName}
+              </SheetTitle>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground ">
+                  <Mail className="h-3.5 w-3.5 text-blue-500" />
+                  <span className="truncate font-medium">
                     {selectedContact?.contact.emailId || '-'}
-                  </p>
+                  </span>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                <div>
-                  <Phone className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground ">
+                  <Phone className="h-3.5 w-3.5 text-green-500" />
+                  <span className="truncate font-medium">
                     {selectedContact?.contact.mobileNumber || '-'}
-                  </p>
+                  </span>
                 </div>
               </div>
             </div>
-          </SheetTitle>
+          </div>
         </SheetHeader>
 
         {selectedContact && (
@@ -101,96 +77,112 @@ export function CampaignContactDetailsSheet({
               <TabsTrigger value="conversation">Conversation</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="flex-1 overflow-y-auto px-4 pb-4 mt-4">
-              <div className="flex flex-col gap-6">
+            <TabsContent value="details" className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
+              <div className="flex flex-col gap-8">
                 <div>
-                  <h4 className="mb-3 text-sm font-semibold">Campaign Status</h4>
-                  <div className="grid gap-2 pb-4">
+                  <h4 className="text-sm font-semibold  tracking-wider  mb-4">
+                    Campaign Engagement
+                  </h4>
+                  <div className="grid gap-3">
                     {/* Email */}
-                    <div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-blue-600" />
+                    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-blue-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                            <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium text-muted-foreground">Email</span>
+                            <span className="text-xs font-semibold text-foreground">
+                              Email Channel
+                            </span>
                             {selectedContact.email.sent && selectedContact.email.sentAt && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
                                 Sent:{' '}
                                 {dayjs(selectedContact.email.sentAt).format('MMM DD, YYYY hh:mm A')}
                               </span>
                             )}
                           </div>
                         </div>
-                        {selectedContact.email.sent ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-gray-400" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {selectedContact.email.sent ? 'SENT' : 'NOT SENT'}
+                          </span>
+                          {selectedContact.email.sent ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-muted/30" />
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1 pl-6 ml-1 border-l-2 border-muted-foreground/20">
+                      <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-blue-100 dark:border-blue-900/40 ml-4 pb-1">
                         {selectedContact?.email?.deliveredAt && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            <p className="text-[11px] text-muted-foreground">
-                              Delivered:{' '}
-                              <span className="font-medium text-foreground">
-                                {dayjs(selectedContact?.email?.deliveredAt).format(
-                                  'MMM DD, YYYY hh:mm A',
-                                )}
-                              </span>
-                            </p>
+                          <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400  tracking-tight">
+                              Delivered
+                            </span>
+                            <span className="text-[10px] font-semibold text-foreground truncate">
+                              {dayjs(selectedContact?.email?.deliveredAt).format('hh:mm A, MMM DD')}
+                            </span>
                           </div>
                         )}
                         {selectedContact?.email?.bouncedAt && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                            <p className="text-[11px] text-muted-foreground">
-                              Bounced:{' '}
-                              <span className="font-medium text-foreground">
-                                {dayjs(selectedContact?.email?.bouncedAt).format(
-                                  'MMM DD, YYYY hh:mm A',
-                                )}
-                              </span>
-                            </p>
+                          <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                            <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400  tracking-tight">
+                              Bounced
+                            </span>
+                            <span className="text-[10px] font-bold text-foreground truncate">
+                              {dayjs(selectedContact?.email?.bouncedAt).format('hh:mm A, MMM DD')}
+                            </span>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* SMS */}
-                    <div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 text-green-600" />
+                    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-green-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
+                            <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium text-muted-foreground">SMS</span>
+                            <span className="text-xs font-semibold text-foreground">
+                              SMS Channel
+                            </span>
                             {selectedContact.sms.sent && selectedContact.sms.sentAt && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
                                 Sent:{' '}
                                 {dayjs(selectedContact.sms.sentAt).format('MMM DD, YYYY hh:mm A')}
                               </span>
                             )}
                           </div>
                         </div>
-                        {selectedContact.sms.sent ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-gray-400" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {selectedContact.sms.sent ? 'SENT' : 'NOT SENT'}
+                          </span>
+                          {selectedContact.sms.sent ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-muted/30" />
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {/* WhatsApp */}
-                    <div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-emerald-600" />
+                    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-emerald-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-900/20">
+                            <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              WhatsApp
+                            <span className="text-xs font-semibold text-foreground">
+                              WhatsApp Channel
                             </span>
                             {selectedContact.whatsapp.sent && selectedContact.whatsapp.sentAt && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
                                 Sent:{' '}
                                 {dayjs(selectedContact.whatsapp.sentAt).format(
                                   'MMM DD, YYYY hh:mm A',
@@ -199,119 +191,65 @@ export function CampaignContactDetailsSheet({
                             )}
                           </div>
                         </div>
-                        {selectedContact.whatsapp.sent ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-gray-400" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {selectedContact.whatsapp.sent ? 'SENT' : 'NOT SENT'}
+                          </span>
+                          {selectedContact.whatsapp.sent ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-muted/30" />
+                          )}
+                        </div>
                       </div>
                       {(selectedContact?.whatsapp?.deliveredAt ||
                         selectedContact?.whatsapp?.bouncedAt) && (
-                        <div className="flex flex-col gap-1 pl-6 ml-1 border-l-2 border-muted-foreground/20">
+                        <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-emerald-100 dark:border-emerald-900/40 ml-4 pb-1">
                           {selectedContact.whatsapp.deliveredAt && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              <p className="text-[11px] text-muted-foreground">
-                                Delivered:{' '}
-                                <span className="font-medium text-foreground">
-                                  {dayjs(selectedContact.whatsapp.deliveredAt).format(
-                                    'MMM DD, YYYY hh:mm A',
-                                  )}
-                                </span>
-                              </p>
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400  tracking-tight">
+                                Delivered
+                              </span>
+                              <span className="text-[10px] font-semibold text-foreground truncate">
+                                {dayjs(selectedContact.whatsapp.deliveredAt).format(
+                                  'hh:mm A, MMM DD',
+                                )}
+                              </span>
                             </div>
                           )}
                           {selectedContact.whatsapp.bouncedAt && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                              <p className="text-[11px] text-muted-foreground">
-                                Bounced:{' '}
-                                <span className="font-medium text-foreground">
-                                  {dayjs(selectedContact.whatsapp.bouncedAt).format(
-                                    'MMM DD, YYYY hh:mm A',
-                                  )}
-                                </span>
-                              </p>
+                            <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                              <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                                Bounced
+                              </span>
+                              <span className="text-[10px] font-bold text-foreground truncate">
+                                {dayjs(selectedContact.whatsapp.bouncedAt).format(
+                                  'hh:mm A, MMM DD',
+                                )}
+                              </span>
                             </div>
                           )}
                         </div>
                       )}
                     </div>
                   </div>
-
-                  <div className="space-y-2 pt-4">
-                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        Response Status
-                      </span>
-                      <Badge
-                        className={getResponseStatusColor(selectedContact.responseStatus)}
-                        variant="secondary"
-                      >
-                        {formatResponseStatus(selectedContact.responseStatus)}
-                      </Badge>
-                    </div>
-                  </div>
                 </div>
 
-                {selectedContact.lead && (
-                  <>
-                    <Separator className="my-6" />
-                    <div>
-                      <h4 className="mb-3 text-sm font-semibold">Lead Information</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
-                          <span className="text-xs font-medium text-muted-foreground">
-                            Lead Status
-                          </span>
-                          <Badge
-                            className={getStatusColor(selectedContact.lead.status)}
-                            variant="secondary"
-                          >
-                            {selectedContact.lead.status}
-                          </Badge>
-                        </div>
-                        {selectedContact.lead.interestedAt && (
-                          <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              Interested At
-                            </span>
-                            <span className="text-xs font-medium text-right">
-                              {dayjs(selectedContact.lead.interestedAt).format(
-                                'MMM DD, YYYY hh:mm A',
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {selectedContact.lead.consentGivenAt && (
-                          <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              Consent Given At
-                            </span>
-                            <span className="text-xs font-medium text-right">
-                              {dayjs(selectedContact.lead.consentGivenAt).format(
-                                'MMM DD, YYYY hh:mm A',
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                      <CheckCircle2 className="h-4 w-4" />
                     </div>
-                  </>
-                )}
-
-                <Separator className="my-6" />
-
-                <div>
-                  <h4 className="mb-3 text-sm font-semibold">Timestamps</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between rounded-md bg-muted/50 px-3 py-2">
-                      <span className="text-xs font-medium text-muted-foreground">Updated At</span>
-                      <span className="text-xs font-medium text-right">
-                        {dayjs(selectedContact.updatedAt).format('MMM DD, YYYY hh:mm A')}
-                      </span>
-                    </div>
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                      Campaign Response
+                    </span>
                   </div>
+                  <Badge
+                    className={getResponseStatusColor(selectedContact.responseStatus)}
+                    variant="secondary"
+                  >
+                    {formatResponseStatus(selectedContact.responseStatus)}
+                  </Badge>
                 </div>
               </div>
             </TabsContent>
