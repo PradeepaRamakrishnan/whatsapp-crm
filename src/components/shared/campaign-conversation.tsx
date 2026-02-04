@@ -323,8 +323,8 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
               <div className="p-4 lg:p-6 max-w-4xl mx-auto w-full">
                 {isLoading ? (
                   <div className="flex flex-col gap-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <MessageSkeleton key={`${tab}-skeleton`} />
+                    {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((skeletonId) => (
+                      <MessageSkeleton key={`${tab}-${skeletonId}`} />
                     ))}
                   </div>
                 ) : error ? (

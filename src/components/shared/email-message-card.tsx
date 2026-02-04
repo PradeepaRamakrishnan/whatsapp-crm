@@ -65,7 +65,12 @@ export function EmailMessageCard({ message }: EmailMessageCardProps) {
       {message.error && (
         <div className="flex items-start gap-1.5 bg-destructive/10 border border-destructive/20 p-2 rounded mb-2">
           <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive mt-0.5" />
-          <p className="text-xs text-destructive">{message.error}</p>
+          <p className="text-xs text-destructive">
+            {typeof message.error === 'string'
+              ? message.error
+              : // biome-ignore lint/suspicious/noExplicitAny: API returns error object with message property
+                (message.error as any)?.message || 'Unknown error'}
+          </p>
         </div>
       )}
 
