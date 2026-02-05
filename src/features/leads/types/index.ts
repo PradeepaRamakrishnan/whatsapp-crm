@@ -118,6 +118,8 @@ export interface Lead {
   };
   interestedAt: string;
   from?: string;
+  dob?: string;
+  panNumber?: string;
   consentGivenAt: string | null;
   createdAt: string;
   updatedAt: string;

@@ -24,16 +24,13 @@ export function OverviewCharts() {
     queryFn: () => getLeadsChartData(),
   });
 
-  // Transform YYYY-MM-DD to just Day number
   const leadChartData = React.useMemo(() => {
     return leadChartDataResponse.map((item) => ({
       ...item,
-      // Parse DD from YYYY-MM-DD
       date: item.date.includes('-') ? parseInt(item.date.split('-')[2], 10).toString() : item.date,
     }));
   }, [leadChartDataResponse]);
 
-  // Current Month Label
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
   const year = new Date().getFullYear();
 
@@ -48,7 +45,6 @@ export function OverviewCharts() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 min-w-0">
-      {/* Campaign Performance Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Campaign Performance</CardTitle>
@@ -83,7 +79,6 @@ export function OverviewCharts() {
         </CardContent>
       </Card>
 
-      {/* Leads Details Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Leads Details</CardTitle>

@@ -357,12 +357,26 @@ export async function markContactNotInterested(
   }
 }
 
-export async function markContactConsent(campaignId: string, contactId: string): Promise<unknown> {
+export async function markContactConsent(
+  campaignId: string,
+  contactId: string,
+  dob?: string,
+  panNumber?: string,
+): Promise<unknown> {
   try {
     const cookieStore = await cookies();
+    const queryParams = new URLSearchParams({
+      campaignId,
+      contactId,
+    });
+
     const response = await axiosClient({
       method: 'POST',
-      url: `/consent?campaignId=${campaignId}&contactId=${contactId}`,
+      url: `/consent?${queryParams.toString()}`,
+      data: {
+        dob,
+        panNumber,
+      },
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -371,7 +385,7 @@ export async function markContactConsent(campaignId: string, contactId: string):
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to mark contact as not interested');
+      throw new Error(error.response?.data?.message || 'Failed to mark contact consent');
     }
     throw error;
   }

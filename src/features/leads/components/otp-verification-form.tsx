@@ -18,6 +18,8 @@ export const OtpVerificationForm = () => {
   const mobile = searchParams.get('mobile') || '';
   const campaignId = searchParams.get('campaignId');
   const contactId = searchParams.get('contactId');
+  const dob = searchParams.get('date_of_birth');
+  const panNumber = searchParams.get('pan_number');
   const [isVerified, setIsVerified] = useState(false);
 
   // Form for OTP
@@ -29,7 +31,12 @@ export const OtpVerificationForm = () => {
       // Logic for successful verification
       try {
         if (campaignId && contactId) {
-          await markContactConsent(campaignId as string, contactId as string);
+          await markContactConsent(
+            campaignId as string,
+            contactId as string,
+            dob || undefined,
+            panNumber || undefined,
+          );
         }
       } catch (error) {
         console.error('Error marking contact consent:', error);
