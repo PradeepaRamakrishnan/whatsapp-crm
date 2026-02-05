@@ -138,7 +138,7 @@ export async function deleteFile(id: string): Promise<void> {
     const response = await axiosClient({
       method: 'PATCH',
       url: `/${id}`,
-      data: { isActive: false },
+      data: { active: false },
       headers: {
         Cookie: cookieStore.toString(),
       },

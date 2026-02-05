@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import type {
   CampaignContactsResponse,
   CampaignDetailsResponse,
+  CampaignPerformanceStat,
   CampaignsResponse,
   CampaignTimelineResponse,
   Configuration,
@@ -545,3 +546,25 @@ export async function sendReplyWhatsApp(
 //     throw error;
 //   }
 // }
+
+export async function getCampaignPerformanceStats(): Promise<CampaignPerformanceStat[]> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: '/campaign-performance',
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch campaign performance stats',
+      );
+    }
+    throw error;
+  }
+}

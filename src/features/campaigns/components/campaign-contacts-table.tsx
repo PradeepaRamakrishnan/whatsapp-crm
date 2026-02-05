@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getCampaignContacts } from '../services';
-import type { CampaignContactData, CampaignContactsResponse } from '../types';
+import type { CampaignContactData, CampaignContactsResponse, ChannelStatus } from '../types';
 
 dayjs.extend(utc);
 
@@ -107,11 +107,7 @@ export const columns: ColumnDef<CampaignContactData>[] = [
     cell: ({ row }) => {
       const { email, sms, whatsapp } = row.original;
 
-      const renderStatusTooltip = (
-        icon: React.ReactNode,
-        status: { sent: boolean; sentAt?: string; deliveredAt?: string; bouncedAt?: string },
-        label: string,
-      ) => (
+      const renderStatusTooltip = (icon: React.ReactNode, status: ChannelStatus, label: string) => (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -126,9 +122,10 @@ export const columns: ColumnDef<CampaignContactData>[] = [
                     Delivered: {dayjs(status?.deliveredAt).format('MMM DD, hh:mm A')}
                   </p>
                 )}
-                {status?.bouncedAt && (
-                  <p className="text-rose-500">
-                    Bounced: {dayjs(status?.bouncedAt).format('MMM DD, hh:mm A')}
+                {(status?.bouncedAt || status?.bounced) && (
+                  <p className="text-rose-500 font-medium">
+                    {status?.bounced ? 'Sent Error' : 'Bounced'}:{' '}
+                    {dayjs(status?.bouncedAt || status?.error?.timestamp).format('MMM DD, hh:mm A')}
                   </p>
                 )}
                 {!status.sent && !status.sentAt && (
