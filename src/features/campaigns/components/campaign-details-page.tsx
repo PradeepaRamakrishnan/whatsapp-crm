@@ -9,8 +9,6 @@ import {
   CheckCircle2,
   Download,
   FileText,
-  // Mail,
-  // MessageSquare,
   Pause,
   Play,
   Send,
@@ -298,127 +296,113 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           <TabsTrigger value="timeline">Timeline History</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="mt-6 space-y-6">
-          {/* Campaign Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Summary</CardTitle>
-              <CardDescription>Basic campaign information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Campaign Name</dt>
-                    <dd className="text-sm font-medium">{campaign.name}</dd>
+        {/* Overview Tab - Normal Card Design with Grid */}
+        <TabsContent value="overview" className="mt-6 space-y-6 animate-in fade-in duration-500">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Card 1: Campaign Information */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <Target className="h-5 w-5 text-primary" />
+                  Campaign Information
+                </CardTitle>
+                <CardDescription>Core identity and strategic status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <dl className="grid gap-6 sm:grid-cols-2">
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Campaign Name
+                      </dt>
+                      <dd className="text-sm font-semibold">{campaign.name}</dd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Description</dt>
-                    <dd className="text-sm font-medium">{campaign.description}</dd>
+                  <div className="flex items-start gap-3">
+                    <Activity className="h-5 w-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Status
+                      </dt>
+                      <dd className="text-sm font-semibold capitalize">{campaign.status}</dd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Status</dt>
-                    <dd className="text-sm font-medium capitalize">{campaign.status}</dd>
+                  <div className="col-span-full flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-slate-500 mt-0.5" />
+                    <div>
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Description
+                      </dt>
+                      <dd className="text-sm font-medium leading-relaxed">
+                        {campaign.description || '-'}
+                      </dd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">File Name</dt>
-                    <dd className="text-sm font-medium">{campaign.file.name}</dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <TrendingUp className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Bank Name</dt>
-                    <dd className="text-sm font-medium uppercase">{campaign.file.bankName}</dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">File Status</dt>
-                    <dd className="text-sm font-medium capitalize">{campaign.file.status}</dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Total Records</dt>
-                    <dd className="text-sm font-medium">
-                      {campaign.fileContentStats.totalRecords.toLocaleString()}
-                    </dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Valid Records</dt>
-                    <dd className="text-sm font-medium text-emerald-600">
-                      {campaign.fileContentStats.validRecords.toLocaleString()}
-                    </dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div className="flex-1">
-                    <dt className="text-xs font-medium text-muted-foreground">Invalid Records</dt>
-                    <dd className="text-sm font-medium text-red-600">
-                      {campaign.fileContentStats.invalidRecords.toLocaleString()}
-                    </dd>
-                  </div>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
+                </dl>
+              </CardContent>
+            </Card>
 
-          {/* Message Delivery Stats */}
-          {/* <Card>
-            <CardHeader>
-              <CardTitle>Message Delivery Statistics</CardTitle>
-              <CardDescription>Breakdown by communication channel</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
-                    <Mail className="h-5 w-5 text-blue-600" />
+            {/* Card 2: File Information */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <Activity className="h-5 w-5 text-emerald-600" />
+                  File Information
+                </CardTitle>
+                <CardDescription>Source details and record health</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-indigo-600 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        File Name
+                      </dt>
+                      <dd className="text-sm font-semibold truncate">{campaign.file.name}</dd>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Email</p>
-                    <p className="text-2xl font-bold">{campaign.messageSent.email}</p>
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="h-5 w-5 text-emerald-600 mt-0.5" />
+                    <div>
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Bank Name
+                      </dt>
+                      <dd className="text-sm font-semibold uppercase">{campaign.file.bankName}</dd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="rounded-lg bg-green-100 p-2 dark:bg-green-950/30">
-                    <MessageSquare className="h-5 w-5 text-green-600" />
+
+                  <div className="col-span-full grid grid-cols-3 gap-4 pt-4 border-t mt-2">
+                    <div className="text-center p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                        Total
+                      </p>
+                      <p className="text-xl font-black">
+                        {campaign.fileContentStats.totalRecords.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-900/20">
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">
+                        Valid
+                      </p>
+                      <p className="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                        {campaign.fileContentStats.validRecords.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-900/20">
+                      <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">
+                        Invalid
+                      </p>
+                      <p className="text-xl font-black text-rose-700 dark:text-rose-400">
+                        {campaign.fileContentStats.invalidRecords.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">SMS</p>
-                    <p className="text-2xl font-bold">{campaign.messageSent.sms}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-950/30">
-                    <MessageSquare className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">WhatsApp</p>
-                    <p className="text-2xl font-bold">{campaign.messageSent.whatsapp}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card> */}
+                </dl>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Contacts Tab */}

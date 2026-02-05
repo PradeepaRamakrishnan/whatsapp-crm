@@ -70,6 +70,7 @@ export interface FileRecord {
   isExcluded: boolean;
   validationErrors: string[] | null;
   campaigns: CampaignReference[];
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }

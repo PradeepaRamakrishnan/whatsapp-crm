@@ -2,15 +2,29 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import { OverviewCharts } from '@/features/dashboard/components/overview-charts';
 import { OverviewStats } from '@/features/dashboard/components/overview-stats';
 import { RecentActivity } from '@/features/dashboard/components/recent-activity';
-import { getOverviewCounts } from '@/features/dashboard/services';
+import {
+  getLeadsChartData,
+  getOverviewCounts,
+  getRecentActivity,
+} from '@/features/dashboard/services';
 
 const OverviewPage = async () => {
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ['overview-counts'],
-    queryFn: () => getOverviewCounts(),
-  });
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: ['overview-counts'],
+      queryFn: () => getOverviewCounts(),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['leads-chart'],
+      queryFn: () => getLeadsChartData(),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['recent-activity', { limit: 5 }],
+      queryFn: () => getRecentActivity(5),
+    }),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
