@@ -142,7 +142,7 @@ export function CampaignContactDetailsSheet({
                           {(selectedContact.email.bounced || selectedContact.email.bouncedAt) && (
                             <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
                               <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
-                                Bounced
+                                Undeliverable
                               </span>
                               <span className="text-[10px] font-bold text-foreground truncate">
                                 {dayjs(
@@ -216,7 +216,7 @@ export function CampaignContactDetailsSheet({
                           {(selectedContact.sms.bounced || selectedContact.sms.bouncedAt) && (
                             <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
                               <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
-                                Bounced
+                                Undeliverable
                               </span>
                               <span className="text-[10px] font-bold text-foreground truncate">
                                 {dayjs(
@@ -296,7 +296,7 @@ export function CampaignContactDetailsSheet({
                             selectedContact.whatsapp.bouncedAt) && (
                             <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
                               <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 tracking-tight">
-                                Bounced
+                                Undeliverable
                               </span>
                               <span className="text-[10px] font-bold text-foreground truncate">
                                 {dayjs(

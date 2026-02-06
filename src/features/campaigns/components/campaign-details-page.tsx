@@ -319,7 +319,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       <dd className="text-sm font-semibold">{campaign.name}</dd>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
+                  {/* <div >
                     <Activity className="h-5 w-5 text-amber-600 mt-0.5" />
                     <div>
                       <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -327,8 +327,8 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       </dt>
                       <dd className="text-sm font-semibold capitalize">{campaign.status}</dd>
                     </div>
-                  </div>
-                  <div className="col-span-full flex items-start gap-3">
+                  </div> */}
+                  <div className="flex items-start gap-3">
                     <FileText className="h-5 w-5 text-slate-500 mt-0.5" />
                     <div>
                       <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">

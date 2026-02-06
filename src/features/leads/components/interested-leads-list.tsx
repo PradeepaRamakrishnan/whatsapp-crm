@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users } from 'lucide-react';
+import { CheckCircle, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllLeads } from '../services';
 import type { LeadsResponse } from '../types';
@@ -23,6 +23,14 @@ export function InterestedLeadsList() {
       bgColor: 'bg-orange-100 dark:bg-orange-950/30',
     },
     {
+      title: 'Total Consent Provided',
+      value: leadsResponse?.stats?.totalConsent?.toString() || '0',
+      icon: CheckCircle,
+      description: 'Total consent provided',
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100 dark:bg-emerald-950/30',
+    },
+    {
       title: 'New Today',
       value: leadsResponse?.stats?.newToday?.toString() || '0',
       icon: TrendingUp,
@@ -30,6 +38,7 @@ export function InterestedLeadsList() {
       color: 'text-blue-600',
       bgColor: 'bg-blue-100 dark:bg-blue-950/30',
     },
+
     // {
     //   title: 'Avg. Response Time',
     //   value: leadsResponse?.stats?.avgResponseTime || '0h',

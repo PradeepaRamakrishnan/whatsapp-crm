@@ -14,6 +14,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import dayjs from 'dayjs';
 import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -183,22 +184,6 @@ export function InterestedLeadsTable() {
 
   const columns = useMemo(
     () => [
-      // columnHelper.accessor('customerName', {
-      //   header: 'Lead Name',
-      //   cell: ({ getValue, row }) => (
-      //     <button
-      //       onClick={() =>
-      //         router.push(
-      //           `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
-      //         )
-      //       }
-      //       className="font-medium hover:text-primary hover:underline cursor-pointer"
-      //     >
-      //       {String(getValue() || '')}
-      //     </button>
-      //   ),
-      //   size: 180,
-      // }),
       columnHelper.accessor('campaign.name', {
         id: 'campaign',
         header: 'Campaign Name',
@@ -207,7 +192,7 @@ export function InterestedLeadsTable() {
             {row.original.campaign?.name ? (
               <Link
                 href={`/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`}
-                className="font-medium hover:text-primary hover:underline cursor-pointer transition-colors"
+                className="font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors"
               >
                 {row.original.campaign.name}
               </Link>
@@ -218,51 +203,15 @@ export function InterestedLeadsTable() {
         ),
         size: 200,
       }),
-      columnHelper.accessor('campaign.status', {
-        id: 'campaignStatus',
-        header: 'Status',
-        cell: ({ row }) => {
-          const status = row.original.campaign?.status;
-          if (!status) return <div className="text-sm text-muted-foreground">-</div>;
-
-          const statusColors: Record<string, string> = {
-            active:
-              'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300',
-            running: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
-            paused:
-              'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
-            failed: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300',
-            completed:
-              'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300',
-          };
-
-          return (
-            <div
-              className={`capitalize px-2 py-1 rounded-full text-xs inline-block border ${statusColors[status] || statusColors.completed}`}
-            >
-              {status}
-            </div>
-          );
-        },
-        size: 120,
-      }),
-      columnHelper.accessor('campaign.interested', {
-        id: 'interested',
-        header: 'Interested',
+      columnHelper.accessor('campaign.description', {
+        id: 'description',
+        header: 'Description',
         cell: ({ row }) => (
-          <div className="font-medium text-center">{row.original.campaign?.interested || 0}</div>
-        ),
-        size: 100,
-      }),
-      columnHelper.accessor('campaign.messageSent.total', {
-        id: 'totalMessages',
-        header: 'Messages Sent',
-        cell: ({ row }) => (
-          <div className="font-medium text-center">
-            {row.original.campaign?.messageSent?.total || 0}
+          <div className="text-sm text-muted-foreground">
+            {row.original.campaign?.description || row.original.campaign?.bankName || '-'}
           </div>
         ),
-        size: 130,
+        size: 200,
       }),
       columnHelper.accessor('campaign.lastRunAt', {
         id: 'lastRunAt',
@@ -270,29 +219,24 @@ export function InterestedLeadsTable() {
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">
             {row.original.campaign?.lastRunAt
-              ? new Date(row.original.campaign.lastRunAt).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
+              ? dayjs(row.original.campaign.lastRunAt).format('MMM DD, YYYY hh:mm a')
               : '-'}
           </div>
         ),
-        size: 120,
+        size: 180,
       }),
-      // columnHelper.accessor('interestedAt', {
-      //   header: 'Interested At',
-      //   cell: ({ getValue }) => (
-      //     <div className="text-sm text-muted-foreground">
-      //       {new Date(getValue()).toLocaleDateString('en-IN', {
-      //         day: '2-digit',
-      //         month: 'short',
-      //         year: 'numeric',
-      //       })}
-      //     </div>
-      //   ),
-      //   size: 120,
-      // }),
+      columnHelper.accessor('campaign.createdAt', {
+        id: 'createdAt',
+        header: 'Created',
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">
+            {row.original.campaign?.createdAt
+              ? dayjs(row.original.campaign.createdAt).format('MMM DD, YYYY')
+              : '-'}
+          </div>
+        ),
+        size: 150,
+      }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',

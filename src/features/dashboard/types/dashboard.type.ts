@@ -1,6 +1,7 @@
 export interface RecentActivityItem {
   id: string;
   name: string;
+  description: string;
   status: string;
   sent: number;
   leads: number;

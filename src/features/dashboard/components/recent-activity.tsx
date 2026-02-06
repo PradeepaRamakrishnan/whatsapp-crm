@@ -1,8 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -20,20 +19,20 @@ export function RecentActivity() {
     queryFn: () => getRecentActivity(5),
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
-      case 'running':
-        return 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
-      case 'paused':
-        return 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300';
-      case 'completed':
-        return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
-      default:
-        return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'active':
+  //       return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
+  //     case 'running':
+  //       return 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
+  //     case 'paused':
+  //       return 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300';
+  //     case 'completed':
+  //       return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
+  //     default:
+  //       return 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300';
+  //   }
+  // };
 
   return (
     <div>
@@ -54,10 +53,10 @@ export function RecentActivity() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Campaign</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead className="text-right">Sent</TableHead>
                   <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
+                  <TableHead className="text-right">Response Rate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -65,11 +64,12 @@ export function RecentActivity() {
                   campaigns.map((campaign) => (
                     <TableRow key={campaign.id}>
                       <TableCell className="font-medium">{campaign.name}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Badge variant="secondary" className={getStatusColor(campaign.status)}>
                           {campaign.status}
                         </Badge>
-                      </TableCell>
+                      </TableCell> */}
+                      <TableCell>{campaign.description}</TableCell>
                       <TableCell className="text-right">{campaign.sent.toLocaleString()}</TableCell>
                       <TableCell className="text-right">
                         {campaign.leads.toLocaleString()}
