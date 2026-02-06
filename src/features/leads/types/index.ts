@@ -74,6 +74,7 @@ export interface Lead {
   campaign?: {
     id: string;
     name: string;
+    description?: string;
     status: string;
     fileName?: string;
     bankName?: string;
@@ -92,7 +93,7 @@ export interface Lead {
       sent: boolean;
       sentAt?: string;
       deliveredAt?: string;
-      bouncedAt?: string;
+      bounced?: string;
     };
     sms?: {
       sent: boolean;
@@ -147,7 +148,6 @@ export interface LeadsResponse {
   stats: {
     totalInterested: number;
     newToday: number;
-    avgResponseTime: string;
-    followUpsDue: number;
+    totalConsent: number;
   };
 }

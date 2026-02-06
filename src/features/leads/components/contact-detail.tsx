@@ -1,26 +1,68 @@
 'use client';
 
-import { CheckCircle2, CreditCard, Mail, MessageSquare, Phone, XCircle } from 'lucide-react';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import {
+  Calendar,
+  CheckCircle2,
+  CreditCard,
+  Mail,
+  MessageSquare,
+  Phone,
+  User,
+  XCircle,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { Lead } from '../types';
+
+dayjs.extend(utc);
+
+const getStatusColor = (status: string | undefined) => {
+  if (!status)
+    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+
+  const s = status.toLowerCase();
+  if (s === 'interested' || s === 'consent_provided') {
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
+  }
+  if (s === 'not_interested') {
+    return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
+  }
+  return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
+};
+
+const formatStatus = (status: string | undefined) => {
+  if (!status) return 'No Response';
+  return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+};
 
 interface ContactDetailsPageProps {
   contact: Lead;
 }
 
 export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
+  const email = contact.contact?.email;
+  const sms = contact.contact?.sms;
+  const whatsapp = contact.contact?.whatsapp;
+
+  // Type guards/helpers for generic Lead type which might miss specific detailed fields
+  const getBouncedAt = (channel: any) =>
+    channel?.bouncedAt || (typeof channel?.bounced === 'string' ? channel.bounced : undefined);
+  const isBounced = (channel: any) => !!(channel?.bounced || channel?.bouncedAt);
+
   const getChannelIcon = (channel: string) => {
     switch (channel.toLowerCase()) {
       case 'email':
-        return <Mail className="h-5 w-5" />;
+        return <Mail className="h-4 w-4" />;
       case 'sms':
-        return <MessageSquare className="h-5 w-5" />;
+        return <MessageSquare className="h-4 w-4" />;
       case 'whatsapp':
-        return <MessageSquare className="h-5 w-5" />;
+        return <MessageSquare className="h-4 w-4" />;
       case 'phone':
-        return <Phone className="h-5 w-5" />;
+        return <Phone className="h-4 w-4" />;
       default:
-        return <Mail className="h-5 w-5" />;
+        return <Mail className="h-4 w-4" />;
     }
   };
 
@@ -41,210 +83,283 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-6 pt-4 min-w-0">
-      {/* Header with Contact Name and Source Channel */}
-
-      {/* Contact Info Card: Source Channel, DOB, PAN */}
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-foreground">Contact Details</span>
-            {contact.from && (
-              <Badge
-                variant="outline"
-                className={`text-xs font-medium px-3 py-1 capitalize flex items-center gap-2 ${getChannelColor(
-                  contact.from,
-                )}`}
+      {/* Customer Information Section */}
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="border-b bg-muted/40 px-4 py-3">
+          <h3 className="text-sm font-semibold tracking-wide text-foreground flex items-center gap-2">
+            <User className="h-4 w-4 text-primary" />
+            Contact Information
+          </h3>
+        </div>
+        <div className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Source Channel */}
+          {contact.from && (
+            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
+              <div
+                className={cn(
+                  'p-2 rounded-md bg-muted/50',
+                  getChannelColor(contact.from).split(' ')[0],
+                )}
               >
                 {getChannelIcon(contact.from)}
-                {contact.from}
-              </Badge>
-            )}
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground  tracking-wider">
+                  Lead Source
+                </p>
+                <p className="text-sm font-semibold capitalize">{contact.from}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Date of Birth */}
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
+            <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+              <Calendar className="h-4 w-4" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground  tracking-wider">
+                Date of Birth
+              </p>
+              <p className="text-sm font-semibold">
+                {contact.dob ? (
+                  dayjs(contact.dob).format('DD MMM, YYYY')
+                ) : (
+                  <span className="text-muted-foreground/60 italic">Not set</span>
+                )}
+              </p>
+            </div>
           </div>
 
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-muted-foreground">Date of Birth</span>
-              <span className="text-sm font-medium mt-1">
-                {contact.dob
-                  ? new Date(contact.dob).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : '-'}
-              </span>
+          {/* PAN Number */}
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
+            <div className="p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+              <CreditCard className="h-4 w-4" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-muted-foreground">PAN Number</span>
-              <span className="text-sm font-medium mt-1">{contact.panNumber || '-'}</span>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground  tracking-wider">
+                PAN Number
+              </p>
+              <p className="text-sm font-semibold font-mono tracking-wide">
+                {contact.panNumber || (
+                  <span className="text-muted-foreground/60 italic font-sans normal-case">
+                    Not set
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Campaign Engagement Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Campaign Engagement</h3>
-
-        {/* Email Channel */}
-        {contact.contact?.email && (
-          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-blue-50 p-2.5 dark:bg-blue-900/20">
-                  <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      <div className="flex flex-col gap-8">
+        <div>
+          <h4 className="text-sm font-semibold tracking-wider mb-4">Campaign Engagement</h4>
+          <div className="grid gap-3">
+            {/* Email */}
+            {email && (
+              <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-blue-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-foreground">Email Channel</span>
+                      {email.sent && email.sentAt && (
+                        <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          Sent: {dayjs(email.sentAt).format('MMM DD, YYYY hh:mm A')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold',
+                        isBounced(email) ? 'text-rose-600' : 'text-muted-foreground',
+                      )}
+                    >
+                      {isBounced(email) ? 'SENT ERROR' : email.sent ? 'SENT' : 'NOT SENT'}
+                    </span>
+                    {isBounced(email) ? (
+                      <XCircle className="h-5 w-5 text-rose-500" />
+                    ) : email.sent ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted/30" />
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">Email Channel</span>
-                  {contact.contact.email.sentAt && (
-                    <span className="text-xs font-medium text-muted-foreground mt-0.5">
-                      Sent: {new Date(contact.contact.email.sentAt).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase">
-                  {contact.contact.email.bouncedAt
-                    ? 'Bounced'
-                    : contact.contact.email.deliveredAt
-                      ? 'Sent'
-                      : contact.contact.email.sent
-                        ? 'Sent'
-                        : 'Not Sent'}
-                </span>
-                {contact.contact.email.bouncedAt ? (
-                  <XCircle className="h-5 w-5 text-rose-500" />
-                ) : contact.contact.email.sent ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-muted/30" />
-                )}
-              </div>
-            </div>
-
-            {(contact.contact.email.deliveredAt || contact.contact.email.bouncedAt) && (
-              <div className="grid grid-cols-1 gap-2 pl-4 border-l-2 border-blue-200 dark:border-blue-900/40 ml-2">
-                {contact.contact.email.deliveredAt && (
-                  <div className="flex flex-col gap-1 px-3 py-2 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
-                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                      Delivered
-                    </span>
-                    <span className="text-xs font-semibold text-foreground">
-                      {new Date(contact.contact.email.deliveredAt).toLocaleString('en-IN')}
-                    </span>
+                {(email.deliveredAt || isBounced(email)) && (
+                  <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-blue-100 dark:border-blue-900/40 ml-4 pb-1">
+                    {email.deliveredAt && (
+                      <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                        <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                          Delivered
+                        </span>
+                        <span className="text-[10px] font-semibold text-foreground truncate">
+                          {dayjs(email.deliveredAt).format('hh:mm A, MMM DD')}
+                        </span>
+                      </div>
+                    )}
+                    {isBounced(email) && (
+                      <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                        <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                          Undeliverable
+                        </span>
+                        <span className="text-[10px] font-bold text-foreground truncate">
+                          {dayjs(getBouncedAt(email)).format('hh:mm A, MMM DD')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
-                {contact.contact.email.bouncedAt && (
-                  <div className="flex flex-col gap-1 px-3 py-2 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
-                    <span className="text-xs font-medium text-rose-600 dark:text-rose-400 uppercase">
-                      Bounced
+              </div>
+            )}
+
+            {/* SMS */}
+            {sms && (
+              <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-green-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
+                      <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-foreground">SMS Channel</span>
+                      {sms.sent && sms.sentAt && (
+                        <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          Sent: {dayjs(sms.sentAt).format('MMM DD, YYYY hh:mm A')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold',
+                        isBounced(sms) ? 'text-rose-600' : 'text-muted-foreground',
+                      )}
+                    >
+                      {isBounced(sms) ? 'SENT ERROR' : sms.sent ? 'SENT' : 'NOT SENT'}
                     </span>
-                    <span className="text-xs font-semibold text-foreground">
-                      {new Date(contact.contact.email.bouncedAt).toLocaleString('en-IN')}
+                    {isBounced(sms) ? (
+                      <XCircle className="h-5 w-5 text-rose-500" />
+                    ) : sms.sent ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted/30" />
+                    )}
+                  </div>
+                </div>
+                {
+                  /* sms.deliveredAt || */ isBounced(sms) && (
+                    <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-green-100 dark:border-green-900/40 ml-4 pb-1">
+                      {/* SMS usually doesn't have deliveredAt in Lead type but checking anyway if available */}
+                      {(sms as any).deliveredAt && (
+                        <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                            Delivered
+                          </span>
+                          <span className="text-[10px] font-semibold text-foreground truncate">
+                            {dayjs((sms as any).deliveredAt).format('hh:mm A, MMM DD')}
+                          </span>
+                        </div>
+                      )}
+                      {isBounced(sms) && (
+                        <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                          <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                            Undeliverable
+                          </span>
+                          <span className="text-[10px] font-bold text-foreground truncate">
+                            {dayjs(getBouncedAt(sms)).format('hh:mm A, MMM DD')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+              </div>
+            )}
+
+            {/* WhatsApp */}
+            {whatsapp && (
+              <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-emerald-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-900/20">
+                      <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-foreground">
+                        WhatsApp Channel
+                      </span>
+                      {whatsapp.sent && whatsapp.sentAt && (
+                        <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          Sent: {dayjs(whatsapp.sentAt).format('MMM DD, YYYY hh:mm A')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold',
+                        isBounced(whatsapp) ? 'text-rose-600' : 'text-muted-foreground',
+                      )}
+                    >
+                      {isBounced(whatsapp) ? 'SENT ERROR' : whatsapp.sent ? 'SENT' : 'NOT SENT'}
                     </span>
+                    {isBounced(whatsapp) ? (
+                      <XCircle className="h-5 w-5 text-rose-500" />
+                    ) : whatsapp.sent ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted/30" />
+                    )}
+                  </div>
+                </div>
+                {(whatsapp.deliveredAt || isBounced(whatsapp)) && (
+                  <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-emerald-100 dark:border-emerald-900/40 ml-4 pb-1">
+                    {whatsapp.deliveredAt && (
+                      <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                        <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                          Delivered
+                        </span>
+                        <span className="text-[10px] font-semibold text-foreground truncate">
+                          {dayjs(whatsapp.deliveredAt).format('hh:mm A, MMM DD')}
+                        </span>
+                      </div>
+                    )}
+                    {isBounced(whatsapp) && (
+                      <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/20">
+                        <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 tracking-tight">
+                          Undeliverable
+                        </span>
+                        <span className="text-[10px] font-bold text-foreground truncate">
+                          {dayjs(getBouncedAt(whatsapp)).format('hh:mm A, MMM DD')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* SMS Channel */}
-        {contact.contact?.sms && (
-          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-sky-50 p-2.5 dark:bg-sky-900/20">
-                  <MessageSquare className="h-5 w-5 text-sky-600 dark:text-sky-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">SMS Channel</span>
-                  {contact.contact.sms.sentAt && (
-                    <span className="text-xs font-medium text-muted-foreground mt-0.5">
-                      Sent: {new Date(contact.contact.sms.sentAt).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase">
-                  {contact.contact.sms.sent ? 'Sent' : 'Not Sent'}
-                </span>
-                {contact.contact.sms.sent ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-muted/30" />
-                )}
-              </div>
+        <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-primary/10 p-2 text-primary">
+              <CheckCircle2 className="h-4 w-4" />
             </div>
+            <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              Campaign Response
+            </span>
           </div>
-        )}
-
-        {/* WhatsApp Channel */}
-        {contact.contact?.whatsapp && (
-          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-50 p-2.5 dark:bg-emerald-900/20">
-                  <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">WhatsApp Channel</span>
-                  {contact.contact.whatsapp.sentAt && (
-                    <span className="text-xs font-medium text-muted-foreground mt-0.5">
-                      Sent: {new Date(contact.contact.whatsapp.sentAt).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase">
-                  {contact.contact.whatsapp.sent ? 'Sent' : 'Not Sent'}
-                </span>
-                {contact.contact.whatsapp.sent ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-muted/30" />
-                )}
-              </div>
-            </div>
-
-            {contact.contact.whatsapp.deliveredAt && (
-              <div className="grid grid-cols-1 gap-2 pl-4 border-l-2 border-emerald-200 dark:border-emerald-900/40 ml-2">
-                <div className="flex flex-col gap-1 px-3 py-2 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    Delivered
-                  </span>
-                  <span className="text-xs font-semibold text-foreground">
-                    {new Date(contact.contact.whatsapp.deliveredAt).toLocaleString('en-IN')}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Campaign Response Section */}
-      <div className="mt-6">
-        <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-orange-50 p-2.5 dark:bg-orange-900/20">
-                <CreditCard className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">CAMPAIGN RESPONSE</span>
-            </div>
-            {contact.status && (
-              <Badge
-                variant="outline"
-                className={`capitalize text-xs font-semibold px-3 py-1.5 ${getChannelColor(contact.status)}`}
-              >
-                {contact.status}
-              </Badge>
-            )}
-          </div>
+          <Badge className={getStatusColor(contact.contact?.status)} variant="secondary">
+            {formatStatus(contact.contact?.status)}
+          </Badge>
         </div>
       </div>
     </div>

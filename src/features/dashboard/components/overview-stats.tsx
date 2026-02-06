@@ -50,7 +50,7 @@ export function OverviewStats() {
       description: 'Leads generated from campaigns',
     },
     {
-      title: 'Conversion Rate',
+      title: 'Response Rate',
       value: counts?.conversionRate ?? '...',
       change: '+5.4%',
       trend: 'up',

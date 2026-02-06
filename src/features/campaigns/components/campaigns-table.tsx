@@ -32,7 +32,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -58,34 +57,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { deleteCampaign, getAllCampaigns } from '../services';
-import type { CampaignData, CampaignStatus, CampaignsResponse } from '../types';
+import type { CampaignData, CampaignsResponse } from '../types';
 
 dayjs.extend(utc);
-
-const getStatusColor = (status: CampaignStatus) => {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    case 'running':
-      return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300';
-    case 'paused':
-      return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300';
-    case 'failed':
-      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
-    case 'completed':
-      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-    default:
-      return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-  }
-};
-
-const statusLabels: Record<CampaignStatus, string> = {
-  active: 'Active',
-  running: 'Running',
-  paused: 'Paused',
-  failed: 'Failed',
-  completed: 'Completed',
-};
 
 function CampaignActions({ id, name }: { id: string; name: string }) {
   const [open, setOpen] = React.useState(false);
@@ -187,18 +161,18 @@ export const columns: ColumnDef<CampaignData>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const status: CampaignStatus = row.getValue('status');
-      return (
-        <Badge variant="outline" className={`font-medium ${getStatusColor(status)}`}>
-          {statusLabels[status] || status}
-        </Badge>
-      );
-    },
-  },
+  // {
+  //   accessorKey: 'status',
+  //   header: 'Status',
+  //   cell: ({ row }) => {
+  //     const status: CampaignStatus = row.getValue('status');
+  //     return (
+  //       <Badge variant="outline" className={`font-medium ${getStatusColor(status)}`}>
+  //         {statusLabels[status] || status}
+  //       </Badge>
+  //     );
+  //   },
+  // },
   {
     accessorKey: 'lastRunAt',
     header: 'Last Run',

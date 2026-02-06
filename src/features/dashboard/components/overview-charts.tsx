@@ -28,10 +28,13 @@ export function OverviewCharts() {
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-    const fullMonthData = Array.from({ length: daysInMonth }, (_, i) => ({
-      date: (i + 1).toString(),
-      count: 0,
-    }));
+    const fullMonthData: Array<{ date: string; count: number }> = Array.from(
+      { length: daysInMonth },
+      (_, i) => ({
+        date: (i + 1).toString(),
+        count: 0,
+      }),
+    );
 
     if (!leadChartDataResponse || leadChartDataResponse.length === 0) {
       return fullMonthData;
@@ -42,15 +45,44 @@ export function OverviewCharts() {
         const day = item.date.includes('-')
           ? parseInt(item.date.split('-')[2], 10).toString()
           : item.date;
-        return [day, item.count];
+        return [day, item.count as number];
       }),
     );
 
     return fullMonthData.map((item) => ({
       ...item,
-      count: dataMap.has(item.date) ? dataMap.get(item.date) : 0,
+      count: (dataMap.get(item.date) as number) ?? 0,
     }));
   }, [leadChartDataResponse]);
+
+  // Generate X-axis ticks for every 5 days
+  const generateXAxisTicks = React.useMemo(() => {
+    const ticks: number[] = [];
+    for (let i = 0; i < leadChartData.length; i += 5) {
+      ticks.push(i);
+    }
+    // Ensure the last day is included
+    if (ticks.length > 0 && ticks[ticks.length - 1] !== leadChartData.length - 1) {
+      ticks.push(leadChartData.length - 1);
+    }
+    return ticks;
+  }, [leadChartData.length]);
+
+  // Custom formatter to show day numbers (1, 2, 3...) instead of indices
+  const formatXAxisTick = (index: number) => {
+    return String(index + 1); // Convert 0-based index to 1-based day number
+  };
+
+  // Generate Y-axis ticks dynamically based on max value (increments of 1)
+  const generateYAxisTicks = React.useMemo(() => {
+    const maxValue = Math.max(...leadChartData.map((item) => item.count), 1);
+    const roundedMax = Math.ceil(maxValue); // Round up to nearest integer
+    const ticks: number[] = [];
+    for (let i = 0; i <= roundedMax; i += 1) {
+      ticks.push(i);
+    }
+    return ticks;
+  }, [leadChartData]);
 
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
   const year = new Date().getFullYear();
@@ -198,7 +230,11 @@ export function OverviewCharts() {
             <div className="h-[300px] w-full animate-pulse rounded bg-muted" />
           ) : (
             <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
-              <div style={{ minWidth: leadChartData.length > 10 ? '800px' : '100%' }}>
+              <div
+                style={{
+                  minWidth: leadChartData.length > 10 ? '800px' : '100%',
+                }}
+              >
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart
                     data={leadChartData}
@@ -221,11 +257,17 @@ export function OverviewCharts() {
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
+                      ticks={generateXAxisTicks}
+                      tickFormatter={formatXAxisTick}
+                      type="number"
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
+                      allowDecimals={false}
+                      type="number"
+                      ticks={generateYAxisTicks}
                     />
                     <Tooltip
                       contentStyle={{
