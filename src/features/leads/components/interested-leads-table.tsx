@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/a11y/useButtonType: <> */
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: <explanation> */
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 'use client';
@@ -14,6 +15,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import slugify from 'slugify';
@@ -177,95 +179,125 @@ export function InterestedLeadsTable() {
     queryFn: () => getAllLeads(page, pageSize, urlSearch || undefined),
   });
 
-  // console.log('leadsResponse', leadsResponse);
-
   const columnHelper = createColumnHelper<Lead>();
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor('customerName', {
-        header: 'Name',
-        cell: ({ getValue, row }) => (
-          <button
-            // onClick={() => router.push(`/leads/${row.original.id}`)}
-            onClick={() =>
-              router.push(
-                `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
-              )
-            }
-            className="font-medium hover:text-primary hover:underline cursor-pointer"
-          >
-            {String(getValue() || '')}
-          </button>
-        ),
-        size: 180,
-      }),
-      columnHelper.accessor('fileContent.emailId', {
-        id: 'email',
-        header: 'Email',
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {row.original.fileContent?.emailId || '-'}
-          </div>
-        ),
-        size: 220,
-      }),
-      columnHelper.accessor('fileContent.mobileNumber', {
-        id: 'phone',
-        header: 'Phone',
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {row.original.fileContent?.mobileNumber || '-'}
-          </div>
-        ),
-        size: 150,
-      }),
+      // columnHelper.accessor('customerName', {
+      //   header: 'Lead Name',
+      //   cell: ({ getValue, row }) => (
+      //     <button
+      //       onClick={() =>
+      //         router.push(
+      //           `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
+      //         )
+      //       }
+      //       className="font-medium hover:text-primary hover:underline cursor-pointer"
+      //     >
+      //       {String(getValue() || '')}
+      //     </button>
+      //   ),
+      //   size: 180,
+      // }),
       columnHelper.accessor('campaign.name', {
         id: 'campaign',
-        header: 'Campaign',
+        header: 'Campaign Name',
         cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.original.campaign?.name || '-'}</div>
+          <div onClick={(e) => e.stopPropagation()}>
+            {row.original.campaign?.name ? (
+              <Link
+                href={`/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`}
+                className="font-medium hover:text-primary hover:underline cursor-pointer transition-colors"
+              >
+                {row.original.campaign.name}
+              </Link>
+            ) : (
+              <div className="text-sm text-muted-foreground">-</div>
+            )}
+          </div>
         ),
-        size: 150,
+        size: 200,
       }),
-      columnHelper.accessor('fileContent.settlementAmount', {
-        id: 'loanAmount',
-        header: 'Amount',
+      columnHelper.accessor('campaign.status', {
+        id: 'campaignStatus',
+        header: 'Status',
         cell: ({ row }) => {
-          const amount = row.original.fileContent?.settlementAmount;
+          const status = row.original.campaign?.status;
+          if (!status) return <div className="text-sm text-muted-foreground">-</div>;
+
+          const statusColors: Record<string, string> = {
+            active:
+              'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300',
+            running: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
+            paused:
+              'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
+            failed: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300',
+            completed:
+              'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300',
+          };
+
           return (
-            <div className="font-medium">{amount ? `₹${amount.toLocaleString('en-IN')}` : '-'}</div>
+            <div
+              className={`capitalize px-2 py-1 rounded-full text-xs inline-block border ${statusColors[status] || statusColors.completed}`}
+            >
+              {status}
+            </div>
           );
         },
         size: 120,
       }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: ({ getValue }) => (
-          <div className="capitalize px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs inline-block">
-            {getValue()}
-          </div>
+      columnHelper.accessor('campaign.interested', {
+        id: 'interested',
+        header: 'Interested',
+        cell: ({ row }) => (
+          <div className="font-medium text-center">{row.original.campaign?.interested || 0}</div>
         ),
         size: 100,
       }),
-      columnHelper.accessor('interestedAt', {
-        header: 'Interested At',
-        cell: ({ getValue }) => (
-          <div className="text-sm text-muted-foreground">
-            {new Date(getValue()).toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            })}
+      columnHelper.accessor('campaign.messageSent.total', {
+        id: 'totalMessages',
+        header: 'Messages Sent',
+        cell: ({ row }) => (
+          <div className="font-medium text-center">
+            {row.original.campaign?.messageSent?.total || 0}
           </div>
         ),
-        size: 150,
+        size: 130,
       }),
+      columnHelper.accessor('campaign.lastRunAt', {
+        id: 'lastRunAt',
+        header: 'Last Run',
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">
+            {row.original.campaign?.lastRunAt
+              ? new Date(row.original.campaign.lastRunAt).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              : '-'}
+          </div>
+        ),
+        size: 120,
+      }),
+      // columnHelper.accessor('interestedAt', {
+      //   header: 'Interested At',
+      //   cell: ({ getValue }) => (
+      //     <div className="text-sm text-muted-foreground">
+      //       {new Date(getValue()).toLocaleDateString('en-IN', {
+      //         day: '2-digit',
+      //         month: 'short',
+      //         year: 'numeric',
+      //       })}
+      //     </div>
+      //   ),
+      //   size: 120,
+      // }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <div className="text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="text-center" onClick={(e) => e.stopPropagation()}>
             <LeadActions id={row.original.id} name={row.original.customerName} />
           </div>
         ),
@@ -311,9 +343,9 @@ export function InterestedLeadsTable() {
               setGlobalFilter(e.target.value);
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
-            placeholder="Search leads..."
+            placeholder="Search campaigns..."
             type="text"
-            aria-label="Search leads"
+            aria-label="Search campaigns"
           />
         </div>
 

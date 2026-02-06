@@ -79,7 +79,6 @@ export function OverviewCharts() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 min-w-0">
-      {/* Campaign Performance Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Campaign Performance</CardTitle>
@@ -187,7 +186,6 @@ export function OverviewCharts() {
         </CardContent>
       </Card>
 
-      {/* Leads Details Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Leads Details</CardTitle>

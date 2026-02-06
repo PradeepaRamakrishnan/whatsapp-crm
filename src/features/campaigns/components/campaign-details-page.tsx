@@ -33,7 +33,7 @@ import {
 import { CampaignContactsTable } from './campaign-contacts-table';
 
 const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
+  switch (status?.toLowerCase()) {
     case 'active':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900';
     case 'scheduled':

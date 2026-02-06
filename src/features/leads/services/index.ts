@@ -88,6 +88,27 @@ export async function getLeadsById(id: string): Promise<LeadsResponse> {
   }
 }
 
+export async function getCompaignById(id: string): Promise<LeadsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch leads by id');
+    }
+    throw error;
+  }
+}
+
 export async function uploadDocument(leadId: string, formData: FormData): Promise<Document> {
   try {
     const cookieStore = await cookies();

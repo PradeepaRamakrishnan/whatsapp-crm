@@ -97,7 +97,7 @@ export const InterestedForm = () => {
           mobileForm.handleSubmit();
           return false;
         }}
-        className="space-y-4"
+        className="space-y-6"
       >
         {/* Mobile Number Field */}
         <mobileForm.Field
@@ -136,7 +136,7 @@ export const InterestedForm = () => {
           )}
         </mobileForm.Field>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <h3 className="font-semibold text-sm">Verification Details</h3>
 
           {/* Date of Birth Field */}
@@ -144,7 +144,7 @@ export const InterestedForm = () => {
             name="date_of_birth"
             validators={{
               onChange: ({ value, fieldApi }) => {
-                const panNumber = fieldApi.form.getFieldValue('pan_number');
+                const panNumber = fieldApi.form.getFieldValue('pan_number') as string;
                 // If PAN is provided, DOB is optional
                 if (panNumber && panNumber.length > 0) {
                   if (!value) return undefined;
@@ -278,22 +278,23 @@ export const InterestedForm = () => {
             }}
           </mobileForm.Field>
 
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">Or</span>
             </div>
-          </div>
+          </div> */}
 
           {/* PAN Number Field */}
           <mobileForm.Field
             name="pan_number"
             validators={{
               onChange: ({ value, fieldApi }) => {
-                const dateOfBirth = fieldApi.form.getFieldValue('date_of_birth');
-                // If DOB is provided, PAN is optional
+                const dateOfBirth = fieldApi.form.getFieldValue('date_of_birth') as
+                  | Date
+                  | undefined;
                 if (dateOfBirth) {
                   if (!value || value.length === 0) return undefined;
                 }
@@ -301,7 +302,6 @@ export const InterestedForm = () => {
                 if ((!value || value.length === 0) && !dateOfBirth) {
                   return 'PAN number is required if Date of Birth is not provided';
                 }
-                // Validate PAN if provided
                 if (value && value.length > 0) {
                   const result = panNumberValidator.safeParse(value);
                   return result.success ? undefined : result.error.errors[0].message;
