@@ -71,12 +71,19 @@ export interface Lead {
   id: string;
   customerName: string;
   status: string;
-  campaign: {
+  campaign?: {
     id: string;
     name: string;
     status: string;
     fileName?: string;
     bankName?: string;
+    interested?: number;
+    messageSent?: {
+      total?: number;
+    };
+    lastRunAt?: string;
+    createdAt?: string;
+    updatedAt?: string;
   };
   contact: {
     id: string;
@@ -94,6 +101,7 @@ export interface Lead {
     whatsapp?: {
       sent: boolean;
       sentAt?: string;
+      deliveredAt?: string;
     };
   };
   fileContent: {

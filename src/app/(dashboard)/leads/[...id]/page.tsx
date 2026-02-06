@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import type { Metadata } from 'next';
 import { LeadDetailsPage } from '@/features/leads/components/lead-details-page';
-import { getLeadsById } from '@/features/leads/services';
+import { getCompaignById } from '@/features/leads/services';
 import type { LeadsResponse } from '@/features/leads/types';
 
 interface DetailPageProps {
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   if (!id) return { title: 'Lead Details' };
 
   try {
-    const leadResponse = await getLeadsById(id);
+    const leadResponse = await getCompaignById(id);
     const lead = (leadResponse as LeadsResponse)?.data?.[0] || leadResponse;
 
     return {
@@ -37,9 +37,11 @@ export default async function DetailPage({ params }: DetailPageProps) {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ['lead', id],
-    queryFn: () => getLeadsById(id),
+    queryKey: ['campaign', id],
+    queryFn: () => getCompaignById(id),
   });
+
+  // console.log(id, 'leadId');
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
