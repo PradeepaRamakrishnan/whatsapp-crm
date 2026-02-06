@@ -3,13 +3,16 @@ stages:
   - deploy
 
 variables:
-  APP_DIR: /home/gitlab-runner/frontend/samatva-crm
+  PROD_APP_DIR: /home/gitlab-runner/frontend/samatva-crm
   STAGE_APP_DIR: /home/gitlab-runner/frontend/samatva-crm-staging
 
-build:
+# -----------------------
+# BUILD (MAIN / PROD)
+# -----------------------
+build:prod:
   stage: build
   script:
-    - cp $APP_DIR/.env .env
+    - cp $PROD_APP_DIR/.env .env
     - pnpm install --frozen-lockfile
     - pnpm run build
   artifacts:
@@ -23,25 +26,10 @@ build:
   only:
     - main
   tags:
-    - samatva
-
-deploy:production:
-  stage: deploy
-  script:
-    - mkdir -p $APP_DIR
-    - cp -r .next node_modules package.json pnpm-lock.yaml public ecosystem.config.js $APP_DIR/
-    - cd $APP_DIR
-    - pm2 reload ecosystem.config.js --only samatva-crm || pm2 start ecosystem.config.js --only samatva-crm
-    - pm2 save
-  only:
-    - main
-  tags:
-    - samatva
-  needs:
-    - build
+    - prod-runner
 
 # -----------------------
-# STAGING DEPLOYMENT
+# BUILD (STAGING)
 # -----------------------
 build:staging:
   stage: build
@@ -60,8 +48,29 @@ build:staging:
   only:
     - staging
   tags:
-    - samatva
+    - stage-runner
 
+# -----------------------
+# DEPLOY PROD
+# -----------------------
+deploy:production:
+  stage: deploy
+  script:
+    - mkdir -p $PROD_APP_DIR
+    - cp -r .next node_modules package.json pnpm-lock.yaml public ecosystem.config.js $PROD_APP_DIR/
+    - cd $PROD_APP_DIR
+    - pm2 reload ecosystem.config.js --only samatva-crm || pm2 start ecosystem.config.js --only samatva-crm
+    - pm2 save
+  only:
+    - main
+  tags:
+    - prod-runner
+  needs:
+    - build:prod
+
+# -----------------------
+# DEPLOY STAGING
+# -----------------------
 deploy:staging:
   stage: deploy
   script:
@@ -73,6 +82,6 @@ deploy:staging:
   only:
     - staging
   tags:
-    - samatva
+    - stage-runner
   needs:
     - build:staging
