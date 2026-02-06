@@ -14,5 +14,17 @@ module.exports = {
       out_file: 'logs/out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
+    {
+      name: 'samatva-crm-staging',
+      script: 'pnpm',
+      args: 'start',
+      env: process.env,
+      instances: 1,
+      exec_mode: 'fork',
+      max_memory_restart: '500M',
+      error_file: 'logs/staging-error.log',
+      out_file: 'logs/staging-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    },
   ],
 };
