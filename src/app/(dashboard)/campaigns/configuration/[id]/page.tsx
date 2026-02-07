@@ -5,15 +5,12 @@ import { ArrowLeft, Check, Save } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-
-// import { toast } from 'sonner';
-
 import { toast } from 'sonner';
 import z from 'zod';
-import { getConfigurationyId, updateConfiguration } from '@/features/campaigns/services';
+import { Button } from '@/components/ui/button';
 import Channel from '@/features/configuration/components/channel';
 import Templates from '@/features/configuration/components/templates';
+import { getConfigurationyId, updateConfiguration } from '@/features/settings/services';
 
 const steps = [
   { id: 1, name: 'Template', description: 'Configure templates' },

@@ -1,6 +1,6 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import { getAllConfiguration } from '@/features/campaigns/services';
 import Configuration from '@/features/configuration/components/configuration';
+import { getAllConfiguration } from '@/features/settings/services';
 
 const AgentConfigurationPage = async () => {
   const queryClient = new QueryClient();

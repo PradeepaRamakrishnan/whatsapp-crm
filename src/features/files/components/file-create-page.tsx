@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileSpreadsheet, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { getAllFinancialInstitutions } from '../../settings/services';
 import { fileUploadSchema } from '../lib/validation';
 import { createFile } from '../services';
 
@@ -26,6 +27,11 @@ export function FileCreatePage() {
   const [isDragging, setIsDragging] = useState(false);
 
   const queryClient = useQueryClient();
+
+  const { data: banksResponse } = useQuery({
+    queryKey: ['financial-institutions'],
+    queryFn: () => getAllFinancialInstitutions(1, 100),
+  });
 
   const form = useForm({
     defaultValues: {
@@ -144,11 +150,11 @@ export function FileCreatePage() {
                             <SelectValue placeholder="Choose bank" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="icici">ICICI Bank</SelectItem>
-                            <SelectItem value="hdfc">HDFC Bank</SelectItem>
-                            <SelectItem value="sbi">State Bank of India</SelectItem>
-                            <SelectItem value="axis">Axis Bank</SelectItem>
-                            <SelectItem value="kotak">Kotak Mahindra Bank</SelectItem>
+                            {banksResponse?.data.map((bank) => (
+                              <SelectItem key={bank.id} value={bank.name}>
+                                {bank.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FieldError>

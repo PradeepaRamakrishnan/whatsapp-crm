@@ -4,11 +4,11 @@ import { LeadDetailsPage } from '@/features/leads/components/lead-details-page';
 import { getCompaignById } from '@/features/leads/services';
 import type { LeadsResponse } from '@/features/leads/types';
 
-interface DetailPageProps {
+type PageProps = {
   params: Promise<{ id: string[] }>;
-}
+};
 
-export async function generateMetadata({ params }: DetailPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id: idArray } = await params;
   const id = idArray?.[idArray.length - 1];
 
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   }
 }
 
-export default async function DetailPage({ params }: DetailPageProps) {
+const LeadDetails = async ({ params }: PageProps) => {
   const { id: idArray } = await params;
   const id = idArray?.[idArray.length - 1];
 
@@ -41,11 +41,11 @@ export default async function DetailPage({ params }: DetailPageProps) {
     queryFn: () => getCompaignById(id),
   });
 
-  // console.log(id, 'leadId');
-
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <LeadDetailsPage leadId={id} />
     </HydrationBoundary>
   );
-}
+};
+
+export default LeadDetails;

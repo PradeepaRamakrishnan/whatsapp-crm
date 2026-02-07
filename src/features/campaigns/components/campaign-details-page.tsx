@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,16 @@ interface CampaignDetailsPageProps {
 }
 
 export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', value);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
   const queryClient = useQueryClient();
 
   // Fetch campaign details with React Query (prefetched on server)
@@ -289,7 +298,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-3">
         <TabsList className=" border-b w-full bg-transparent p-0">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contacts">Campaign Recipients</TabsTrigger>
@@ -319,15 +328,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                       <dd className="text-sm font-semibold">{campaign.name}</dd>
                     </div>
                   </div>
-                  {/* <div >
-                    <Activity className="h-5 w-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Status
-                      </dt>
-                      <dd className="text-sm font-semibold capitalize">{campaign.status}</dd>
-                    </div>
-                  </div> */}
                   <div className="flex items-start gap-3">
                     <FileText className="h-5 w-5 text-slate-500 mt-0.5" />
                     <div>
@@ -410,7 +410,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           <CampaignContactsTable campaignId={campaignId} />
         </TabsContent>
 
-        {/* Timeline Tab */}
         {/* Timeline Tab */}
         <TabsContent value="timeline" className="mt-6">
           <Card>

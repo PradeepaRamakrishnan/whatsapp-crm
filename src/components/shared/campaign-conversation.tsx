@@ -363,7 +363,7 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                                     </div>
                                   </CollapsibleTrigger>
                                   <CollapsibleContent className="border-t bg-muted/5">
-                                    <div className="p-5 italic text-muted-foreground">
+                                    <div className="p-5  text-muted-foreground">
                                       {/* biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields */}
                                       <EmailMessageCard message={message} />
                                     </div>

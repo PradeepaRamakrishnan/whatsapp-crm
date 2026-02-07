@@ -249,7 +249,7 @@ export function ResponseConversationView({ contact }: { contact: BorrowerData })
                     )}
                     <span className="text-xs text-muted-foreground">{resp.contactPhone}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed italic">
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed ">
                     {resp.lastMessage}
                   </p>
                   {resp.unreadCount && resp.unreadCount > 0 && selectedResponseId !== resp.id && (
@@ -428,7 +428,7 @@ export function ResponseConversationView({ contact }: { contact: BorrowerData })
                         Subject: {msg.subject}
                       </h4>
                     )}
-                    <div className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed italic border-l-2 border-primary/20 pl-4 py-1">
+                    <div className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed  border-l-2 border-primary/20 pl-4 py-1">
                       {msg.content}
                     </div>
                   </CardContent>

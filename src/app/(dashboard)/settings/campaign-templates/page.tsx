@@ -1,8 +1,8 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import type { Metadata } from 'next';
 import { TemplatesList } from '@/features/campaigns/components/templates-list';
-import { getAllTemplates } from '@/features/campaigns/services';
 import type { TemplateChannel } from '@/features/campaigns/types/template.types';
+import { getAllTemplates } from '@/features/settings/services';
 
 export const metadata: Metadata = {
   title: 'Template Management',
