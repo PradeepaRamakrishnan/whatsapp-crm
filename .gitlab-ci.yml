@@ -57,9 +57,10 @@ deploy:production:
   stage: deploy
   script:
     - mkdir -p $PROD_APP_DIR
-    - cp -r .next node_modules package.json pnpm-lock.yaml public ecosystem.config.js $PROD_APP_DIR/
+    - cp -r .next node_modules package.json pnpm-lock.yaml public $PROD_APP_DIR/
     - cd $PROD_APP_DIR
-    - pm2 reload ecosystem.config.js --only samatva-crm || pm2 start ecosystem.config.js --only samatva-crm
+    - pm2 delete samatva-crm || true
+    - pm2 start pnpm --name samatva-crm -- start
     - pm2 save
   only:
     - main
@@ -75,9 +76,10 @@ deploy:staging:
   stage: deploy
   script:
     - mkdir -p $STAGE_APP_DIR
-    - cp -r .next node_modules package.json pnpm-lock.yaml public ecosystem.config.js $STAGE_APP_DIR/
+    - cp -r .next node_modules package.json pnpm-lock.yaml public $STAGE_APP_DIR/
     - cd $STAGE_APP_DIR
-    - pm2 reload ecosystem.config.js --only samatva-crm-staging || pm2 start ecosystem.config.js --only samatva-crm-staging
+    - pm2 delete samatva-crm-staging || true
+    - pm2 start pnpm --name samatva-crm-staging -- start
     - pm2 save
   only:
     - staging
