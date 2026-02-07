@@ -7,6 +7,21 @@ variables:
   STAGE_APP_DIR: /home/gitlab-runner/frontend/samatva-crm-staging
 
 # -----------------------
+# BUILD (MERGE REQUESTS)
+# -----------------------
+build:mr:
+  stage: build
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm run lint
+    - pnpm run type-check
+    - pnpm run build
+  only:
+    - merge_requests
+  tags:
+    - prod-runner
+
+# -----------------------
 # BUILD (MAIN / PROD)
 # -----------------------
 build:prod:
