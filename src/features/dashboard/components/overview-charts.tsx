@@ -3,12 +3,13 @@
 import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
-  Line,
-  LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -19,10 +20,46 @@ import { getCampaignPerformanceStats } from '../../campaigns/services';
 import { getLeadsChartData } from '../services';
 
 export function OverviewCharts() {
-  const { data: leadChartDataResponse = [], isLoading } = useQuery({
+  // All hooks at top level - no conditional calls
+  const { data: leadChartDataResponse } = useQuery({
     queryKey: ['leads-chart'],
     queryFn: () => getLeadsChartData(),
   });
+
+  const { data: campaignDataResponse = [] } = useQuery({
+    queryKey: ['campaign-stats'],
+    queryFn: () => getCampaignPerformanceStats(),
+  });
+
+  // Calculate chart data at top level (FIXED: moved outside JSX)
+  const chartData = React.useMemo(() => {
+    const totals = campaignDataResponse.reduce(
+      (acc, curr) => ({
+        email: acc.email + (Number(curr.email) || 0),
+        sms: acc.sms + (Number(curr.sms) || 0),
+        whatsapp: acc.whatsapp + (Number(curr.whatsapp) || 0),
+      }),
+      { email: 0, sms: 0, whatsapp: 0 },
+    );
+
+    return [
+      {
+        name: 'Email',
+        value: totals.email,
+        fill: 'url(#gradient-email)',
+      },
+      {
+        name: 'SMS',
+        value: totals.sms,
+        fill: 'url(#gradient-sms)',
+      },
+      {
+        name: 'WhatsApp',
+        value: totals.whatsapp,
+        fill: 'url(#gradient-whatsapp)',
+      },
+    ].filter((item) => item.value > 0);
+  }, [campaignDataResponse]);
 
   const leadChartData = React.useMemo(() => {
     const now = new Date();
@@ -55,59 +92,8 @@ export function OverviewCharts() {
     }));
   }, [leadChartDataResponse]);
 
-  // Generate X-axis ticks for every 5 days
-  const generateXAxisTicks = React.useMemo(() => {
-    const ticks: number[] = [];
-    for (let i = 0; i < leadChartData.length; i += 5) {
-      ticks.push(i);
-    }
-    // Ensure the last day is included
-    if (ticks.length > 0 && ticks[ticks.length - 1] !== leadChartData.length - 1) {
-      ticks.push(leadChartData.length - 1);
-    }
-    return ticks;
-  }, [leadChartData.length]);
-
-  // Custom formatter to show day numbers (1, 2, 3...) instead of indices
-  const formatXAxisTick = (index: number) => {
-    return String(index + 1); // Convert 0-based index to 1-based day number
-  };
-
-  // Generate Y-axis ticks dynamically based on max value (increments of 1)
-  const generateYAxisTicks = React.useMemo(() => {
-    const maxValue = Math.max(...leadChartData.map((item) => item.count), 1);
-    const roundedMax = Math.ceil(maxValue); // Round up to nearest integer
-    const ticks: number[] = [];
-    for (let i = 0; i <= roundedMax; i += 1) {
-      ticks.push(i);
-    }
-    return ticks;
-  }, [leadChartData]);
-
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
   const year = new Date().getFullYear();
-
-  const { data: campaignDataResponse = [] } = useQuery({
-    queryKey: ['campaign-stats'],
-    queryFn: () => getCampaignPerformanceStats(),
-  });
-
-  const campaignData = React.useMemo(() => {
-    // Show only 6 months - Jan to Jun
-    const months6 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-
-    const dataMap = new Map(campaignDataResponse.map((item) => [item.month, item]));
-
-    return months6.map((month) => {
-      const existingData = dataMap.get(month);
-      return {
-        month,
-        email: existingData?.email ? Number(existingData.email) : 0,
-        sms: existingData?.sms ? Number(existingData.sms) : 0,
-        whatsapp: existingData?.whatsapp ? Number(existingData.whatsapp) : 0,
-      };
-    });
-  }, [campaignDataResponse]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 min-w-0">
@@ -117,104 +103,68 @@ export function OverviewCharts() {
           <CardDescription>Monthly campaign activity by channel</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={campaignData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={true}
-                stroke="currentColor"
-                opacity={0.1}
-              />
-              <XAxis
-                dataKey="month"
-                tick={{ fill: 'currentColor', fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: 'currentColor', fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length > 0) {
-                    return (
-                      <div className="rounded-lg border bg-background p-3 shadow-xl">
-                        <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
-                        <div className="space-y-1">
-                          {payload.map((entry) => (
-                            <div
-                              key={entry.name}
-                              className="flex items-center justify-between gap-4"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="h-2.5 w-2.5 rounded-full"
-                                  style={{ backgroundColor: entry.color }}
-                                />
-                                <span className="text-sm font-medium text-muted-foreground">
-                                  {entry.name}
-                                </span>
-                              </div>
-                              <span className="text-sm font-bold" style={{ color: entry.color }}>
-                                {entry.value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="line" />
-
-              {/* Email Line - Blue */}
-              <Line
-                type="monotone"
-                dataKey="email"
-                stroke="#3b82f6"
-                strokeWidth={2.5}
-                name="Email"
-                dot={{ fill: '#3b82f6', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#3b82f6' }}
-                connectNulls={true}
-              />
-
-              {/* SMS Line - Orange */}
-              <Line
-                type="monotone"
-                dataKey="sms"
-                stroke="#f59e0b"
-                strokeWidth={2.5}
-                name="SMS"
-                dot={{ fill: '#f59e0b', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#f59e0b' }}
-                connectNulls={true}
-              />
-
-              {/* WhatsApp Line - Green */}
-              <Line
-                type="monotone"
-                dataKey="whatsapp"
-                stroke="#10b981"
-                strokeWidth={2.5}
-                name="WhatsApp"
-                dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#10b981' }}
-                connectNulls={true}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {campaignDataResponse && campaignDataResponse.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <defs>
+                  <linearGradient id="gradient-email" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#60a5fa" />
+                  </linearGradient>
+                  <linearGradient id="gradient-sms" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                  <linearGradient id="gradient-whatsapp" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#34d399" />
+                  </linearGradient>
+                </defs>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={110}
+                  paddingAngle={0}
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index as number}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                  }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  formatter={(value) => (
+                    <span className="text-sm font-medium text-muted-foreground ml-2">{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] w-full flex items-center justify-center rounded">
+              <div className="text-center">
+                <p className="text-muted-foreground font-medium">No data available</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  There are no campaigns for this month
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -226,9 +176,7 @@ export function OverviewCharts() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="h-[300px] w-full animate-pulse rounded bg-muted" />
-          ) : (
+          {leadChartDataResponse && leadChartDataResponse.length > 0 ? (
             <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
               <div
                 style={{
@@ -236,16 +184,10 @@ export function OverviewCharts() {
                 }}
               >
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart
+                  <BarChart
                     data={leadChartData}
                     margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
                   >
-                    <defs>
-                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#b9d1d3" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#b9d1d3" stopOpacity={0.2} />
-                      </linearGradient>
-                    </defs>
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={true}
@@ -257,17 +199,13 @@ export function OverviewCharts() {
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
-                      ticks={generateXAxisTicks}
-                      tickFormatter={formatXAxisTick}
-                      type="number"
+                      interval={0}
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                       allowDecimals={false}
-                      type="number"
-                      ticks={generateYAxisTicks}
                     />
                     <Tooltip
                       contentStyle={{
@@ -284,7 +222,7 @@ export function OverviewCharts() {
                               <p className="text-xs font-medium text-muted-foreground mb-1">
                                 Date: {label} {monthName}
                               </p>
-                              <p className="text-lg font-bold text-[#82a0a2]">
+                              <p className="text-lg font-bold text-[#413ea0]">
                                 {Number(payload[0].value).toLocaleString()} Leads
                               </p>
                             </div>
@@ -293,19 +231,18 @@ export function OverviewCharts() {
                         return null;
                       }}
                     />
-                    <Area
-                      type="natural"
-                      dataKey="count"
-                      stroke="#82a0a2"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorLeads)"
-                      animationDuration={1500}
-                      dot={{ r: 4, fill: '#82a0a2', strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0 }}
-                    />
-                  </AreaChart>
+                    <Bar dataKey="count" fill="#413ea0" barSize={20} radius={[4, 4, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[300px] w-full flex items-center justify-center rounded">
+              <div className="text-center">
+                <p className="text-muted-foreground font-medium">No data available</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  There are no leads for {monthName} {year}
+                </p>
               </div>
             </div>
           )}

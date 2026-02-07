@@ -36,7 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getCompaignById } from '../services';
+import { getCampaignById } from '../services';
 import type { Lead, LeadsResponse } from '../types';
 import { ContactDetailsPage } from './contact-detail';
 import { LeadDocuments } from './lead-documents';
@@ -48,7 +48,7 @@ interface LeadDetailsPageProps {
 export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   const { data: leadResponse, isLoading } = useQuery({
     queryKey: ['campaign', leadId],
-    queryFn: () => getCompaignById(leadId),
+    queryFn: () => getCampaignById(leadId),
   });
 
   // Support both paginated shape (LeadsResponse) and plain array response
@@ -89,22 +89,29 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: (info) =>
-          info.getValue() ? (
+        cell: (info) => {
+          const status = info.getValue();
+          const isConsent = status === 'consent_provided';
+          const isInterested = status === 'interested';
+
+          return isConsent ? (
             <Badge
               variant="outline"
               className="capitalize text-xs font-medium px-2 py-1 border bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300"
             >
               Consent
             </Badge>
-          ) : (
+          ) : isInterested ? (
             <Badge
               variant="outline"
               className="capitalize text-xs font-medium px-2 py-1 border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
             >
               Interested
             </Badge>
-          ),
+          ) : (
+            <Badge>{status || 'Unknown'}</Badge>
+          );
+        },
       }),
       columnHelper.accessor('interestedAt', {
         header: 'Interested At',
@@ -137,7 +144,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     getSortedRowModel: getSortedRowModel(),
     // Simple filter logic for client-side filtering
     filterFns: {
-      fuzzy: (row, columnId, value, addMeta) => {
+      fuzzy: (row, columnId, value) => {
         const itemRank = row.getValue(columnId);
         if (typeof itemRank === 'string') {
           return itemRank.toLowerCase().includes(value.toLowerCase());
@@ -166,13 +173,15 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     );
   }
 
-  if (!leads || leads.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6 text-muted-foreground">
-        Lead not found.
-      </div>
-    );
-  }
+  // console.log(leads, 'leads in details page');
+
+  // if (!leads || leads.length === 0) {
+  //   return (
+  //     <div className="flex flex-1 items-center justify-center p-6 text-muted-foreground">
+  //       Lead not found.
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-1 flex-col gap-6  p-6 min-w-0">

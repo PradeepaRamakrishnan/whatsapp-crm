@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { getAllTemplates } from '@/features/campaigns/services';
+import { getAllTemplates } from '@/features/settings/services';
 
 // import { mockTemplates } from '@/features/campaigns/lib/templates-data';
 

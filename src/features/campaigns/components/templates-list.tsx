@@ -7,7 +7,7 @@ import { useRouter } from 'nextjs-toploader/app';
 import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAllTemplates } from '../services';
+import { getAllTemplates } from '@/features/settings/services';
 import type { TemplateChannel } from '../types/template.types';
 import { TemplateCard } from './template-card';
 

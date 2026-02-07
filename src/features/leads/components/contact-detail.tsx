@@ -46,7 +46,6 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
   const sms = contact.contact?.sms;
   const whatsapp = contact.contact?.whatsapp;
 
-  // Type guards/helpers for generic Lead type which might miss specific detailed fields
   const getBouncedAt = (channel: any) =>
     channel?.bouncedAt || (typeof channel?.bounced === 'string' ? channel.bounced : undefined);
   const isBounced = (channel: any) => !!(channel?.bounced || channel?.bouncedAt);
@@ -83,74 +82,75 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-6 pt-4 min-w-0">
-      {/* Customer Information Section */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        <div className="border-b bg-muted/40 px-4 py-3">
-          <h3 className="text-sm font-semibold tracking-wide text-foreground flex items-center gap-2">
-            <User className="h-4 w-4 text-primary" />
-            Contact Information
-          </h3>
-        </div>
-        <div className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Source Channel */}
-          {contact.from && (
+      {/* Customer Information Section - Only show if there's data */}
+      {(contact.from || contact.dob || contact.panNumber) && (
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="border-b bg-muted/40 px-4 py-3">
+            <h3 className="text-sm font-semibold tracking-wide text-foreground flex items-center gap-2">
+              <User className="h-4 w-4 text-primary" />
+              Contact Information
+            </h3>
+          </div>
+          <div className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Source Channel */}
+            {contact.from && (
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
+                <div
+                  className={cn(
+                    'p-2 rounded-md bg-muted/50',
+                    getChannelColor(contact.from).split(' ')[0],
+                  )}
+                >
+                  {getChannelIcon(contact.from)}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground  tracking-wider">
+                    Lead Source
+                  </p>
+                  <p className="text-sm font-semibold capitalize">{contact.from}</p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
-              <div
-                className={cn(
-                  'p-2 rounded-md bg-muted/50',
-                  getChannelColor(contact.from).split(' ')[0],
-                )}
-              >
-                {getChannelIcon(contact.from)}
+              <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                <Calendar className="h-4 w-4" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground  tracking-wider">
-                  Lead Source
+                  Date of Birth
                 </p>
-                <p className="text-sm font-semibold capitalize">{contact.from}</p>
+                <p className="text-sm font-semibold">
+                  {contact.dob ? (
+                    dayjs(contact.dob).format('DD MMM, YYYY')
+                  ) : (
+                    <span className="text-muted-foreground/60 ">Not set</span>
+                  )}
+                </p>
               </div>
             </div>
-          )}
+            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
+              <div className="p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                <CreditCard className="h-4 w-4" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground  tracking-wider">
+                  PAN Number
+                </p>
 
-          {/* Date of Birth */}
-          <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
-            <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-              <Calendar className="h-4 w-4" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground  tracking-wider">
-                Date of Birth
-              </p>
-              <p className="text-sm font-semibold">
-                {contact.dob ? (
-                  dayjs(contact.dob).format('DD MMM, YYYY')
-                ) : (
-                  <span className="text-muted-foreground/60 italic">Not set</span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* PAN Number */}
-          <div className="flex items-start gap-3 p-3 rounded-lg border bg-card/50 hover:bg-muted/30 transition-colors">
-            <div className="p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-              <CreditCard className="h-4 w-4" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground  tracking-wider">
-                PAN Number
-              </p>
-              <p className="text-sm font-semibold font-mono tracking-wide">
-                {contact.panNumber || (
-                  <span className="text-muted-foreground/60 italic font-sans normal-case">
-                    Not set
-                  </span>
-                )}
-              </p>
+                <p className="text-sm font-semibold">
+                  {contact.panNumber ? (
+                    <span> {contact.panNumber} </span>
+                  ) : (
+                    <span className="text-muted-foreground/60 ">Not set</span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
       <div className="flex flex-col gap-8">
         <div>
           <h4 className="text-sm font-semibold tracking-wider mb-4">Campaign Engagement</h4>

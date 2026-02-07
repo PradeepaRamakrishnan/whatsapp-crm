@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { getAllConfiguration } from '@/features/campaigns/services';
+import { getAllConfiguration } from '@/features/settings/services';
 
 interface TemplatePreview {
   type: 'email' | 'sms' | 'whatsapp';
