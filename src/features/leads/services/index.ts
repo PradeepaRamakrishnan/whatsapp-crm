@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import type { Document, Lead, LeadsResponse } from '../types';
 
 const axiosClient = axios.create({
@@ -13,39 +14,37 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function getAllLeads(
-  page: number,
-  limit: number,
-  search?: string,
-): Promise<LeadsResponse> {
-  try {
-    const cookieStore = await cookies();
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      active: 'true',
-    });
+export const getAllLeads = cache(
+  async (page: number, limit: number, search?: string): Promise<LeadsResponse> => {
+    try {
+      const cookieStore = await cookies();
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        active: 'true',
+      });
 
-    if (search) {
-      queryParams.append('name', search);
+      if (search) {
+        queryParams.append('name', search);
+      }
+
+      const response = await axiosClient({
+        method: 'GET',
+        url: `/?${queryParams.toString()}`,
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      });
+
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch all leads');
+      }
+      throw error;
     }
-
-    const response = await axiosClient({
-      method: 'GET',
-      url: `/?${queryParams.toString()}`,
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch all leads');
-    }
-    throw error;
-  }
-}
+  },
+);
 
 export async function deleteLead(id: string): Promise<void> {
   try {
@@ -67,7 +66,7 @@ export async function deleteLead(id: string): Promise<void> {
   }
 }
 
-export async function getLeadsById(id: string): Promise<LeadsResponse> {
+export const getLeadsById = cache(async (id: string): Promise<LeadsResponse> => {
   try {
     const cookieStore = await cookies();
 
@@ -86,9 +85,9 @@ export async function getLeadsById(id: string): Promise<LeadsResponse> {
     }
     throw error;
   }
-}
+});
 
-export async function getCompaignById(id: string): Promise<LeadsResponse> {
+export const getCampaignById = cache(async (id: string): Promise<LeadsResponse> => {
   try {
     const cookieStore = await cookies();
 
@@ -107,7 +106,10 @@ export async function getCompaignById(id: string): Promise<LeadsResponse> {
     }
     throw error;
   }
-}
+});
+
+/** @deprecated Use getCampaignById */
+export const getCompaignById = getCampaignById;
 
 export async function uploadDocument(leadId: string, formData: FormData): Promise<Document> {
   try {

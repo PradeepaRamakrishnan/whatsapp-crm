@@ -55,7 +55,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { deleteLead, getAllLeads } from '../services';
+import { deleteLead, getAllLeads, getCampaignById } from '../services';
 import type { Lead, LeadsResponse } from '../types';
 
 function LeadActions({ id, name }: { id: string; name: string }) {
@@ -136,6 +136,7 @@ function LeadActions({ id, name }: { id: string; name: string }) {
 
 export function InterestedLeadsTable() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -180,6 +181,17 @@ export function InterestedLeadsTable() {
     queryFn: () => getAllLeads(page, pageSize, urlSearch || undefined),
   });
 
+  const prefetchLead = useCallback(
+    (id: string) => {
+      queryClient.prefetchQuery({
+        queryKey: ['campaign', id],
+        queryFn: () => getCampaignById(id),
+        staleTime: 60 * 1000,
+      });
+    },
+    [queryClient],
+  );
+
   const columnHelper = createColumnHelper<Lead>();
 
   const columns = useMemo(
@@ -193,6 +205,7 @@ export function InterestedLeadsTable() {
               <Link
                 href={`/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`}
                 className="font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors"
+                onMouseEnter={() => prefetchLead(row.original.id)}
               >
                 {row.original.campaign.name}
               </Link>
@@ -248,7 +261,7 @@ export function InterestedLeadsTable() {
         size: 80,
       }),
     ],
-    [router, columnHelper],
+    [prefetchLead, columnHelper],
   );
 
   const table = useReactTable({
@@ -343,6 +356,7 @@ export function InterestedLeadsTable() {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
+                    onMouseEnter={() => prefetchLead(row.original.id)}
                     onClick={() =>
                       router.push(
                         `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,

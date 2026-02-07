@@ -36,7 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getCompaignById } from '../services';
+import { getCampaignById } from '../services';
 import type { Lead, LeadsResponse } from '../types';
 import { ContactDetailsPage } from './contact-detail';
 import { LeadDocuments } from './lead-documents';
@@ -48,7 +48,7 @@ interface LeadDetailsPageProps {
 export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
   const { data: leadResponse, isLoading } = useQuery({
     queryKey: ['campaign', leadId],
-    queryFn: () => getCompaignById(leadId),
+    queryFn: () => getCampaignById(leadId),
   });
 
   // Support both paginated shape (LeadsResponse) and plain array response
