@@ -61,35 +61,29 @@ export function OverviewCharts() {
     ].filter((item) => item.value > 0);
   }, [campaignDataResponse]);
 
+  // FIXED: Updated lead chart data to use API response directly with proper formatting
   const leadChartData = React.useMemo(() => {
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-    const fullMonthData: Array<{ date: string; count: number }> = Array.from(
-      { length: daysInMonth },
-      (_, i) => ({
-        date: (i + 1).toString(),
-        count: 0,
-      }),
-    );
-
     if (!leadChartDataResponse || leadChartDataResponse.length === 0) {
-      return fullMonthData;
+      return [];
     }
 
-    const dataMap = new Map(
-      leadChartDataResponse.map((item) => {
-        const day = item.date.includes('-')
-          ? parseInt(item.date.split('-')[2], 10).toString()
-          : item.date;
-        return [day, item.count as number];
-      }),
-    );
+    // Map API response to chart format
+    return leadChartDataResponse.map((item) => {
+      // Extract day from date (handles both 'YYYY-MM-DD' and numeric formats)
+      let dayLabel = item.date;
 
-    return fullMonthData.map((item) => ({
-      ...item,
-      count: (dataMap.get(item.date) as number) ?? 0,
-    }));
+      if (typeof item.date === 'string' && item.date.includes('-')) {
+        // Format: "2026-02-09" -> "09" or "9"
+        const day = parseInt(item.date.split('-')[2], 10);
+        dayLabel = day.toString();
+      }
+
+      return {
+        date: dayLabel,
+        count: Number(item.count) || 0,
+        originalDate: item.date, // Keep original for reference
+      };
+    });
   }, [leadChartDataResponse]);
 
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
@@ -176,11 +170,14 @@ export function OverviewCharts() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {leadChartDataResponse && leadChartDataResponse.length > 0 ? (
+          {leadChartData && leadChartData.length > 0 ? (
             <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
               <div
                 style={{
-                  minWidth: leadChartData.length > 10 ? '800px' : '100%',
+                  minWidth:
+                    leadChartData.length > 10
+                      ? `${Math.max(leadChartData.length * 60, 800)}px`
+                      : '100%',
                 }}
               >
                 <ResponsiveContainer width="100%" height={300}>
@@ -199,13 +196,27 @@ export function OverviewCharts() {
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
-                      interval={0}
+                      interval={
+                        leadChartData.length > 15 ? Math.floor(leadChartData.length / 10) : 0
+                      }
+                      label={{
+                        value: 'Date (Day)',
+                        position: 'insideBottomRight',
+                        offset: -5,
+                        style: { fontSize: 12, fill: 'currentColor' },
+                      }}
                     />
                     <YAxis
                       tick={{ fill: 'currentColor', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                       allowDecimals={false}
+                      label={{
+                        value: 'Lead Count',
+                        angle: -90,
+                        position: 'insideLeft',
+                        style: { fontSize: 12, fill: 'currentColor' },
+                      }}
                     />
                     <Tooltip
                       contentStyle={{

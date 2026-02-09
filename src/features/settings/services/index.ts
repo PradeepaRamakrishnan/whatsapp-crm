@@ -41,6 +41,29 @@ export async function getAllFinancialInstitutions(
   }
 }
 
+export async function getAllFinancialInstitutionsName(): Promise<FinancialInstitutionsResponse> {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/financial-institutions/names/list`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch get all financial institutions',
+      );
+    }
+    throw error;
+  }
+}
+
 export async function createFinancialInstitution(
   data: Record<string, unknown>,
 ): Promise<FinancialInstitution> {

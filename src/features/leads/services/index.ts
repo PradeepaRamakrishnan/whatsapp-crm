@@ -3,7 +3,13 @@
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
-import type { Document, Lead, LeadsResponse } from '../types';
+import type {
+  Document,
+  Lead,
+  LeadsResponse,
+  ManualFollowupCase,
+  ManualFollowupsResponse,
+} from '../types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_LEADS_API_URL}`,
@@ -200,6 +206,55 @@ export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead>
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to update lead');
+    }
+    throw error;
+  }
+}
+export async function getManualFollowups(
+  page: number,
+  limit: number,
+  search?: string,
+): Promise<ManualFollowupsResponse> {
+  try {
+    const cookieStore = await cookies();
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search) {
+      queryParams.append('search', search);
+    }
+
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/manual-followups?${queryParams.toString()}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch manual followups');
+    }
+    throw error;
+  }
+}
+export async function getManualFollowupById(id: string): Promise<ManualFollowupCase> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/manual-followups/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch manual followup details');
     }
     throw error;
   }
