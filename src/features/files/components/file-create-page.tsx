@@ -17,8 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { getAllFinancialInstitutionsName } from '@/features/settings/services';
 import { cn } from '@/lib/utils';
-import { getAllFinancialInstitutions } from '../../settings/services';
 import { fileUploadSchema } from '../lib/validation';
 import { createFile } from '../services';
 
@@ -29,8 +29,8 @@ export function FileCreatePage() {
   const queryClient = useQueryClient();
 
   const { data: banksResponse } = useQuery({
-    queryKey: ['financial-institutions'],
-    queryFn: () => getAllFinancialInstitutions(1, 100),
+    queryKey: ['financial-institutions-names'],
+    queryFn: () => getAllFinancialInstitutionsName(),
   });
 
   const form = useForm({
@@ -145,16 +145,23 @@ export function FileCreatePage() {
                         <Select
                           value={field.state.value}
                           onValueChange={(val) => field.handleChange(val)}
+                          disabled={!banksResponse?.data || banksResponse.data.length === 0}
                         >
                           <SelectTrigger id="select-bank">
                             <SelectValue placeholder="Choose bank" />
                           </SelectTrigger>
                           <SelectContent>
-                            {banksResponse?.data.map((bank) => (
-                              <SelectItem key={bank.id} value={bank.name}>
-                                {bank.name}
-                              </SelectItem>
-                            ))}
+                            {banksResponse?.data && banksResponse.data.length > 0 ? (
+                              banksResponse.data.map((bank) => (
+                                <SelectItem key={bank.id} value={bank.name}>
+                                  {bank.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground text-center">
+                                No banks available
+                              </div>
+                            )}
                           </SelectContent>
                         </Select>
                         <FieldError>

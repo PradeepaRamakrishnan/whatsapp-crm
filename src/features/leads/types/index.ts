@@ -151,3 +151,88 @@ export interface LeadsResponse {
     totalConsent: number;
   };
 }
+export interface ManualFollowupCase {
+  id: string;
+  reason: string;
+  status: string;
+  assignedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  fileContent: {
+    id: string;
+    customerName: string;
+    emailId: string;
+    mobileNumber: string;
+    settlementAmount?: number;
+  } | null;
+  assignedToAgent: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  channelDetails: {
+    email?: {
+      sent: boolean;
+      sentAt?: string;
+      deliveredAt?: string;
+      bounced?: boolean;
+    };
+    sms?: {
+      sent: boolean;
+      sentAt?: string;
+    };
+    whatsapp?: {
+      sent: boolean;
+      sentAt?: string;
+      deliveredAt?: string;
+      read?: boolean;
+    };
+    responseStatus?: string;
+    status: string;
+  } | null;
+  campaignHistory?: Array<{
+    id: string;
+    name: string;
+    status: string;
+    createdAt: string;
+    email?: {
+      sent: boolean;
+      sentAt?: string;
+      deliveredAt?: string;
+      bounced?: boolean;
+      bouncedAt?: string;
+      error?: {
+        message?: string;
+        timestamp?: string;
+      };
+    };
+    sms?: {
+      sent: boolean;
+      sentAt?: string;
+      deliveredAt?: string;
+      bounced?: boolean;
+      bouncedAt?: string;
+    };
+    whatsapp?: {
+      sent: boolean;
+      sentAt?: string;
+      deliveredAt?: string;
+      bounced?: boolean;
+      bouncedAt?: string;
+      read?: boolean;
+      error?: {
+        message?: string;
+        timestamp?: string;
+      };
+    };
+    responseStatus?: string;
+    updatedAt?: string;
+  }>;
+}
+
+export interface ManualFollowupsResponse {
+  data: ManualFollowupCase[];
+  meta: LeadsMeta;
+}

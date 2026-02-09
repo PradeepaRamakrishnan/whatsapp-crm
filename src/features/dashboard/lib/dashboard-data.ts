@@ -62,10 +62,10 @@ export const dashboardData = {
           title: 'All Leads',
           url: '/leads/list',
         },
-        // {
-        //   title: 'Interested',
-        //   url: '/leads/interested',
-        // },
+        {
+          title: 'Manual Followup',
+          url: '/leads/manual-followup',
+        },
         // {
         //   title: 'Qualified',
         //   url: '/leads/qualified',
