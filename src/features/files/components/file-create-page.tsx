@@ -30,7 +30,7 @@ export function FileCreatePage() {
 
   const { data: banksResponse } = useQuery({
     queryKey: ['financial-institutions'],
-    queryFn: () => getAllFinancialInstitutions(1, 100),
+    queryFn: () => getAllFinancialInstitutions(1, 10),
   });
 
   const form = useForm({
