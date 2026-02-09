@@ -342,9 +342,7 @@ export function ManualFollowupTable() {
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400  tracking-wide">
                           Primary Reason
                         </span>
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                          {followupDetails.reason}
-                        </p>
+                        <p className="text-sm font-medium  ">{followupDetails.reason}</p>
                       </div>
                       {followupDetails.notes && (
                         <>
@@ -353,9 +351,7 @@ export function ManualFollowupTable() {
                             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400  tracking-wide">
                               Agent Notes
                             </span>
-                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                              {followupDetails.notes}
-                            </p>
+                            <p className="text-sm">{followupDetails.notes}</p>
                           </div>
                         </>
                       )}
