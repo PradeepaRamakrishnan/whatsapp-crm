@@ -448,7 +448,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                         Invalid
                       </dt>
                       <dd className="text-2xl font-bold tracking-tight text-rose-600">
-                        {campaign.fileContentStats.invalidRecords.toLocaleString()}
+                        {(campaign.fileContentStats.invalidRecords ?? 0).toLocaleString()}
                       </dd>
                     </div>
 
@@ -457,7 +457,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                         Duplicates
                       </dt>
                       <dd className="text-2xl font-bold tracking-tight text-amber-600">
-                        {campaign.fileContentStats.duplicateRecords.toLocaleString()}
+                        {(campaign.fileContentStats.duplicateRecords ?? 0).toLocaleString()}
                       </dd>
                     </div>
 
@@ -466,7 +466,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                         Excluded
                       </dt>
                       <dd className="text-2xl font-bold tracking-tight text-slate-600">
-                        {campaign.fileContentStats.excludedRecords.toLocaleString()}
+                        {(campaign.fileContentStats.excludedRecords ?? 0).toLocaleString()}
                       </dd>
                     </div>
                   </div>
