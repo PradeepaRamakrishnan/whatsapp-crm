@@ -71,10 +71,16 @@ export interface ChannelStatus {
   } | null;
 }
 
-export interface ContactMessageSent {
-  total: number;
+export interface ChannelMessageStats {
   sent: number;
   pending: number;
+}
+
+export interface ContactMessageSent {
+  totalContacts: number;
+  email: ChannelMessageStats;
+  sms: ChannelMessageStats;
+  whatsapp: ChannelMessageStats;
 }
 
 export interface CampaignFile {

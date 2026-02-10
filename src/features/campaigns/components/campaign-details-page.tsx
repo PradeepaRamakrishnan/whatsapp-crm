@@ -9,6 +9,10 @@ import {
   CheckCircle2,
   Download,
   FileText,
+  Mail,
+  MessageCircle,
+  MessageCircleMore,
+  MessageSquare,
   Pause,
   Play,
   Send,
@@ -38,6 +42,8 @@ const getStatusColor = (status: string) => {
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900';
     case 'running':
       return 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-900';
+    case 'pending':
+      return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-900';
     case 'scheduled':
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900';
     case 'completed':
@@ -48,6 +54,29 @@ const getStatusColor = (status: string) => {
       return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-900';
     default:
       return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-900';
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return 'Retrieving recipients...';
+    case 'active':
+      return 'Ready to start';
+    case 'running':
+      return 'Sending messages';
+    case 'completed':
+      return 'Completed';
+    case 'paused':
+      return 'Paused';
+    case 'scheduled':
+      return 'Scheduled';
+    case 'draft':
+      return 'Draft';
+    case 'failed':
+      return 'Failed';
+    default:
+      return status;
   }
 };
 
@@ -73,9 +102,10 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
     queryKey: ['campaign', campaignId],
     queryFn: () => getCampaignById(campaignId),
     refetchInterval: (query) => {
-      // Only refetch every 10 seconds if campaign is running
+      // Refetch every 5 seconds if campaign is running or pending
       const campaignData = query.state.data;
-      return campaignData?.status?.toLowerCase() === 'running' ? 10000 : false;
+      const status = campaignData?.status?.toLowerCase();
+      return status === 'running' || status === 'pending' ? 5000 : false;
     },
     refetchOnWindowFocus: false,
   });
@@ -179,8 +209,15 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl font-bold tracking-tight">{campaign.name}</h1>
-              <Badge className={cn('border', getStatusColor(campaign.status))} variant="secondary">
-                {campaign.status}
+              <Badge
+                className={cn(
+                  'border',
+                  getStatusColor(campaign.status),
+                  campaign.status?.toLowerCase() === 'active' && 'animate-pulse',
+                )}
+                variant="secondary"
+              >
+                {getStatusLabel(campaign.status)}
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -288,18 +325,33 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
+              <CardTitle className="text-sm font-medium">Progress</CardTitle>
               <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-950/30">
-                <Send className="h-4 w-4 text-orange-600" />
+                <MessageCircleMore className="h-4 w-4 text-orange-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {campaign.contactMessageSent.sent.toLocaleString()}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  <span className="text-xl font-bold">
+                    {(campaign.contactMessageSent?.email?.sent ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xl font-bold">
+                    {(campaign.contactMessageSent?.whatsapp?.sent ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MessageSquare className="h-4 w-4 text-green-600" />
+                  <span className="text-xl font-bold">
+                    {(campaign.contactMessageSent?.sms?.sent ?? 0).toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {campaign.contactMessageSent.pending} pending
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Sent messages by channel</p>
             </CardContent>
           </Card>
         </div>
