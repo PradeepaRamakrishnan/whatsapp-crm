@@ -85,9 +85,11 @@ export interface CampaignFile {
 }
 
 export interface FileContentStats {
-  totalRecords: number;
-  validRecords: number;
+  totalRecords?: number;
+  validRecords?: number;
   invalidRecords: number;
+  duplicateRecords: number;
+  excludedRecords: number;
 }
 
 export interface CampaignDetails {

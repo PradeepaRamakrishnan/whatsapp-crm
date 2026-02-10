@@ -25,6 +25,7 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -66,6 +67,7 @@ import {
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { deleteFileRecord, getFileById } from '../services';
+import { useFileFilterStore } from '../store/file-filter-store';
 import type { FileRecord } from '../types/file.types';
 import { FileRecordEdit } from './file-record-edit';
 
@@ -209,7 +211,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
-  const filter = searchParams.get('filter') || 'all';
+  const urlFilter = searchParams.get('filter') || 'all';
+  const { filter: storeFilter, setFilter: setStoreFilter } = useFileFilterStore();
 
   const updateParams = React.useCallback(
     (updates: { page?: number; pageSize?: number; filter?: string }) => {
@@ -228,18 +231,25 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         }
         params.set('page', '1'); // Reset to page 1 on filter change
       }
-      router.replace(`?${params.toString()}`);
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
+
+  // Sync URL to Store (for highlighting external components)
+  useEffect(() => {
+    if (urlFilter !== storeFilter) {
+      setStoreFilter(urlFilter);
+    }
+  }, [urlFilter, storeFilter, setStoreFilter]);
 
   const {
     data: fileData,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['file', fileId, { page, limit: pageSize, filter }],
-    queryFn: () => getFileById(fileId, page, pageSize, filter),
+    queryKey: ['file', fileId, { page, limit: pageSize, filter: urlFilter }],
+    queryFn: () => getFileById(fileId, page, pageSize, urlFilter),
     placeholderData: (previousData) => previousData,
   });
 
@@ -282,12 +292,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             className="max-w-sm w-full"
             disabled={showLoading}
           />
-          <Select
-            value={filter}
-            onValueChange={(val) => {
-              updateParams({ filter: val });
-            }}
-          >
+          <Select value={urlFilter} onValueChange={(val) => updateParams({ filter: val })}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="All Records" />
             </SelectTrigger>

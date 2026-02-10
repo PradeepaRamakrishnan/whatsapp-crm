@@ -80,6 +80,8 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
     refetchOnWindowFocus: false,
   });
 
+  // console.log('Campaign Details:', campaign);
+
   // Fetch campaign timeline
   const { data: timelineResponse } = useQuery({
     queryKey: ['campaign-timeline', campaignId],
@@ -379,30 +381,41 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                     </div>
                   </div>
 
-                  <div className="col-span-full grid grid-cols-3 gap-4 pt-4 border-t mt-2">
-                    <div className="text-center p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                        Total
-                      </p>
-                      <p className="text-xl font-black">
-                        {campaign.fileContentStats.totalRecords.toLocaleString()}
-                      </p>
+                  <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t mt-6">
+                    <div className="border-l-2 border-blue-500 pl-4 py-1">
+                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        Total Records
+                      </dt>
+                      <dd className="text-2xl font-bold tracking-tight">
+                        {(campaign.fileContentStats.totalRecords ?? 0).toLocaleString()}
+                      </dd>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-900/20">
-                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">
-                        Valid
-                      </p>
-                      <p className="text-xl font-black text-emerald-700 dark:text-emerald-400">
-                        {campaign.fileContentStats.validRecords.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-center p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-900/20">
-                      <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">
+
+                    <div className="border-l-2 border-rose-500 pl-4 py-1">
+                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                         Invalid
-                      </p>
-                      <p className="text-xl font-black text-rose-700 dark:text-rose-400">
+                      </dt>
+                      <dd className="text-2xl font-bold tracking-tight text-rose-600">
                         {campaign.fileContentStats.invalidRecords.toLocaleString()}
-                      </p>
+                      </dd>
+                    </div>
+
+                    <div className="border-l-2 border-amber-500 pl-4 py-1">
+                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        Duplicates
+                      </dt>
+                      <dd className="text-2xl font-bold tracking-tight text-amber-600">
+                        {campaign.fileContentStats.duplicateRecords.toLocaleString()}
+                      </dd>
+                    </div>
+
+                    <div className="border-l-2 border-slate-400 pl-4 py-1">
+                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        Excluded
+                      </dt>
+                      <dd className="text-2xl font-bold tracking-tight text-slate-600">
+                        {campaign.fileContentStats.excludedRecords.toLocaleString()}
+                      </dd>
                     </div>
                   </div>
                 </dl>
