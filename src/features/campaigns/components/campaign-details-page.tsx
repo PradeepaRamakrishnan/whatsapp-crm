@@ -36,10 +36,12 @@ const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
     case 'active':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900';
+    case 'running':
+      return 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-900';
     case 'scheduled':
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900';
     case 'completed':
-      return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-900';
+      return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-900';
     case 'draft':
       return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-900';
     case 'paused':
@@ -211,7 +213,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 {runMutation.isPending ? 'Running...' : 'Run'}
               </Button>
             )}
-            {campaign.status === 'active' ? (
+            {campaign.status === 'running' ? (
               <Button
                 variant="outline"
                 size="sm"
