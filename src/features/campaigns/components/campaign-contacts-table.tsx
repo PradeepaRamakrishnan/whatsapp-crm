@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { CheckCircle2, Mail, MessageSquare } from 'lucide-react';
+import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -147,18 +147,18 @@ export const columns: ColumnDef<CampaignContactData>[] = [
             'Email',
           )}
           {renderStatusTooltip(
+            <MessageCircle
+              className={`h-4 w-4 ${whatsapp.bounced || whatsapp.bouncedAt ? 'text-rose-600' : whatsapp.sent ? 'text-emerald-600' : 'text-gray-300'}`}
+            />,
+            whatsapp,
+            'WhatsApp',
+          )}
+          {renderStatusTooltip(
             <MessageSquare
               className={`h-4 w-4 ${sms.bounced || sms.bouncedAt ? 'text-rose-600' : sms.sent ? 'text-green-600' : 'text-gray-300'}`}
             />,
             sms,
             'SMS',
-          )}
-          {renderStatusTooltip(
-            <CheckCircle2
-              className={`h-4 w-4 ${whatsapp.bounced || whatsapp.bouncedAt ? 'text-rose-600' : whatsapp.sent ? 'text-emerald-600' : 'text-gray-300'}`}
-            />,
-            whatsapp,
-            'WhatsApp',
           )}
         </div>
       );
