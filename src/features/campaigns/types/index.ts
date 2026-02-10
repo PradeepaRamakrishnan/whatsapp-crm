@@ -201,6 +201,12 @@ export interface ConfigTemplate {
   updatedAt: string;
 }
 
+export interface ChannelOrderItem {
+  channel: 'email' | 'sms' | 'whatsapp';
+  delayMs: number;
+  enabled: boolean;
+}
+
 export interface Configuration {
   id: string;
   emailTemplate?: ConfigTemplate;
@@ -211,6 +217,7 @@ export interface Configuration {
   frequency?: number;
   interval?: number;
   schedulerEnabled?: boolean;
+  channelOrder?: ChannelOrderItem[];
   active: boolean;
   createdAt: string;
   updatedAt: string;
