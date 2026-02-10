@@ -178,9 +178,10 @@ export const columns: ColumnDef<CampaignContactData>[] = [
 
 interface CampaignContactsTableProps {
   campaignId: string;
+  campaignStatus?: string;
 }
 
-export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps) {
+export function CampaignContactsTable({ campaignId, campaignStatus }: CampaignContactsTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -209,6 +210,8 @@ export function CampaignContactsTable({ campaignId }: CampaignContactsTableProps
     queryKey: ['campaign-contacts', campaignId, { page, limit: pageSize }],
     queryFn: () => getCampaignContacts(campaignId, page, pageSize),
     placeholderData: (previousData) => previousData,
+    refetchInterval: campaignStatus?.toLowerCase() === 'running' ? 10000 : false,
+    refetchOnWindowFocus: false,
   });
 
   const contacts = contactsResponse?.data || [];
