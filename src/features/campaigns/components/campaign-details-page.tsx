@@ -70,7 +70,11 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
   const { data: campaign, isLoading } = useQuery({
     queryKey: ['campaign', campaignId],
     queryFn: () => getCampaignById(campaignId),
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time stats
+    refetchInterval: (query) => {
+      // Only refetch every 10 seconds if campaign is running
+      const campaignData = query.state.data;
+      return campaignData?.status?.toLowerCase() === 'running' ? 10000 : false;
+    },
     refetchOnWindowFocus: false,
   });
 
@@ -407,7 +411,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
 
         {/* Contacts Tab */}
         <TabsContent value="contacts" className="mt-2">
-          <CampaignContactsTable campaignId={campaignId} />
+          <CampaignContactsTable campaignId={campaignId} campaignStatus={campaign.status} />
         </TabsContent>
 
         {/* Timeline Tab */}
