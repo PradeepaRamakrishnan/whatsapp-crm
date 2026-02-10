@@ -210,7 +210,10 @@ export function CampaignContactsTable({ campaignId, campaignStatus }: CampaignCo
     queryKey: ['campaign-contacts', campaignId, { page, limit: pageSize }],
     queryFn: () => getCampaignContacts(campaignId, page, pageSize),
     placeholderData: (previousData) => previousData,
-    refetchInterval: campaignStatus?.toLowerCase() === 'running' ? 10000 : false,
+    refetchInterval: () => {
+      const status = campaignStatus?.toLowerCase();
+      return status === 'running' || status === 'pending' ? 30000 : false;
+    },
     refetchOnWindowFocus: false,
   });
 

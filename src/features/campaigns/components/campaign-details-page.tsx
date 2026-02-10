@@ -42,6 +42,8 @@ const getStatusColor = (status: string) => {
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900';
     case 'running':
       return 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-900';
+    case 'pending':
+      return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-900';
     case 'scheduled':
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900';
     case 'completed':
@@ -52,6 +54,29 @@ const getStatusColor = (status: string) => {
       return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-900';
     default:
       return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-900';
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return 'Retrieving recipients...';
+    case 'active':
+      return 'Ready to start';
+    case 'running':
+      return 'Sending messages';
+    case 'completed':
+      return 'Completed';
+    case 'paused':
+      return 'Paused';
+    case 'scheduled':
+      return 'Scheduled';
+    case 'draft':
+      return 'Draft';
+    case 'failed':
+      return 'Failed';
+    default:
+      return status;
   }
 };
 
@@ -77,9 +102,10 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
     queryKey: ['campaign', campaignId],
     queryFn: () => getCampaignById(campaignId),
     refetchInterval: (query) => {
-      // Only refetch every 10 seconds if campaign is running
+      // Refetch every 5 seconds if campaign is running or pending
       const campaignData = query.state.data;
-      return campaignData?.status?.toLowerCase() === 'running' ? 10000 : false;
+      const status = campaignData?.status?.toLowerCase();
+      return status === 'running' || status === 'pending' ? 5000 : false;
     },
     refetchOnWindowFocus: false,
   });
@@ -181,8 +207,15 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl font-bold tracking-tight">{campaign.name}</h1>
-              <Badge className={cn('border', getStatusColor(campaign.status))} variant="secondary">
-                {campaign.status}
+              <Badge
+                className={cn(
+                  'border',
+                  getStatusColor(campaign.status),
+                  campaign.status?.toLowerCase() === 'active' && 'animate-pulse',
+                )}
+                variant="secondary"
+              >
+                {getStatusLabel(campaign.status)}
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
