@@ -26,3 +26,32 @@ export interface FinancialInstitutionsResponse {
     totalPages: number;
   };
 }
+
+export interface TemplateVariable {
+  id: string;
+  key: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  fallbackValue: string | null;
+}
+
+export interface Template {
+  id: string;
+  externalId: string;
+  name: string;
+  alias: string;
+  status: string;
+  publishedAt: string;
+  from: string;
+  subject: string;
+  replyTo: string;
+  variables: TemplateVariable[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TemplatesResponse {
+  data: Template[];
+}
