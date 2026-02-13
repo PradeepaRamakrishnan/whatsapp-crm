@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { TemplatesList } from '@/features/settings/components/templates-list';
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
 };
 
 const CampaignTemplatesPage = () => {
-  return <TemplatesList />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TemplatesList />
+    </Suspense>
+  );
 };
 
 export default CampaignTemplatesPage;
