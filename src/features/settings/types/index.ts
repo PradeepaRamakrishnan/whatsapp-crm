@@ -46,6 +46,8 @@ export interface Template {
   from: string;
   subject: string;
   replyTo: string;
+  html?: string;
+  text?: string;
   variables: TemplateVariable[];
   active: boolean;
   createdAt: string;
@@ -54,4 +56,41 @@ export interface Template {
 
 export interface TemplatesResponse {
   data: Template[];
+}
+
+export interface WhatsAppButton {
+  text: string;
+  type: 'QUICK_REPLY' | 'URL';
+  url?: string;
+  example?: string[];
+}
+
+export interface WhatsAppComponent {
+  text?: string;
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
+  format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  buttons?: WhatsAppButton[];
+  example?: {
+    // biome-ignore lint/style/useNamingConvention: API returns snake_case
+    header_handle?: string[];
+    // biome-ignore lint/style/useNamingConvention: API returns snake_case
+    body_text?: string[][];
+  };
+}
+
+export interface WhatsAppTemplate {
+  id: string;
+  externalId: string;
+  name: string;
+  language: string;
+  status: string;
+  category: string;
+  components: WhatsAppComponent[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhatsAppTemplatesResponse {
+  data: WhatsAppTemplate[];
 }

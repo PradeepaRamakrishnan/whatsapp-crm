@@ -6,7 +6,9 @@ import type { Configuration, ConfigurationResponse } from '@/features/campaigns/
 import type {
   FinancialInstitution,
   FinancialInstitutionsResponse,
+  Template,
   TemplatesResponse,
+  WhatsAppTemplatesResponse,
 } from '../types';
 
 const axiosClient = axios.create({
@@ -198,6 +200,26 @@ export async function getAllEmailTemplates(): Promise<TemplatesResponse> {
   }
 }
 
+export async function getEmailTemplateById(id: string): Promise<Template> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/email-templates/${id}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch email template');
+    }
+    throw error;
+  }
+}
+
 export async function syncWhatsAppTemplates(): Promise<{ success: boolean; message: string }> {
   try {
     const cookieStore = await cookies();
@@ -233,6 +255,26 @@ export async function syncResendTemplates(): Promise<{ success: boolean; message
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to sync Resend templates');
+    }
+    throw error;
+  }
+}
+
+export async function getAllWhatsAppTemplates(): Promise<WhatsAppTemplatesResponse> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/whatsapp-templates`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch WhatsApp templates');
     }
     throw error;
   }
