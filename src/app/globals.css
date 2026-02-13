@@ -109,7 +109,7 @@
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.25 0.08 60);
-  --sidebar-accent-foreground: oklch(0.90 0.05 70);
+  --sidebar-accent-foreground: oklch(0.9 0.05 70);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
@@ -182,7 +182,6 @@
   }
 
   @keyframes float {
-
     0%,
     100% {
       transform: translateY(0);

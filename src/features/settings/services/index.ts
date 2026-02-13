@@ -279,3 +279,49 @@ export async function getAllWhatsAppTemplates(): Promise<WhatsAppTemplatesRespon
     throw error;
   }
 }
+
+export async function toggleEmailTemplateDefault(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/email-templates/${id}/default`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update email template default');
+    }
+    throw error;
+  }
+}
+
+export async function toggleWhatsAppTemplateDefault(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'PATCH',
+      url: `/whatsapp-templates/${id}/default`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to update WhatsApp template default',
+      );
+    }
+    throw error;
+  }
+}

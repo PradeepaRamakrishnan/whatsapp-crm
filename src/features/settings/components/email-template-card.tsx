@@ -1,18 +1,29 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Calendar, CheckCircle2, Mail, Tag } from 'lucide-react';
+import { Calendar, CheckCircle2, Mail, Star, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Template } from '../types';
 
 interface EmailTemplateCardProps {
   template: Template;
   onClick?: () => void;
+  onToggleDefault?: (templateId: string) => void;
 }
 
-export function EmailTemplateCard({ template, onClick }: EmailTemplateCardProps) {
+export function EmailTemplateCard({ template, onClick, onToggleDefault }: EmailTemplateCardProps) {
   const isPublished = template.status === 'published';
+
+  // Format status to title case
+  const formattedStatus =
+    template.status.charAt(0).toUpperCase() + template.status.slice(1).toLowerCase();
+
+  const handleToggleDefault = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleDefault?.(template.id);
+  };
 
   return (
     <Card
@@ -37,7 +48,7 @@ export function EmailTemplateCard({ template, onClick }: EmailTemplateCardProps)
                   }
                 >
                   {isPublished && <CheckCircle2 className="mr-1 h-3 w-3" />}
-                  {template.status}
+                  {formattedStatus}
                 </Badge>
                 {template.active && (
                   <Badge variant="outline" className="text-xs">
@@ -47,6 +58,18 @@ export function EmailTemplateCard({ template, onClick }: EmailTemplateCardProps)
               </div>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-8 w-8"
+            onClick={handleToggleDefault}
+          >
+            <Star
+              className={`h-4 w-4 ${
+                template.isDefault ? 'fill-green-500 text-green-500' : 'text-muted-foreground'
+              }`}
+            />
+          </Button>
         </div>
       </CardHeader>
 

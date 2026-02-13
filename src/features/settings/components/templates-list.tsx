@@ -14,6 +14,8 @@ import {
   getAllWhatsAppTemplates,
   syncResendTemplates,
   syncWhatsAppTemplates,
+  toggleEmailTemplateDefault,
+  toggleWhatsAppTemplateDefault,
 } from '../services';
 import type { WhatsAppTemplate } from '../types';
 import { EmailTemplateCard } from './email-template-card';
@@ -85,6 +87,42 @@ export function TemplatesList() {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to sync WhatsApp templates', {
         id: 'sync-whatsapp-templates',
+      });
+    },
+  });
+
+  const { mutate: toggleEmailDefault } = useMutation({
+    mutationFn: toggleEmailTemplateDefault,
+    onMutate: () => {
+      toast.loading('Updating default template...', { id: 'toggle-email-default' });
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Default template updated successfully', {
+        id: 'toggle-email-default',
+      });
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update default template', {
+        id: 'toggle-email-default',
+      });
+    },
+  });
+
+  const { mutate: toggleWhatsAppDefault } = useMutation({
+    mutationFn: toggleWhatsAppTemplateDefault,
+    onMutate: () => {
+      toast.loading('Updating default template...', { id: 'toggle-whatsapp-default' });
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Default template updated successfully', {
+        id: 'toggle-whatsapp-default',
+      });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update default template', {
+        id: 'toggle-whatsapp-default',
       });
     },
   });
@@ -169,6 +207,7 @@ export function TemplatesList() {
                     key={template.id}
                     template={template}
                     onClick={() => setSelectedTemplateId(template.id)}
+                    onToggleDefault={toggleEmailDefault}
                   />
                 ))}
               </div>
@@ -235,6 +274,7 @@ export function TemplatesList() {
                     key={template.id}
                     template={template}
                     onClick={() => setSelectedWhatsAppTemplate(template)}
+                    onToggleDefault={toggleWhatsAppDefault}
                   />
                 ))}
               </div>

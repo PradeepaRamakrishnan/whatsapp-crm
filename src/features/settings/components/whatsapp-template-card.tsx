@@ -1,25 +1,40 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Calendar, CheckCircle2, MessageSquare, Tag } from 'lucide-react';
+import { Calendar, CheckCircle2, MessageSquare, Star, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { WhatsAppTemplate } from '../types';
 
 interface WhatsAppTemplateCardProps {
   template: WhatsAppTemplate;
   onClick?: () => void;
+  onToggleDefault?: (templateId: string) => void;
 }
 
-export function WhatsAppTemplateCard({ template, onClick }: WhatsAppTemplateCardProps) {
+export function WhatsAppTemplateCard({
+  template,
+  onClick,
+  onToggleDefault,
+}: WhatsAppTemplateCardProps) {
   const isApproved = template.status === 'APPROVED';
   const headerComponent = template.components.find((c) => c.type === 'HEADER');
   const bodyComponent = template.components.find((c) => c.type === 'BODY');
   const buttonsComponent = template.components.find((c) => c.type === 'BUTTONS');
 
+  // Format category to title case
+  const formattedCategory =
+    template.category.charAt(0).toUpperCase() + template.category.slice(1).toLowerCase();
+
+  const handleToggleDefault = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleDefault?.(template.id);
+  };
+
   return (
     <Card
-      className={`transition-all hover:shadow-md ${onClick ? 'cursor-pointer' : ''}`}
+      className={`transition-all hover:shadow-md flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <CardHeader>
@@ -50,10 +65,22 @@ export function WhatsAppTemplateCard({ template, onClick }: WhatsAppTemplateCard
               </div>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-8 w-8"
+            onClick={handleToggleDefault}
+          >
+            <Star
+              className={`h-4 w-4 ${
+                template.isDefault ? 'fill-green-500 text-green-500' : 'text-muted-foreground'
+              }`}
+            />
+          </Button>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 flex-1 flex flex-col">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Tag className="h-3.5 w-3.5" />
           <span className="truncate font-mono text-xs">{template.name}</span>
@@ -62,7 +89,7 @@ export function WhatsAppTemplateCard({ template, onClick }: WhatsAppTemplateCard
         <div className="space-y-1.5">
           <div className="text-xs text-muted-foreground">Category</div>
           <Badge variant="outline" className="text-xs">
-            {template.category}
+            {formattedCategory}
           </Badge>
         </div>
 
@@ -107,7 +134,7 @@ export function WhatsAppTemplateCard({ template, onClick }: WhatsAppTemplateCard
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t mt-auto">
           <Calendar className="h-3.5 w-3.5" />
           <span>Updated {dayjs(template.updatedAt).format('MMM DD, YYYY')}</span>
         </div>

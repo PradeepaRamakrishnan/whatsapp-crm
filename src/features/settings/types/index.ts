@@ -50,6 +50,7 @@ export interface Template {
   text?: string;
   variables: TemplateVariable[];
   active: boolean;
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,6 +88,7 @@ export interface WhatsAppTemplate {
   category: string;
   components: WhatsAppComponent[];
   active: boolean;
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 }
