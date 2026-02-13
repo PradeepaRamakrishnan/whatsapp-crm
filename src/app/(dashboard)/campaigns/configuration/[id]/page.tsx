@@ -6,11 +6,9 @@ import { useParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import z from 'zod';
 import { Button } from '@/components/ui/button';
 import type { ChannelOrderItem } from '@/features/campaigns/types';
 import Channel from '@/features/configuration/components/channel';
-import Templates from '@/features/configuration/components/templates';
 import { getConfigurationyId, updateConfiguration } from '@/features/settings/services';
 
 const steps = [
@@ -38,7 +36,6 @@ export default function EditConfigurationPage() {
   const [emailTemplate, setEmailTemplate] = useState<string>('');
   const [smsTemplate, setSmsTemplate] = useState<string>('');
   const [whatsappTemplate, setWhatsappTemplate] = useState<string>('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Scheduler State
   const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
@@ -139,36 +136,6 @@ export default function EditConfigurationPage() {
   // };
 
   const handleNext = () => {
-    setErrors({});
-    const schema = z.object({
-      emailTemplate: emailEnabled
-        ? z.string().min(1, 'Please select an email template')
-        : z.string().optional(),
-      smsTemplate: smsEnabled
-        ? z.string().min(1, 'Please select an SMS template')
-        : z.string().optional(),
-      whatsappTemplate: whatsappEnabled
-        ? z.string().min(1, 'Please select a WhatsApp template')
-        : z.string().optional(),
-    });
-
-    const result = schema.safeParse({
-      emailTemplate,
-      smsTemplate,
-      whatsappTemplate,
-    });
-
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        if (issue.path[0]) {
-          newErrors[issue.path[0] as string] = issue.message;
-        }
-      });
-      setErrors(newErrors);
-      return;
-    }
-
     if (currentStep < steps.length) {
       setCurrentStep((prev) => prev + 1);
     }
@@ -339,21 +306,11 @@ export default function EditConfigurationPage() {
       <div className="flex-1">
         {currentStep === 1 && (
           <div className="space-y-4">
-            <Templates
-              emailEnabled={emailEnabled}
-              setEmailEnabled={setEmailEnabled}
-              smsEnabled={smsEnabled}
-              setSmsEnabled={setSmsEnabled}
-              whatsappEnabled={whatsappEnabled}
-              setWhatsappEnabled={setWhatsappEnabled}
-              emailTemplate={emailTemplate}
-              setEmailTemplate={setEmailTemplate}
-              smsTemplate={smsTemplate}
-              setSmsTemplate={setSmsTemplate}
-              whatsappTemplate={whatsappTemplate}
-              setWhatsappTemplate={setWhatsappTemplate}
-              errors={errors}
-            />
+            <div className="rounded-lg border bg-card p-6">
+              <p className="text-sm text-muted-foreground">
+                Template selection will be available soon.
+              </p>
+            </div>
             <div className="flex justify-end pt-6">
               <Button onClick={handleNext}>Next Step</Button>
             </div>

@@ -31,7 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { mockTemplates } from '../lib/templates-data';
 import { RecordSelectionTable } from './record-selection-table';
 
 type CampaignPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -92,17 +91,14 @@ export function CreateCampaignForm() {
     },
   });
 
-  const emailTemplates = mockTemplates.filter(
-    (t) => t.status === 'approved' && t.channel === 'email',
-  );
-  const smsTemplates = mockTemplates.filter((t) => t.status === 'approved' && t.channel === 'sms');
-  const whatsappTemplates = mockTemplates.filter(
-    (t) => t.status === 'approved' && t.channel === 'whatsapp',
-  );
+  // TODO: Replace with actual template API calls
+  const emailTemplates: any[] = [];
+  const smsTemplates: any[] = [];
+  const whatsappTemplates: any[] = [];
 
-  const selectedEmailData = mockTemplates.find((t) => t.id === emailTemplate);
-  const selectedSmsData = mockTemplates.find((t) => t.id === smsTemplate);
-  const selectedWhatsappData = mockTemplates.find((t) => t.id === whatsappTemplate);
+  const selectedEmailData = undefined as any;
+  const selectedSmsData = undefined as any;
+  const selectedWhatsappData = undefined as any;
   const selectedFileData = mockFiles.find((f) => f.id === selectedFile);
 
   const allRequiredTemplatesSelected =
