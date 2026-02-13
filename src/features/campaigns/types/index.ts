@@ -1,3 +1,5 @@
+import type { Template, WhatsAppTemplate } from '@/features/settings/types';
+
 export type CampaignStatus = 'active' | 'running' | 'paused' | 'failed' | 'completed';
 
 export interface CampaignErrorDetails {
@@ -217,14 +219,15 @@ export interface ChannelOrderItem {
 
 export interface Configuration {
   id: string;
-  emailTemplate?: ConfigTemplate;
-  smsTemplate?: ConfigTemplate;
-  whatsappTemplate?: ConfigTemplate;
-  schedulerId?: string;
+  emailTemplate?: Template;
+  smsTemplate?: Template | null;
+  whatsappTemplate?: WhatsAppTemplate;
+  schedulerId?: string | null;
   cronPattern?: string;
   frequency?: number;
   interval?: number;
   schedulerEnabled?: boolean;
+  jobId?: string | null;
   channelOrder?: ChannelOrderItem[];
   active: boolean;
   createdAt: string;
