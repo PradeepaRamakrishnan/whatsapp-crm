@@ -195,7 +195,7 @@ export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead>
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
-      method: 'PATCH',
+      method: 'PUT',
       url: `/${id}`,
       data,
       headers: {

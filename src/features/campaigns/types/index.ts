@@ -269,7 +269,7 @@ export interface InteractionRecord {
     createdAt: string;
     updatedAt: string;
   };
-  channel: 'email' | 'sms' | 'whatsapp' | 'call';
+  channel: 'email' | 'sms' | 'whatsapp' | 'call' | 'note';
   direction: 'inbound' | 'outbound';
   status: string;
   subject: string | null;

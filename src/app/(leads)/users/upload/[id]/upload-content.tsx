@@ -4,9 +4,12 @@ import { useSearchParams } from 'next/navigation';
 
 import { SteppedDocumentUploader } from '@/features/leads/components/stepped-document-uploader';
 
-export function UploadContent() {
+interface UploadContentProps {
+  leadId: string;
+}
+
+export function UploadContent({ leadId }: UploadContentProps) {
   const searchParams = useSearchParams();
-  const leadId = searchParams.get('leadId') || '';
   const campaignId = searchParams.get('campaignId') || undefined;
   const contactId = searchParams.get('contactId') || undefined;
 

@@ -130,6 +130,7 @@ export interface Lead {
   dob?: string;
   panNumber?: string;
   consentGivenAt: string | null;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
   documents?: Document[];

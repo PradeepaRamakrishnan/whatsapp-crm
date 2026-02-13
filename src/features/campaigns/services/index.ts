@@ -324,7 +324,7 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
 export async function getContactMessages(
   campaignId: string,
   contactId?: string,
-  channel?: 'email' | 'sms' | 'whatsapp',
+  channel?: 'email' | 'sms' | 'whatsapp' | 'call' | 'note',
 ): Promise<unknown> {
   try {
     const cookieStore = await cookies();
@@ -473,6 +473,66 @@ export async function getCampaignPerformanceStats(): Promise<CampaignPerformance
       throw new Error(
         error.response?.data?.message || 'Failed to fetch campaign performance stats',
       );
+    }
+    throw error;
+  }
+}
+
+export async function logCallInteraction(
+  campaignId: string,
+  contactId: string,
+  data: {
+    notes: string;
+  },
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/interactions`,
+      data: {
+        channel: 'call',
+        ...data,
+      },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to log call interaction');
+    }
+    throw error;
+  }
+}
+
+export async function logNoteInteraction(
+  campaignId: string,
+  contactId: string,
+  note: string,
+): Promise<unknown> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/${campaignId}/contacts/${contactId}/interactions`,
+      data: {
+        channel: 'note',
+        notes: note,
+        direction: 'outbound',
+        status: 'completed',
+      },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to log note');
     }
     throw error;
   }
