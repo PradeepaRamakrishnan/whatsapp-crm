@@ -91,9 +91,11 @@ export interface CampaignFile {
 }
 
 export interface FileContentStats {
-  totalRecords: number;
-  validRecords: number;
+  totalRecords?: number;
+  validRecords?: number;
   invalidRecords: number;
+  duplicateRecords: number;
+  excludedRecords: number;
 }
 
 export interface CampaignDetails {
@@ -207,6 +209,12 @@ export interface ConfigTemplate {
   updatedAt: string;
 }
 
+export interface ChannelOrderItem {
+  channel: 'email' | 'sms' | 'whatsapp';
+  delayMs: number;
+  enabled: boolean;
+}
+
 export interface Configuration {
   id: string;
   emailTemplate?: ConfigTemplate;
@@ -217,6 +225,7 @@ export interface Configuration {
   frequency?: number;
   interval?: number;
   schedulerEnabled?: boolean;
+  channelOrder?: ChannelOrderItem[];
   active: boolean;
   createdAt: string;
   updatedAt: string;

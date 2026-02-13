@@ -184,9 +184,8 @@ export async function deleteCampaign(id: string): Promise<unknown> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
-      method: 'PATCH',
+      method: 'DELETE',
       url: `/${id}`,
-      data: { active: false },
       headers: {
         Cookie: cookieStore.toString(),
       },

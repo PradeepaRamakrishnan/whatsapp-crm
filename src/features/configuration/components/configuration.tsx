@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import cronstrue from 'cronstrue';
 import { Mail, MessageSquare, Pencil, Phone, Send } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,12 +17,65 @@ import {
 } from '@/components/ui/dialog';
 import { getAllConfiguration } from '@/features/settings/services';
 
+// import { ChannelOrderItem } from '@/features/campaigns/types';
+
 interface TemplatePreview {
   type: 'email' | 'sms' | 'whatsapp';
   name: string;
   content: string;
   bank: string;
 }
+
+const channelConfig: Record<
+  string,
+  { icon: any; label: string; bgColor: string; textColor: string; iconColor: string }
+> = {
+  email: {
+    icon: Mail,
+    label: 'Email',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+    textColor: 'text-blue-900 dark:text-blue-100',
+    iconColor: 'text-blue-600',
+  },
+  sms: {
+    icon: MessageSquare,
+    label: 'SMS',
+    bgColor: 'bg-green-50 dark:bg-green-950/30',
+    textColor: 'text-green-900 dark:text-green-100',
+    iconColor: 'text-green-600',
+  },
+  whatsapp: {
+    icon: Send,
+    label: 'WhatsApp',
+    bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-900 dark:text-emerald-100',
+    iconColor: 'text-emerald-600',
+  },
+  phone: {
+    icon: Phone,
+    label: 'Call',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    textColor: 'text-purple-900 dark:text-purple-100',
+    iconColor: 'text-purple-600',
+  },
+  call: {
+    icon: Phone,
+    label: 'Call',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    textColor: 'text-purple-900 dark:text-purple-100',
+    iconColor: 'text-purple-600',
+  },
+};
+
+const formatDelay = (ms: number) => {
+  if (ms === 0) return 'Start';
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) return `${hours} hr`;
+  return `${hours} hr ${remainingMinutes} min`;
+};
 
 const ConfigurationPage = () => {
   const router = useRouter();
@@ -33,16 +86,15 @@ const ConfigurationPage = () => {
     queryFn: () => getAllConfiguration(),
   });
 
-  // Get the first configuration from the data array
+  // console.log('Configuration Response:', configurationResponse);
+
   const config = configurationResponse?.data?.[0];
 
-  // Helper to get email content (HTML body)
   const getEmailContent = (content: { subject?: string; body?: string } | undefined): string => {
     if (!content) return 'No content configured';
     return content.body || 'No content configured';
   };
 
-  // Helper to get SMS/WhatsApp content (text body)
   const getTemplateContent = (content: { subject?: string; body?: string } | undefined): string => {
     if (!content) return 'No content configured';
     return content.body || 'No content configured';
@@ -95,11 +147,6 @@ const ConfigurationPage = () => {
           content: 'No content configured',
         },
   };
-
-  // Get scheduler status and cron pattern
-  // const schedulerEnabled = config?.schedulerEnabled ?? false;
-  // const cronPattern = config?.cronPattern || 'Not configured';
-  // const approved = config?.approved ?? false;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-8 p-6">
@@ -253,34 +300,61 @@ const ConfigurationPage = () => {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30">
-                  <Mail className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Email</span>
-                  <Badge variant="secondary" className="text-xs">
-                    Start
-                  </Badge>
-                </div>
-                <span className="text-muted-foreground">→</span>
-                <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2 dark:bg-green-950/30">
-                  <MessageSquare className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium">SMS</span>
-                  <Badge variant="outline" className="text-xs">
-                    30 min
-                  </Badge>
-                </div>
-                <span className="text-muted-foreground">→</span>
-                <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
-                  <Send className="h-4 w-4 text-emerald-600" />
-                  <span className="text-sm font-medium">WhatsApp</span>
-                  <Badge variant="outline" className="text-xs">
-                    60 min
-                  </Badge>
-                </div>
-                <span className="text-muted-foreground">→</span>
-                <div className="flex items-center gap-2 rounded-lg border bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
-                  <Phone className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium">Call</span>
-                </div>
+                {config?.channelOrder &&
+                config.channelOrder.filter((item) => item.enabled).length > 0 ? (
+                  config.channelOrder
+                    .filter((item) => item.enabled)
+                    .map((item, index: number, filtered) => {
+                      const channelInfo = channelConfig[
+                        item.channel as keyof typeof channelConfig
+                      ] || {
+                        icon: MessageSquare,
+                        label: item.channel,
+                        bgColor: 'bg-gray-50 dark:bg-gray-900/30',
+                        textColor: 'text-gray-900 dark:text-gray-100',
+                        iconColor: 'text-gray-600',
+                      };
+                      const Icon = channelInfo.icon;
+
+                      return (
+                        <React.Fragment key={item.channel}>
+                          <div
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${channelInfo.bgColor}`}
+                          >
+                            <Icon className={`h-4 w-4 ${channelInfo.iconColor}`} />
+                            <span className={`text-sm font-medium ${channelInfo.textColor}`}>
+                              {channelInfo.label}
+                            </span>
+                            <Badge
+                              variant={index === 0 ? 'secondary' : 'outline'}
+                              className="text-xs"
+                            >
+                              {index === 0 ? 'Start' : formatDelay(item.delayMs)}
+                            </Badge>
+                          </div>
+                          {index < filtered.length - 1 && (
+                            <span className="text-muted-foreground">→</span>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                ) : (
+                  <div className="flex items-center gap-2 rounded-lg border bg-blue-50 px-3 py-2 dark:bg-blue-950/30 opacity-60">
+                    <span className="text-sm text-muted-foreground italic">
+                      No channel sequence configured
+                    </span>
+                  </div>
+                )}
+
+                {/* {!config?.channelOrder?.some((c: ChannelOrderItem) => c.channel === 'phone') && (
+                  <>
+                    <span className="text-muted-foreground">→</span>
+                    <div className="flex items-center gap-2 rounded-lg border bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
+                      <Phone className="h-4 w-4 text-purple-600" />
+                      <span className="text-sm font-medium">Call</span>
+                    </div>
+                  </>
+                )} */}
               </div>
 
               {/* Scheduler Time Display */}

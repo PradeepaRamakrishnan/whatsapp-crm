@@ -7,6 +7,7 @@ import { useRouter } from 'nextjs-toploader/app';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import type { ChannelOrderItem } from '@/features/campaigns/types';
 import Channel from '@/features/configuration/components/channel';
 import { getConfigurationyId, updateConfiguration } from '@/features/settings/services';
 
@@ -42,6 +43,11 @@ export default function EditConfigurationPage() {
   const [scheduledTime, setScheduledTime] = useState('');
   const [frequency, setFrequency] = useState('0');
   const [interval, setInterval] = useState('0');
+  const [channelOrder, setChannelOrder] = useState<ChannelOrderItem[]>([
+    { channel: 'email', delayMs: 0, enabled: true },
+    { channel: 'sms', delayMs: 10 * 60 * 1000, enabled: true },
+    { channel: 'whatsapp', delayMs: 15 * 60 * 1000, enabled: true },
+  ]);
 
   useEffect(() => {
     if (config) {
@@ -70,6 +76,11 @@ export default function EditConfigurationPage() {
 
       if (config.frequency) setFrequency(String(config.frequency));
       if (config.interval) setInterval(String(config.interval));
+
+      // Initialize channel order if exists
+      if (config.channelOrder && Array.isArray(config.channelOrder)) {
+        setChannelOrder(config.channelOrder);
+      }
 
       // Attempt to parse cron for existing values (basic parsing)
       if (config.cronPattern) {
@@ -137,14 +148,35 @@ export default function EditConfigurationPage() {
     }
   };
 
+  // Build a cron expression from the selected date and time
+  const generateCronFromSchedule = () => {
+    if (!scheduledDate || !scheduledTime) {
+      return null;
+    }
+
+    // scheduledDate: 'YYYY-MM-DD', scheduledTime: 'HH:MM'
+    const [monthStr, dayStr] = scheduledDate.split('-').map((v) => Number(v));
+    const [hourStr, minuteStr] = scheduledTime.split(':');
+
+    const minute = Number(minuteStr ?? '0');
+    const hour = Number(hourStr ?? '0');
+    const day = Number(dayStr ?? '1');
+    const month = Number(monthStr ?? '1');
+
+    if (Number.isNaN(minute) || Number.isNaN(hour) || Number.isNaN(day) || Number.isNaN(month)) {
+      return null;
+    }
+
+    // Backend expects 6-field cron (sec min hour DOM month DOW), e.g. '0 20 19 * * *'
+    // Use 0 seconds, selected minute & hour, specific day/month, any day-of-week
+    return `0 ${minute} ${hour} ${day} ${month} *`;
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // ✅ CORRECT: Backend expects template IDs as strings directly, not nested objects
       const payload: Record<string, unknown> = {};
 
-      // Only send template IDs if enabled AND has value
-      // Backend uses undefined check, so only add fields that should be updated
       if (emailEnabled && emailTemplate) {
         payload.emailTemplate = emailTemplate;
       }
@@ -157,17 +189,25 @@ export default function EditConfigurationPage() {
         payload.whatsappTemplate = whatsappTemplate;
       }
 
-      // Add scheduler configuration
       if (scheduleMode === 'schedule') {
-        payload.cronPattern = config?.cronPattern || '';
+        const cron = generateCronFromSchedule();
+        if (!cron) {
+          toast.error('Please select a valid schedule date and time');
+          setIsSaving(false);
+          return;
+        }
+
+        payload.cronPattern = cron;
         payload.schedulerEnabled = true;
         payload.frequency = parseInt(frequency, 10) || 0;
         payload.interval = parseInt(interval, 10) || 0;
       } else {
-        // Send empty string to remove scheduler
         payload.schedulerEnabled = false;
         payload.cronPattern = '';
       }
+
+      // Add channel order
+      payload.channelOrder = channelOrder;
 
       await updateConfiguration(id, payload);
 
@@ -293,6 +333,8 @@ export default function EditConfigurationPage() {
               setFrequency={setFrequency}
               interval={interval}
               setInterval={setInterval}
+              channelOrder={channelOrder}
+              setChannelOrder={setChannelOrder}
             />
             <div className="flex justify-between pt-6">
               <Button variant="outline" onClick={handleBack}>

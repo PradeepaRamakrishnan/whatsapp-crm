@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import type { Configuration } from '@/features/campaigns/types';
+import type { ChannelOrderItem, Configuration } from '@/features/campaigns/types';
 
 // import { getAllConfiguration } from '@/features/campaigns/services';
 // import { useQuery } from '@tanstack/react-query';
@@ -42,13 +42,11 @@ interface ChannelsProps {
   setFrequency: (freq: string) => void;
   interval: string;
   setInterval: (int: string) => void;
+  channelOrder: ChannelOrderItem[];
+  setChannelOrder: (order: ChannelOrderItem[]) => void;
 }
 
 const Channel = ({
-  emailEnabled,
-  smsEnabled,
-  whatsappEnabled,
-  _configuration,
   scheduleMode,
   setScheduleMode,
   scheduledDate,
@@ -59,16 +57,13 @@ const Channel = ({
   setFrequency,
   interval,
   setInterval,
+  channelOrder,
+  setChannelOrder,
 }: ChannelsProps) => {
   // Local state for delays (keep local for now as not requested to be saved yet? Or maybe they should be saved too?)
   // The user only mentioned updating schedulerEnabled and cronPattern.
   const [smsDelay, setSmsDelay] = useState('10');
   const [whatsappDelay, setWhatsappDelay] = useState('15');
-  const [channelOrder, setChannelOrder] = useState<('email' | 'sms' | 'whatsapp')[]>([
-    'email',
-    'sms',
-    'whatsapp',
-  ]);
 
   // const { data: configuration } = useQuery({
   //   queryKey: ['configurations'],
@@ -212,7 +207,7 @@ const Channel = ({
       <Card className="border-2">
         <CardContent className="p-6">
           <div className="flex flex-wrap items-center gap-4">
-            {channelOrder.map((channel, index) => {
+            {channelOrder.map((channelItem, index) => {
               const isFirst = index === 0;
               const isLast = index === channelOrder.length - 1;
               const channelConfig = {
@@ -241,13 +236,23 @@ const Channel = ({
                 },
               };
 
-              const config = channelConfig[channel];
+              const config = channelConfig[channelItem.channel];
               const Icon = config.icon;
+
+              // Helper to update delay for this channel
+              const updateChannelDelay = (newDelay: string) => {
+                const newOrder = [...channelOrder];
+                newOrder[index] = {
+                  ...newOrder[index],
+                  delayMs: parseInt(newDelay, 10) * 60 * 1000, // Convert minutes to milliseconds
+                };
+                setChannelOrder(newOrder);
+              };
 
               return (
                 <>
                   <div
-                    key={channel}
+                    key={channelItem.channel}
                     className={`flex items-center gap-3 rounded-lg border-2 px-4 py-3 ${config.colors}`}
                   >
                     <Icon className={`h-5 w-5 ${config.iconColor}`} />
@@ -279,13 +284,13 @@ const Channel = ({
                     )}
                   </div>
 
-                  {!isFirst && 'delay' in config && (
+                  {!isFirst && (
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         min="0"
-                        value={config.delay}
-                        onChange={(e) => config.setDelay?.(e.target.value)}
+                        value={Math.round(channelItem.delayMs / 60 / 1000)} // Convert ms to minutes
+                        onChange={(e) => updateChannelDelay(e.target.value)}
                         className="h-10 w-20 text-center"
                       />
                       <span className="text-sm text-muted-foreground">min</span>
@@ -321,23 +326,29 @@ const Channel = ({
             <div className="text-sm text-muted-foreground">
               <p className="font-medium text-foreground mb-1">How it works:</p>
               <ul className="space-y-1 text-xs">
-                {emailEnabled && <li>• Campaign starts with Email communication</li>}
-                {!emailEnabled && smsEnabled && <li>• Campaign starts with SMS communication</li>}
-                {!emailEnabled && !smsEnabled && whatsappEnabled && (
-                  <li>• Campaign starts with WhatsApp communication</li>
-                )}
-                {emailEnabled && smsEnabled && (
-                  <li>• After {smsDelay} minutes, SMS will be sent to recipients</li>
-                )}
-                {smsEnabled && whatsappEnabled && (
-                  <li>
-                    • After {whatsappDelay} minutes from {emailEnabled ? 'SMS' : 'start'}, WhatsApp
-                    message will be sent
-                  </li>
-                )}
-                {emailEnabled && !smsEnabled && whatsappEnabled && (
-                  <li>• After {whatsappDelay} minutes, WhatsApp message will be sent</li>
-                )}
+                {channelOrder.map((item, index) => {
+                  const channelNames = {
+                    email: 'Email',
+                    sms: 'SMS',
+                    whatsapp: 'WhatsApp',
+                  };
+                  const delayMinutes = Math.round(item.delayMs / 60 / 1000);
+
+                  if (index === 0) {
+                    return (
+                      <li key={item.channel}>
+                        • Campaign starts with {channelNames[item.channel]} communication
+                      </li>
+                    );
+                  } else {
+                    return (
+                      <li key={item.channel}>
+                        • After {delayMinutes} minutes, {channelNames[item.channel]} will be sent to
+                        recipients
+                      </li>
+                    );
+                  }
+                })}
                 <li>• Call follow-up will be scheduled after all automated communications</li>
               </ul>
             </div>

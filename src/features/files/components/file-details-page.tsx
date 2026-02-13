@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, Calendar, Database, FileText, Mail, XCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,21 @@ interface FileDetailsPageProps {
 }
 
 export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // const { filter } = useFileFilterStore();
+
+  const updateFilter = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === 'all') {
+      params.delete('filter');
+    } else {
+      params.set('filter', val);
+    }
+    params.set('page', '1');
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   const { data: file, isLoading } = useQuery<FileDetailData>({
     queryKey: ['file', fileId, { page: 1, limit: 10 }],
     queryFn: () => getFileById(fileId, 1, 10),
@@ -125,7 +141,10 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-blue-500 hover:shadow-sm"
+          onClick={() => updateFilter('all')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Records</CardTitle>
             <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
@@ -141,7 +160,10 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-red-500 hover:shadow-sm "
+          onClick={() => updateFilter('invalid')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Invalid Records</CardTitle>
             <div className="rounded-lg bg-red-100 p-2 dark:bg-red-950/30">
@@ -156,7 +178,10 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-amber-500 hover:shadow-sm"
+          onClick={() => updateFilter('duplicate_email')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Duplicates</CardTitle>
             <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950/30">
@@ -171,7 +196,10 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-gray-500 hover:shadow-sm"
+          onClick={() => updateFilter('excluded')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Excluded</CardTitle>
             <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-950/30">
