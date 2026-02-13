@@ -28,7 +28,13 @@ interface TemplatePreview {
 
 const channelConfig: Record<
   string,
-  { icon: any; label: string; bgColor: string; textColor: string; iconColor: string }
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    bgColor: string;
+    textColor: string;
+    iconColor: string;
+  }
 > = {
   email: {
     icon: Mail,
@@ -90,14 +96,20 @@ const ConfigurationPage = () => {
 
   const config = configurationResponse?.data?.[0];
 
-  const getEmailContent = (content: { subject?: string; body?: string } | undefined): string => {
-    if (!content) return 'No content configured';
-    return content.body || 'No content configured';
+  const getEmailContent = (template: { html?: string; text?: string }): string => {
+    if (!template) return 'No content configured';
+    return template.html || template.text || 'No content configured';
   };
 
-  const getTemplateContent = (content: { subject?: string; body?: string } | undefined): string => {
-    if (!content) return 'No content configured';
-    return content.body || 'No content configured';
+  const getWhatsAppContent = (template: {
+    components?: Array<{
+      type: string;
+      text?: string;
+    }>;
+  }): string => {
+    if (!template?.components) return 'No content configured';
+    const bodyComponent = template.components.find((c) => c.type === 'BODY');
+    return bodyComponent?.text || 'No content configured';
   };
 
   const templates = {
@@ -105,9 +117,9 @@ const ConfigurationPage = () => {
       ? {
           type: 'email' as const,
           name: config.emailTemplate.name,
-          description: config.emailTemplate.description,
-          bank: config.emailTemplate.tags.join(', '),
-          content: getEmailContent(config.emailTemplate.content),
+          description: config.emailTemplate.subject || config.emailTemplate.alias,
+          bank: config.emailTemplate.status || '-',
+          content: getEmailContent(config.emailTemplate),
         }
       : {
           type: 'email' as const,
@@ -120,9 +132,9 @@ const ConfigurationPage = () => {
       ? {
           type: 'sms' as const,
           name: config.smsTemplate.name,
-          description: config.smsTemplate.description,
-          bank: config.smsTemplate.tags.join(', '),
-          content: getTemplateContent(config.smsTemplate.content),
+          description: config.smsTemplate.alias || config.smsTemplate.name,
+          bank: config.smsTemplate.status || '-',
+          content: config.smsTemplate.text || 'No content configured',
         }
       : {
           type: 'sms' as const,
@@ -135,9 +147,9 @@ const ConfigurationPage = () => {
       ? {
           type: 'whatsapp' as const,
           name: config.whatsappTemplate.name,
-          description: config.whatsappTemplate.description,
-          bank: config.whatsappTemplate.tags.join(', '),
-          content: getTemplateContent(config.whatsappTemplate.content),
+          description: `${config.whatsappTemplate.language} - ${config.whatsappTemplate.status}`,
+          bank: config.whatsappTemplate.category || '-',
+          content: getWhatsAppContent(config.whatsappTemplate),
         }
       : {
           type: 'whatsapp' as const,
