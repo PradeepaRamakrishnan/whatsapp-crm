@@ -6,18 +6,31 @@ import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import utc from 'dayjs/plugin/utc';
-import { Lock, Mail, MessageSquare } from 'lucide-react';
+import { Lock, Mail, MessageSquare, Phone, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CallMessageCard } from '@/components/shared/call-message-card';
 import { EmailMessageCard } from '@/components/shared/email-message-card';
 import { MessageInput } from '@/components/shared/message-input';
 import { SMSMessageCard } from '@/components/shared/sms-message-card';
 import { WhatsAppMessageCard } from '@/components/shared/whatsapp-message-card';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
   getContactMessages,
+  logCallInteraction,
   sendReplyEmail,
   sendReplySMS,
   sendReplyWhatsApp,
@@ -50,6 +63,9 @@ function transformMessage(m: InteractionRecord, channel: string = 'email') {
     deliveredAt: m.deliveredAt,
     bouncedAt: m.bouncedAt,
     error: m.error,
+    callDuration: m.callDuration,
+    callOutcome: m.callOutcome,
+    callNotes: m.callNotes,
   };
 }
 
@@ -122,10 +138,16 @@ function ErrorState({ error }: { error: Error | null }) {
 
 export function CampaignConversation({ campaignId, contactId }: CampaignConversationProps) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'email' | 'whatsapp' | 'sms'>('email');
+  const [activeTab, setActiveTab] = useState<'email' | 'whatsapp' | 'sms' | 'call'>('email');
   const emailScrollRef = useRef<HTMLDivElement>(null);
   const smsScrollRef = useRef<HTMLDivElement>(null);
   const whatsappScrollRef = useRef<HTMLDivElement>(null);
+  const callScrollRef = useRef<HTMLDivElement>(null);
+
+  const [isLogCallOpen, setIsLogCallOpen] = useState(false);
+  const [callDetails, setCallDetails] = useState({
+    notes: '',
+  });
 
   // Queries
   const {
@@ -160,6 +182,17 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     enabled: !!contactId,
   });
 
+  const {
+    data: callsQueryResult,
+    isLoading: isLoadingCalls,
+    error: callsError,
+  } = useQuery<InteractionResponse, Error>({
+    queryKey: ['contact-messages', campaignId, contactId, 'call'],
+    queryFn: () =>
+      getContactMessages(campaignId, contactId, 'call') as Promise<InteractionResponse>,
+    enabled: !!contactId,
+  });
+
   // Mutations
   const { mutate: sendEmail, isPending: isSending } = useMutation({
     mutationFn: (data: { subject: string; body: string }) =>
@@ -186,6 +219,17 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
       }),
   });
 
+  const { mutate: logCall, isPending: isLoggingCall } = useMutation({
+    mutationFn: (data: { notes: string }) => logCallInteraction(campaignId, contactId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['contact-messages', campaignId, contactId, 'call'],
+      });
+      setIsLogCallOpen(false);
+      setCallDetails({ notes: '' });
+    },
+  });
+
   // Transform messages
   const emailGroups = useMemo(() => {
     const messages = emailResponse?.data
@@ -208,9 +252,17 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     return groupMessagesByDate(messages);
   }, [whatsappResponse]);
 
+  const callsGroups = useMemo(() => {
+    const messages = callsQueryResult?.data
+      ? [...callsQueryResult.data].reverse().map((m) => transformMessage(m, 'call'))
+      : [];
+    return groupMessagesByDate(messages);
+  }, [callsQueryResult]);
+
   const emailCount = Object.values(emailGroups).flat().length;
   const smsCount = Object.values(smsGroups).flat().length;
   const whatsappCount = Object.values(whatsappGroups).flat().length;
+  const callsCount = Object.values(callsGroups).flat().length;
 
   const scrollToBottom = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
@@ -239,6 +291,13 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
     }, 100);
     return () => clearTimeout(timer);
   }, [activeTab, scrollToBottom, whatsappGroups]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === 'call') scrollToBottom(callScrollRef);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, scrollToBottom, callsGroups]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden h-full">
@@ -282,24 +341,104 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                 : 'bg-muted/30 border-muted-foreground/10 text-muted-foreground hover:bg-muted/50'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5 text-sky-500" />
             <span>SMS</span>
             <span className="opacity-60 font-medium">({smsCount})</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('call')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-semibold whitespace-nowrap ${
+              activeTab === 'call'
+                ? 'bg-purple-50 text-purple-600 border-purple-200 shadow-sm'
+                : 'bg-muted/30 border-muted-foreground/10 text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Phone className="w-3.5 h-3.5 text-purple-500" />
+            <span>Calls</span>
+            <span className="opacity-60 font-medium">({callsCount})</span>
+          </button>
         </div>
+
+        {activeTab === 'call' && (
+          <Dialog open={isLogCallOpen} onOpenChange={setIsLogCallOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="ml-auto gap-2">
+                <Plus className="w-4 h-4" />
+                Log Call
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Log Call Note</DialogTitle>
+                <DialogDescription>
+                  Record a quick note about your call with the customer.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Type call details here..."
+                    className="min-h-[100px]"
+                    value={callDetails.notes}
+                    onChange={(e) => setCallDetails({ ...callDetails, notes: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  onClick={() =>
+                    logCall({
+                      notes: callDetails.notes,
+                    })
+                  }
+                  disabled={isLoggingCall || !callDetails.notes.trim()}
+                >
+                  {isLoggingCall ? 'Saving...' : 'Save Note'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Content Area */}
-      {['email', 'whatsapp', 'sms'].map((tab) => {
+      {['email', 'whatsapp', 'sms', 'call'].map((tab) => {
         if (tab !== activeTab) return null;
 
         const groups =
-          tab === 'email' ? emailGroups : tab === 'whatsapp' ? whatsappGroups : smsGroups;
+          tab === 'email'
+            ? emailGroups
+            : tab === 'whatsapp'
+              ? whatsappGroups
+              : tab === 'sms'
+                ? smsGroups
+                : callsGroups;
         const isLoading =
-          tab === 'email' ? isLoadingEmail : tab === 'whatsapp' ? isLoadingWhatsapp : isLoadingSms;
-        const error = tab === 'email' ? emailError : tab === 'whatsapp' ? whatsappError : smsError;
+          tab === 'email'
+            ? isLoadingEmail
+            : tab === 'whatsapp'
+              ? isLoadingWhatsapp
+              : tab === 'sms'
+                ? isLoadingSms
+                : isLoadingCalls;
+        const error =
+          tab === 'email'
+            ? emailError
+            : tab === 'whatsapp'
+              ? whatsappError
+              : tab === 'sms'
+                ? smsError
+                : callsError;
         const scrollRef =
-          tab === 'email' ? emailScrollRef : tab === 'whatsapp' ? whatsappScrollRef : smsScrollRef;
+          tab === 'email'
+            ? emailScrollRef
+            : tab === 'whatsapp'
+              ? whatsappScrollRef
+              : tab === 'sms'
+                ? smsScrollRef
+                : callScrollRef;
         const isSendingLocal =
           tab === 'email' ? isSending : tab === 'whatsapp' ? isSendingWhatsapp : isSendingSms;
         const isWhatsApp = tab === 'whatsapp';
@@ -373,6 +512,8 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                             }
                             if (isWhatsApp)
                               return <WhatsAppMessageCard key={message.id} message={message} />;
+                            if (tab === 'call')
+                              return <CallMessageCard key={message.id} message={message} />;
                             return <SMSMessageCard key={message.id} message={message} />;
                           })}
                         </div>
@@ -385,39 +526,47 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                     <div className="p-6 rounded-full bg-muted/40 mb-4 animate-in zoom-in-50 duration-300">
                       {tab === 'email' ? (
                         <Mail className="w-8 h-8 text-primary/60" />
+                      ) : tab === 'call' ? (
+                        <Phone className="w-8 h-8 text-primary/60" />
                       ) : (
                         <MessageSquare className="w-8 h-8 text-primary/60" />
                       )}
                     </div>
-                    <p className="text-base font-bold text-foreground">No conversation found</p>
+                    <p className="text-base font-bold text-foreground">
+                      No {tab === 'call' ? 'calls' : 'conversation'} found
+                    </p>
                     <p className="text-sm mt-1 max-w-[200px] text-center opacity-70">
-                      Send the first message to start the conversation.
+                      {tab === 'call'
+                        ? 'Log your first call to start tracking.'
+                        : 'Send the first message to start the conversation.'}
                     </p>
                   </div>
                 )}
               </div>
             </ScrollArea>
 
-            <div className="border-t bg-background p-4 relative z-10 items-center justify-center flex">
-              <div className="max-w-4xl w-full">
-                <MessageInput
-                  placeholder={`Send ${tab === 'whatsapp' ? 'a WhatsApp message' : tab === 'sms' ? 'an SMS' : 'an Email'}...`}
-                  disabled={isSendingLocal}
-                  onSend={(msg) => {
-                    if (tab === 'email') {
-                      const lines = msg.trim().split('\n');
-                      const subject = lines[0] || 'No Subject';
-                      const body = lines.slice(1).join('\n') || lines[0];
-                      sendEmail({ subject, body });
-                    } else if (tab === 'whatsapp') {
-                      sendWhatsapp({ body: msg });
-                    } else {
-                      sendSms({ body: msg });
-                    }
-                  }}
-                />
+            {tab !== 'call' && (
+              <div className="border-t bg-background p-4 relative z-10 items-center justify-center flex">
+                <div className="max-w-4xl w-full">
+                  <MessageInput
+                    placeholder={`Send ${tab === 'whatsapp' ? 'a WhatsApp message' : tab === 'sms' ? 'an SMS' : 'an Email'}...`}
+                    disabled={isSendingLocal}
+                    onSend={(msg) => {
+                      if (tab === 'email') {
+                        const lines = msg.trim().split('\n');
+                        const subject = lines[0] || 'No Subject';
+                        const body = lines.slice(1).join('\n') || lines[0];
+                        sendEmail({ subject, body });
+                      } else if (tab === 'whatsapp') {
+                        sendWhatsapp({ body: msg });
+                      } else {
+                        sendSms({ body: msg });
+                      }
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       })}

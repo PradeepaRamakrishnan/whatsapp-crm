@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   CheckCircle2,
@@ -11,6 +11,7 @@ import {
   FileCheck,
   FileText,
   Info,
+  Loader2,
   Lock,
   ShieldCheck,
   Trash2,
@@ -33,7 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { updateLead, uploadDocument } from '../services';
+import { getDocuments, updateLead, uploadDocument } from '../services';
 import type { Document } from '../types';
 import { DocumentType, DocumentUploadSchema } from '../types';
 
@@ -193,6 +194,21 @@ export function SteppedDocumentUploader({
 
   const [currentStep, setCurrentStep] = useState(0);
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+
+  // Fetch documents from API if they exist
+  const { data: documentsData, isLoading: isDocsLoading } = useQuery({
+    queryKey: ['lead-documents', leadId],
+    queryFn: () => getDocuments(leadId),
+    enabled: !!leadId,
+  });
+
+  // Sync documents state when data is fetched
+  useEffect(() => {
+    if (documentsData?.documents) {
+      setDocuments(documentsData.documents);
+    }
+  }, [documentsData]);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewDoc, setPreviewDoc] = useState<Document | Document[] | null>(null);
 
@@ -215,14 +231,10 @@ export function SteppedDocumentUploader({
     activeDocTypeRef.current = docType;
     fileInputRef.current?.click();
   };
-  //   console.log(leadId, 'lead id');
-
-  //   console.log(documents, 'uploaded documents');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeDocTypeRef.current) {
-      // Basic size/type check remains for early exit but we mainly use Zod in confirmUpload
       setSelectedFile(file);
       setUploadFileName(file.name);
       setIsUploadModalOpen(true);
@@ -248,6 +260,7 @@ export function SteppedDocumentUploader({
       setSelectedFile(null);
       activeDocTypeRef.current = null;
       toast.success('Document uploaded successfully');
+      queryClient.invalidateQueries({ queryKey: ['lead-documents', leadId] });
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
       // Reset error for this specific type if it was showing
       setShowErrors(false);
@@ -272,20 +285,26 @@ export function SteppedDocumentUploader({
   const confirmUpload = () => {
     if (!selectedFile || !activeDocTypeRef.current) return;
 
-    // Convert docType string to native enum for Zod validation
-    const docType = activeDocTypeRef.current.startsWith('aadhaar')
-      ? DocumentType.Aadhar
-      : activeDocTypeRef.current === 'pan'
-        ? DocumentType.Pan
-        : activeDocTypeRef.current === 'income_proof'
-          ? DocumentType.IncomeProof
-          : activeDocTypeRef.current === 'bank_statement'
-            ? DocumentType.BankStatement
-            : activeDocTypeRef.current === 'address_proof'
-              ? DocumentType.AddressProof
-              : activeDocTypeRef.current === 'loan_statement'
-                ? DocumentType.LoanStatement
-                : DocumentType.Other;
+    // Map the trigger type to the correct DocumentType enum
+    let docType: DocumentType;
+
+    if (activeDocTypeRef.current === 'aadhaar_front') {
+      docType = DocumentType.AadharFront;
+    } else if (activeDocTypeRef.current === 'aadhaar_back') {
+      docType = DocumentType.AadharBack;
+    } else if (activeDocTypeRef.current === 'pan') {
+      docType = DocumentType.Pan;
+    } else if (activeDocTypeRef.current === 'income_proof') {
+      docType = DocumentType.IncomeProof;
+    } else if (activeDocTypeRef.current === 'bank_statement') {
+      docType = DocumentType.BankStatement;
+    } else if (activeDocTypeRef.current === 'address_proof') {
+      docType = DocumentType.AddressProof;
+    } else if (activeDocTypeRef.current === 'loan_statement') {
+      docType = DocumentType.LoanStatement;
+    } else {
+      docType = DocumentType.Other;
+    }
 
     const result = DocumentUploadSchema.safeParse({
       name: uploadFileName,
@@ -305,7 +324,7 @@ export function SteppedDocumentUploader({
 
     uploadMutation.mutate({
       file: selectedFile,
-      type: docType, // Use the mapped backend type
+      type: docType,
       name: uploadFileName,
     });
   };
@@ -342,9 +361,9 @@ export function SteppedDocumentUploader({
     return group.documents.every((doc) => {
       if (!doc.required) return true;
       if (doc.id === 'aadhaar') {
-        // For Aadhaar, we check if we have at least 2 documents of type 'aadhaar'
-        const aadhaarDocs = documents.filter((d) => d.type === DocumentType.Aadhar);
-        return aadhaarDocs.length >= 2;
+        const hasFront = documents.some((d) => d.type === DocumentType.AadharFront);
+        const hasBack = documents.some((d) => d.type === DocumentType.AadharBack);
+        return hasFront && hasBack;
       }
       return documents.some((d) => d.type === doc.id);
     });
@@ -416,6 +435,15 @@ export function SteppedDocumentUploader({
     );
   }
 
+  if (isDocsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+        <Loader2 className="size-10 text-primary animate-spin mb-4" />
+        <p className="text-sm text-muted-foreground font-medium">Loading your documents...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Progress Header */}
@@ -425,7 +453,7 @@ export function SteppedDocumentUploader({
             <h2 className="text-xs font-semibold text-primary  tracking-widest capitalize">
               Step {currentStep + 1} of {DOCUMENT_GROUPS.length}
             </h2>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 ">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 ">
               {activeGroup.title} Upload
             </h1>
           </div>
@@ -436,14 +464,13 @@ export function SteppedDocumentUploader({
         </div>
 
         <div className="space-y-3">
-          <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground  tracking-widest ">
+          <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground  ">
             <span>Overall Progress</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
         </div>
 
-        {/* Shadcn-style Tabs for Navigation */}
         <div className="pt-2">
           <Tabs
             value={activeGroup.id}
@@ -500,9 +527,18 @@ export function SteppedDocumentUploader({
                 const uploadedDoc = documents.find((d) => d.type === doc.id);
                 const aadhaarDocs =
                   doc.id === 'aadhaar'
-                    ? documents.filter((d) => d.type === DocumentType.Aadhar)
+                    ? documents
+                        .filter(
+                          (d) =>
+                            d.type === DocumentType.AadharFront ||
+                            d.type === DocumentType.AadharBack,
+                        )
+                        .sort((a, b) => (a.type === DocumentType.AadharFront ? -1 : 1))
                     : [];
-                const isAadhaarComplete = doc.id === 'aadhaar' && aadhaarDocs.length >= 2;
+                const isAadhaarComplete =
+                  doc.id === 'aadhaar' &&
+                  documents.some((d) => d.type === DocumentType.AadharFront) &&
+                  documents.some((d) => d.type === DocumentType.AadharBack);
                 const isSingleComplete = doc.id !== 'aadhaar' && uploadedDoc;
                 const isAnyComplete = isAadhaarComplete || isSingleComplete;
 
@@ -511,7 +547,7 @@ export function SteppedDocumentUploader({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight text-primary uppercase">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 tracking-tight text-primary ">
                             {doc.name}
                           </h3>
                           {isAnyComplete && (
@@ -546,7 +582,11 @@ export function SteppedDocumentUploader({
                                 onClick={() => {
                                   if (doc.id === 'aadhaar') {
                                     setDocuments(
-                                      documents.filter((d) => d.type !== DocumentType.Aadhar),
+                                      documents.filter(
+                                        (d) =>
+                                          d.type !== DocumentType.AadharFront &&
+                                          d.type !== DocumentType.AadharBack,
+                                      ),
                                     );
                                   } else {
                                     setDocuments(documents.filter((d) => d.id !== uploadedDoc?.id));
@@ -587,13 +627,13 @@ export function SteppedDocumentUploader({
                             {
                               side: 'aadhaar_front',
                               label: 'Front Side',
-                              data: aadhaarDocs[0],
+                              data: aadhaarDocs.find((d) => d.type === DocumentType.AadharFront),
                               dragging: draggedDocType === 'aadhaar_front',
                             },
                             {
                               side: 'aadhaar_back',
                               label: 'Back Side',
-                              data: aadhaarDocs[1],
+                              data: aadhaarDocs.find((d) => d.type === DocumentType.AadharBack),
                               dragging: draggedDocType === 'aadhaar_back',
                             },
                           ].map((item) => {
@@ -633,7 +673,7 @@ export function SteppedDocumentUploader({
                                       <Upload className="size-4.5" />
                                     )}
                                   </div>
-                                  <h4 className="text-sm font-bold text-foreground">
+                                  <h4 className="text-sm font-semibold text-foreground">
                                     {item.label}
                                   </h4>
                                   <p className="text-[11px] text-muted-foreground mt-1 text-center">
@@ -670,7 +710,7 @@ export function SteppedDocumentUploader({
                             <div className="size-12 rounded-xl bg-muted flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                               <Upload className="size-6" />
                             </div>
-                            <h4 className="text-base font-bold text-foreground">
+                            <h4 className="text-base font-semibold text-foreground">
                               Click or Drag File
                             </h4>
                             <p className="text-sm text-muted-foreground mt-1 text-center max-w-[200px]">
@@ -742,9 +782,7 @@ export function SteppedDocumentUploader({
       <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
         <DialogContent className="max-w-[400px] rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-base  tracking-tight uppercase">
-              Confirm Filename
-            </DialogTitle>
+            <DialogTitle className="text-sm  tracking-tight ">Confirm Filename</DialogTitle>
             <DialogDescription className="text-xs font-medium">
               Provide a clear title for internal verification.
             </DialogDescription>
@@ -754,7 +792,7 @@ export function SteppedDocumentUploader({
               <Label
                 htmlFor="docName"
                 className={cn(
-                  'text-[10px] font-bold tracking-widest uppercase',
+                  'text-[10px] font-bold  ',
                   fieldErrors.name ? 'text-destructive' : 'text-muted-foreground',
                 )}
               >
@@ -784,7 +822,7 @@ export function SteppedDocumentUploader({
             <Button
               variant="ghost"
               size="sm"
-              className="text-[10px] font-bold uppercase tracking-widest"
+              // className="text-[10px] font-bold  tracking-widest"
               onClick={() => setIsUploadModalOpen(false)}
             >
               Cancel
@@ -793,7 +831,7 @@ export function SteppedDocumentUploader({
               onClick={confirmUpload}
               disabled={uploadMutation.isPending}
               size="sm"
-              className="px-8 h-10 text-[10px] font-bold uppercase tracking-widest rounded-lg"
+              // className="px-8 h-10  font-bold  tracking-widest rounded-lg"
             >
               {uploadMutation.isPending ? 'Uploading...' : 'Confirm'}
             </Button>

@@ -17,7 +17,7 @@ function UploadPageHeader() {
       </div>
 
       <div className="text-center space-y-4">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-tight ">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight ">
           Secure Document Portal
         </h1>
         <p className="text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto  tracking-wide">
@@ -30,14 +30,22 @@ function UploadPageHeader() {
   );
 }
 
-export default function UploadPage() {
+interface UploadPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function UploadPage({ params }: UploadPageProps) {
+  const { id } = await params;
+
   return (
     <div className="min-h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950">
       <div className="container mx-auto py-16 px-4 max-w-6xl">
         <div className="space-y-12">
           <UploadPageHeader />
           <Suspense fallback={<div>Loading...</div>}>
-            <UploadContent />
+            <UploadContent leadId={id} />
           </Suspense>
         </div>
       </div>

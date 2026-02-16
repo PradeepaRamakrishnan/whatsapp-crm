@@ -290,7 +290,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{campaign.totalContacts.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{campaign.totalContacts?.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Campaign database</p>
             </CardContent>
           </Card>
@@ -303,7 +303,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{campaign.interested.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{campaign.interested?.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 {interestedPercentage.toFixed(1)}% conversion
               </p>

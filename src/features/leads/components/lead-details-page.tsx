@@ -12,9 +12,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Mail, Phone, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { CampaignConversation } from '@/components/shared/campaign-conversation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -35,11 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getCampaignById } from '../services';
 import type { Lead, LeadsResponse } from '../types';
-import { ContactDetailsPage } from './contact-detail';
-import { LeadDocuments } from './lead-documents';
+import { LeadDetailSheet } from './lead-detail-sheet';
 
 interface LeadDetailsPageProps {
   leadId: string;
@@ -51,7 +46,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
     queryFn: () => getCampaignById(leadId),
   });
 
-  // Support both paginated shape (LeadsResponse) and plain array response
   const leads: Lead[] = ((leadResponse as LeadsResponse)?.data as Lead[] | undefined) || [];
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -172,16 +166,6 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
       </div>
     );
   }
-
-  // console.log(leads, 'leads in details page');
-
-  // if (!leads || leads.length === 0) {
-  //   return (
-  //     <div className="flex flex-1 items-center justify-center p-6 text-muted-foreground">
-  //       Lead not found.
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="flex flex-1 flex-col gap-6  p-6 min-w-0">
@@ -333,77 +317,14 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
         </div>
       </div>
 
-      <Sheet
-        open={isSheetOpen}
+      <LeadDetailSheet
+        lead={selectedLead}
+        isOpen={isSheetOpen}
         onOpenChange={(open) => {
           setIsSheetOpen(open);
           if (!open) setSelectedLead(null);
         }}
-      >
-        <SheetContent className="flex flex-col sm:max-w-4xl">
-          <SheetHeader className="border-b pb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm border border-primary/20">
-                <User className="h-7 w-7 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <SheetTitle className="text-xl font-bold tracking-tight">
-                  {selectedLead?.customerName || 'Lead Details'}
-                </SheetTitle>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Mail className="h-3.5 w-3.5 text-blue-500" />
-                    <span className="truncate font-medium">
-                      {selectedLead?.fileContent?.emailId || '-'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Phone className="h-3.5 w-3.5 text-green-500" />
-                    <span className="truncate font-medium">
-                      {selectedLead?.fileContent?.mobileNumber || '-'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SheetHeader>
-
-          {selectedLead && (
-            <Tabs defaultValue="details" className="flex flex-1 flex-col overflow-hidden mt-2">
-              <TabsList className="mx-4 mt-2">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
-                <TabsTrigger value="conversation">Conversation</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="flex-1 overflow-y-auto px-6 pb-6 mt-2">
-                <ContactDetailsPage contact={selectedLead} />
-              </TabsContent>
-
-              <TabsContent value="documents" className="flex-1 overflow-y-auto px-6 pb-6 mt-2">
-                <LeadDocuments
-                  leadId={selectedLead.id}
-                  campaignId={selectedLead.campaign?.id}
-                  contactId={selectedLead.contact?.id}
-                  initialDocuments={selectedLead.documents}
-                />
-              </TabsContent>
-
-              <TabsContent
-                value="conversation"
-                className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0"
-              >
-                {selectedLead.campaign?.id && selectedLead.contact?.id && (
-                  <CampaignConversation
-                    campaignId={selectedLead.campaign.id}
-                    contactId={selectedLead.contact.id}
-                  />
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
-        </SheetContent>
-      </Sheet>
+      />
     </div>
   );
 }
