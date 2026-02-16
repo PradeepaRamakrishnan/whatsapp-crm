@@ -124,6 +124,7 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
               campaignId={lead.campaign?.id}
               contactId={lead.contact?.id}
               initialDocuments={lead.documents}
+              email={lead.fileContent?.emailId}
             />
           </TabsContent>
 
