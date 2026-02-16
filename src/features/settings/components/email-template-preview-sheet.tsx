@@ -14,12 +14,14 @@ interface EmailTemplatePreviewSheetProps {
   templateId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  onToggleDefault?: (templateId: string) => void;
 }
 
 export function EmailTemplatePreviewSheet({
   templateId,
   isOpen,
   onClose,
+  onToggleDefault,
 }: EmailTemplatePreviewSheetProps) {
   const {
     data: template,
@@ -33,6 +35,12 @@ export function EmailTemplatePreviewSheet({
 
   const isPublished = template?.status === 'published';
 
+  const handleToggleDefault = () => {
+    if (template?.id) {
+      onToggleDefault?.(template.id);
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="flex flex-col sm:max-w-3xl">
@@ -44,7 +52,7 @@ export function EmailTemplatePreviewSheet({
                 {template?.name || 'Email Template'}
               </SheetTitle>
               {template && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge
                     variant={isPublished ? 'default' : 'secondary'}
                     className={
@@ -63,9 +71,18 @@ export function EmailTemplatePreviewSheet({
                 </div>
               )}
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {template?.isDefault ? (
+                <Badge className="bg-green-600 text-white hover:bg-green-600">Default</Badge>
+              ) : (
+                <Button variant="outline" size="sm" onClick={handleToggleDefault}>
+                  Make Default
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </SheetHeader>
 

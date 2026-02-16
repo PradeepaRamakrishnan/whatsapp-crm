@@ -1,75 +1,59 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Calendar, CheckCircle2, Mail, Star, Tag } from 'lucide-react';
+import { Calendar, CheckCircle2, Mail, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Template } from '../types';
 
 interface EmailTemplateCardProps {
   template: Template;
   onClick?: () => void;
-  onToggleDefault?: (templateId: string) => void;
 }
 
-export function EmailTemplateCard({ template, onClick, onToggleDefault }: EmailTemplateCardProps) {
+export function EmailTemplateCard({ template, onClick }: EmailTemplateCardProps) {
   const isPublished = template.status === 'published';
 
   // Format status to title case
   const formattedStatus =
     template.status.charAt(0).toUpperCase() + template.status.slice(1).toLowerCase();
 
-  const handleToggleDefault = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleDefault?.(template.id);
-  };
-
   return (
     <Card
-      className={`transition-all hover:shadow-md ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative transition-all hover:shadow-md ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
+      {template.isDefault && (
+        <Badge className="absolute top-3 right-3 bg-green-600 text-white hover:bg-green-600 text-xs z-10">
+          Default
+        </Badge>
+      )}
       <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
-              <Mail className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-base truncate">{template.name}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge
-                  variant={isPublished ? 'default' : 'secondary'}
-                  className={
-                    isPublished
-                      ? 'bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400'
-                      : ''
-                  }
-                >
-                  {isPublished && <CheckCircle2 className="mr-1 h-3 w-3" />}
-                  {formattedStatus}
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950/30">
+            <Mail className="h-4 w-4 text-blue-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base truncate pr-16">{template.name}</CardTitle>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <Badge
+                variant={isPublished ? 'default' : 'secondary'}
+                className={
+                  isPublished
+                    ? 'bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400'
+                    : ''
+                }
+              >
+                {isPublished && <CheckCircle2 className="mr-1 h-3 w-3" />}
+                {formattedStatus}
+              </Badge>
+              {template.active && (
+                <Badge variant="outline" className="text-xs">
+                  Active
                 </Badge>
-                {template.active && (
-                  <Badge variant="outline" className="text-xs">
-                    Active
-                  </Badge>
-                )}
-              </div>
+              )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 h-8 w-8"
-            onClick={handleToggleDefault}
-          >
-            <Star
-              className={`h-4 w-4 ${
-                template.isDefault ? 'fill-green-500 text-green-500' : 'text-muted-foreground'
-              }`}
-            />
-          </Button>
         </div>
       </CardHeader>
 
