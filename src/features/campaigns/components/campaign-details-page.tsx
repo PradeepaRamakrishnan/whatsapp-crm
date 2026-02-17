@@ -412,64 +412,75 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 <CardDescription>Source details and record health</CardDescription>
               </CardHeader>
               <CardContent>
-                <dl className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-indigo-600 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        File Name
-                      </dt>
-                      <dd className="text-sm font-semibold truncate">{campaign.file.name}</dd>
+                {campaign.file && campaign.fileContentStats ? (
+                  <dl className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-indigo-600 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          File Name
+                        </dt>
+                        <dd className="text-sm font-semibold truncate">{campaign.file.name}</dd>
+                      </div>
                     </div>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-5 w-5 text-emerald-600 mt-0.5" />
+                      <div>
+                        <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Bank Name
+                        </dt>
+                        <dd className="text-sm font-semibold uppercase">
+                          {campaign.file.bankName}
+                        </dd>
+                      </div>
+                    </div>
+
+                    <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t mt-6">
+                      <div className="border-l-2 border-blue-500 pl-4 py-1">
+                        <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          Total Records
+                        </dt>
+                        <dd className="text-2xl font-bold tracking-tight">
+                          {(campaign.fileContentStats.totalRecords ?? 0).toLocaleString()}
+                        </dd>
+                      </div>
+
+                      <div className="border-l-2 border-rose-500 pl-4 py-1">
+                        <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          Invalid
+                        </dt>
+                        <dd className="text-2xl font-bold tracking-tight text-rose-600">
+                          {(campaign.fileContentStats.invalidRecords ?? 0).toLocaleString()}
+                        </dd>
+                      </div>
+
+                      <div className="border-l-2 border-amber-500 pl-4 py-1">
+                        <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          Duplicates
+                        </dt>
+                        <dd className="text-2xl font-bold tracking-tight text-amber-600">
+                          {(campaign.fileContentStats.duplicateRecords ?? 0).toLocaleString()}
+                        </dd>
+                      </div>
+
+                      <div className="border-l-2 border-slate-400 pl-4 py-1">
+                        <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          Excluded
+                        </dt>
+                        <dd className="text-2xl font-bold tracking-tight text-slate-600">
+                          {(campaign.fileContentStats.excludedRecords ?? 0).toLocaleString()}
+                        </dd>
+                      </div>
+                    </div>
+                  </dl>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <AlertCircle className="h-12 w-12 text-muted-foreground/50" />
+                    <p className="mt-4 text-sm font-medium text-muted-foreground">
+                      File information not available
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <TrendingUp className="h-5 w-5 text-emerald-600 mt-0.5" />
-                    <div>
-                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Bank Name
-                      </dt>
-                      <dd className="text-sm font-semibold uppercase">{campaign.file.bankName}</dd>
-                    </div>
-                  </div>
-
-                  <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t mt-6">
-                    <div className="border-l-2 border-blue-500 pl-4 py-1">
-                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                        Total Records
-                      </dt>
-                      <dd className="text-2xl font-bold tracking-tight">
-                        {(campaign.fileContentStats.totalRecords ?? 0).toLocaleString()}
-                      </dd>
-                    </div>
-
-                    <div className="border-l-2 border-rose-500 pl-4 py-1">
-                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                        Invalid
-                      </dt>
-                      <dd className="text-2xl font-bold tracking-tight text-rose-600">
-                        {(campaign.fileContentStats.invalidRecords ?? 0).toLocaleString()}
-                      </dd>
-                    </div>
-
-                    <div className="border-l-2 border-amber-500 pl-4 py-1">
-                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                        Duplicates
-                      </dt>
-                      <dd className="text-2xl font-bold tracking-tight text-amber-600">
-                        {(campaign.fileContentStats.duplicateRecords ?? 0).toLocaleString()}
-                      </dd>
-                    </div>
-
-                    <div className="border-l-2 border-slate-400 pl-4 py-1">
-                      <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                        Excluded
-                      </dt>
-                      <dd className="text-2xl font-bold tracking-tight text-slate-600">
-                        {(campaign.fileContentStats.excludedRecords ?? 0).toLocaleString()}
-                      </dd>
-                    </div>
-                  </div>
-                </dl>
+                )}
               </CardContent>
             </Card>
           </div>
