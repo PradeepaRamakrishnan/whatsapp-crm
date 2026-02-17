@@ -11,12 +11,14 @@ interface WhatsAppTemplatePreviewSheetProps {
   template: WhatsAppTemplate | null;
   isOpen: boolean;
   onClose: () => void;
+  onToggleDefault?: (templateId: string) => void;
 }
 
 export function WhatsAppTemplatePreviewSheet({
   template,
   isOpen,
   onClose,
+  onToggleDefault,
 }: WhatsAppTemplatePreviewSheetProps) {
   const isApproved = template?.status === 'APPROVED';
 
@@ -24,6 +26,12 @@ export function WhatsAppTemplatePreviewSheet({
   const bodyComponent = template?.components.find((c) => c.type === 'BODY');
   const footerComponent = template?.components.find((c) => c.type === 'FOOTER');
   const buttonsComponent = template?.components.find((c) => c.type === 'BUTTONS');
+
+  const handleToggleDefault = () => {
+    if (template?.id) {
+      onToggleDefault?.(template.id);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -36,7 +44,7 @@ export function WhatsAppTemplatePreviewSheet({
                 {template?.name || 'WhatsApp Template'}
               </SheetTitle>
               {template && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge
                     variant={isApproved ? 'default' : 'secondary'}
                     className={
@@ -58,9 +66,18 @@ export function WhatsAppTemplatePreviewSheet({
                 </div>
               )}
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {template?.isDefault ? (
+                <Badge className="bg-green-600 text-white hover:bg-green-600">Default</Badge>
+              ) : (
+                <Button variant="outline" size="sm" onClick={handleToggleDefault}>
+                  Make Default
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </SheetHeader>
 

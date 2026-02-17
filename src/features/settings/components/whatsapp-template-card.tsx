@@ -1,23 +1,17 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Calendar, CheckCircle2, MessageSquare, Star, Tag } from 'lucide-react';
+import { Calendar, CheckCircle2, MessageSquare, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { WhatsAppTemplate } from '../types';
 
 interface WhatsAppTemplateCardProps {
   template: WhatsAppTemplate;
   onClick?: () => void;
-  onToggleDefault?: (templateId: string) => void;
 }
 
-export function WhatsAppTemplateCard({
-  template,
-  onClick,
-  onToggleDefault,
-}: WhatsAppTemplateCardProps) {
+export function WhatsAppTemplateCard({ template, onClick }: WhatsAppTemplateCardProps) {
   const isApproved = template.status === 'APPROVED';
   const headerComponent = template.components.find((c) => c.type === 'HEADER');
   const bodyComponent = template.components.find((c) => c.type === 'BODY');
@@ -27,56 +21,42 @@ export function WhatsAppTemplateCard({
   const formattedCategory =
     template.category.charAt(0).toUpperCase() + template.category.slice(1).toLowerCase();
 
-  const handleToggleDefault = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleDefault?.(template.id);
-  };
-
   return (
     <Card
-      className={`transition-all hover:shadow-md flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative transition-all hover:shadow-md flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
+      {template.isDefault && (
+        <Badge className="absolute top-3 right-3 bg-green-600 text-white hover:bg-green-600 text-xs z-10">
+          Default
+        </Badge>
+      )}
       <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div className="rounded-lg bg-green-100 p-2 dark:bg-green-950/30">
-              <MessageSquare className="h-4 w-4 text-green-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-base truncate">{template.name}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge
-                  variant={isApproved ? 'default' : 'secondary'}
-                  className={
-                    isApproved
-                      ? 'bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400'
-                      : ''
-                  }
-                >
-                  {isApproved && <CheckCircle2 className="mr-1 h-3 w-3" />}
-                  {template.status}
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="rounded-lg bg-green-100 p-2 dark:bg-green-950/30">
+            <MessageSquare className="h-4 w-4 text-green-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base truncate pr-16">{template.name}</CardTitle>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <Badge
+                variant={isApproved ? 'default' : 'secondary'}
+                className={
+                  isApproved
+                    ? 'bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400'
+                    : ''
+                }
+              >
+                {isApproved && <CheckCircle2 className="mr-1 h-3 w-3" />}
+                {template.status}
+              </Badge>
+              {template.active && (
+                <Badge variant="outline" className="text-xs">
+                  Active
                 </Badge>
-                {template.active && (
-                  <Badge variant="outline" className="text-xs">
-                    Active
-                  </Badge>
-                )}
-              </div>
+              )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 h-8 w-8"
-            onClick={handleToggleDefault}
-          >
-            <Star
-              className={`h-4 w-4 ${
-                template.isDefault ? 'fill-green-500 text-green-500' : 'text-muted-foreground'
-              }`}
-            />
-          </Button>
         </div>
       </CardHeader>
 

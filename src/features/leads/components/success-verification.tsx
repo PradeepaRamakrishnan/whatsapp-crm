@@ -1,8 +1,9 @@
 'use client';
 
 import { Award, CheckCircle2, Clock, Shield } from 'lucide-react';
-import { useRouter } from 'next/router';
-import { Button } from '@/components/ui/button';
+
+// import { Button } from '@/components/ui/button';
+// import { useRouter } from 'nextjs-toploader/app';
 
 interface SuccessVerificationProps {
   campaignId?: string | null;
@@ -10,7 +11,7 @@ interface SuccessVerificationProps {
 }
 
 export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificationProps) => {
-  const router = useRouter();
+  // const router = useRouter();
 
   return (
     <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
@@ -70,15 +71,15 @@ export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificati
         </div>
       </div>
 
-      <div className="pt-4">
+      {/* <div className="pt-4">
         <Button
           variant="outline"
-          onClick={() => router.push('/leads/interested')}
+          onClick={() => router.push('/')}
           className="w-full h-12 text-base font-semibold border-2"
         >
-          Return to Home
+          Back to Home
         </Button>
-      </div>
+      </div> */}
 
       <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">

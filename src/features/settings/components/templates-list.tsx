@@ -207,7 +207,6 @@ export function TemplatesList() {
                     key={template.id}
                     template={template}
                     onClick={() => setSelectedTemplateId(template.id)}
-                    onToggleDefault={toggleEmailDefault}
                   />
                 ))}
               </div>
@@ -274,7 +273,6 @@ export function TemplatesList() {
                     key={template.id}
                     template={template}
                     onClick={() => setSelectedWhatsAppTemplate(template)}
-                    onToggleDefault={toggleWhatsAppDefault}
                   />
                 ))}
               </div>
@@ -288,6 +286,7 @@ export function TemplatesList() {
         templateId={selectedTemplateId}
         isOpen={!!selectedTemplateId}
         onClose={() => setSelectedTemplateId(null)}
+        onToggleDefault={toggleEmailDefault}
       />
 
       {/* WhatsApp Template Preview Sheet */}
@@ -295,6 +294,7 @@ export function TemplatesList() {
         template={selectedWhatsAppTemplate}
         isOpen={!!selectedWhatsAppTemplate}
         onClose={() => setSelectedWhatsAppTemplate(null)}
+        onToggleDefault={toggleWhatsAppDefault}
       />
     </div>
   );
