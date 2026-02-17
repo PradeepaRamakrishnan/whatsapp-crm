@@ -10,24 +10,12 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import dayjs from 'dayjs';
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle,
-  Copy,
-  Mail,
-  Pencil,
-  Phone,
-  Trash2,
-  User,
-} from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,14 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import {
-  Sheet,
-  SheetContent,
-  // SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+// import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -69,6 +50,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { deleteFileRecord, getFileById } from '../services';
 import { useFileFilterStore } from '../store/file-filter-store';
 import type { FileRecord } from '../types/file.types';
+import { FileRecordDetailsSheet } from './file-record-details-sheet';
 import { FileRecordEdit } from './file-record-edit';
 
 interface FileRecordsTableProps {
@@ -99,21 +81,6 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
       toast.error(error.message || 'Failed to delete record');
     },
   });
-
-  const getResponseStatusColor = (responseStatus: 'interested' | 'not_interested' | null) => {
-    if (responseStatus === 'interested') {
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
-    }
-    if (responseStatus === 'not_interested') {
-      return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300';
-    }
-    return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
-  };
-
-  const formatResponseStatus = (responseStatus: 'interested' | 'not_interested' | null) => {
-    if (responseStatus === null) return 'No Response';
-    return responseStatus.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  };
 
   const columns: ColumnDef<FileRecord>[] = [
     {
@@ -252,6 +219,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     queryFn: () => getFileById(fileId, page, pageSize, urlFilter),
     placeholderData: (previousData) => previousData,
   });
+
+  // console.log(fileData, 'filedata')
 
   const showLoading = isLoading || (isFetching && !fileData);
 
@@ -406,276 +375,10 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
           </Button>
         </div>
       </div>
-      <Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
-        <SheetContent className="flex flex-col sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <div>{selectedRecord?.customerName}</div>
-
-                  <div className="flex items-center pt-1 gap-2">
-                    <Mail className="h-3.5 w-3.5 text-blue-600" />
-                    <p className="text-sm font-normal text-muted-foreground">
-                      {selectedRecord?.emailId || '-'}
-                    </p>
-                  </div>
-                  <div className="flex items-center pt-1 gap-2">
-                    <Phone className="h-3.5 w-3.5 text-green-600" />
-                    <p className="text-sm font-normal text-muted-foreground">
-                      {selectedRecord?.mobileNumber || '-'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </SheetTitle>
-            {/* <SheetDescription>Customer record details</SheetDescription> */}
-          </SheetHeader>
-
-          {selectedRecord && (
-            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 mt-4 pb-4">
-              {/* Excluded Alert */}
-              {selectedRecord.isExcluded && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Excluded Record</AlertTitle>
-                  <AlertDescription className="space-y-3 mt-2">
-                    <p>This record has been excluded and will not be included in campaigns.</p>
-
-                    <Separator className="bg-destructive/20" />
-
-                    <div className="pt-1">
-                      <p className="font-semibold mb-1.5">Reason:</p>
-                      <p>
-                        This record has previously shown interest, indicated no interest, or entered
-                        the consent process in a previous campaign.
-                      </p>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div>
-                <h4 className="my-4 text-sm font-semibold">Campaigns</h4>
-                {selectedRecord.campaigns && selectedRecord.campaigns.length > 0 ? (
-                  <div className="space-y-4">
-                    {selectedRecord.campaigns.map((campaign) => (
-                      <div
-                        key={campaign.id}
-                        className="rounded-lg border p-4 dark:border-slate-700"
-                      >
-                        {/* Campaign Name */}
-                        <p className="font-semibold text-base mb-4">{campaign.name}</p>
-
-                        {/* Created At */}
-                        {campaign.lastRun && (
-                          <div className="mb-4 flex items-center gap-2 rounded-md bg-muted/50 p-2">
-                            <Calendar className="h-4 w-4 text-primary" />
-                            <div className="text-xs">
-                              <p className="font-medium text-muted-foreground">Created At</p>
-                              <p className="font-medium">
-                                {dayjs(campaign.lastRun).format('MMM DD, YYYY hh:mm A')}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Campaign Status */}
-                        {campaign.channels && (
-                          <div className="mb-4">
-                            <p className="mb-3 text-sm font-medium text-muted-foreground">
-                              Campaign Status
-                            </p>
-                            <div className="space-y-2">
-                              {/* Email */}
-                              {campaign.channels.email && (
-                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <Mail className="h-4 w-4 text-blue-600" />
-                                      <div>
-                                        <p className="text-sm font-medium">Email</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {campaign.channels.email.sentAt
-                                            ? `Sent: ${dayjs(campaign.channels.email.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                            : '-'}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    {campaign.channels.email.sent && (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                  </div>
-
-                                  <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
-                                    {campaign.channels?.email?.deliveredAt && (
-                                      <div className="flex items-center gap-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        <p className="text-[11px] text-muted-foreground">
-                                          Delivered:{' '}
-                                          <span className="font-medium text-foreground">
-                                            {dayjs(campaign?.channels?.email?.deliveredAt).format(
-                                              'MMM DD, YYYY hh:mm A',
-                                            )}
-                                          </span>
-                                        </p>
-                                      </div>
-                                    )}
-                                    {campaign.channels?.email?.bouncedAt && (
-                                      <div className="flex items-center gap-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                                        <p className="text-[11px] text-muted-foreground">
-                                          Bounced:{' '}
-                                          <span className="font-medium text-foreground">
-                                            {dayjs(campaign?.channels?.email?.bouncedAt).format(
-                                              'MMM DD, YYYY hh:mm A',
-                                            )}
-                                          </span>
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* SMS */}
-                              {campaign.channels.sms && (
-                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <Copy className="h-4 w-4 text-green-600" />
-                                      <div>
-                                        <p className="text-sm font-medium">SMS</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {campaign.channels.sms.sentAt
-                                            ? `Sent: ${dayjs(campaign.channels.sms.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                            : '-'}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    {campaign.channels.sms.sent && (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* WhatsApp */}
-                              {campaign.channels.whatsapp && (
-                                <div className="flex flex-col gap-2 rounded-md bg-muted/30 px-3 py-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <Phone className="h-4 w-4 text-green-600" />
-                                      <div>
-                                        <p className="text-sm font-medium">WhatsApp</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {campaign.channels.whatsapp.sentAt
-                                            ? `Sent: ${dayjs(campaign.channels.whatsapp.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                            : '-'}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    {campaign.channels.whatsapp.sent && (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                  </div>
-
-                                  {(campaign.channels?.whatsapp?.deliveredAt ||
-                                    campaign.channels?.whatsapp?.bouncedAt) && (
-                                    <div className="flex flex-col gap-1 pl-7 border-l-2 border-muted-foreground/20 ml-2">
-                                      {campaign.channels?.whatsapp?.deliveredAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Delivered:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(
-                                                campaign?.channels?.whatsapp?.deliveredAt,
-                                              ).format('MMM DD, YYYY hh:mm A')}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                      {campaign.channels?.whatsapp?.bouncedAt && (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Bounced:{' '}
-                                            <span className="font-medium text-foreground">
-                                              {dayjs(
-                                                campaign?.channels?.whatsapp?.bouncedAt,
-                                              ).format('MMM DD, YYYY hh:mm A')}
-                                            </span>
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Response Status */}
-                        {campaign.responseStatus && (
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-muted-foreground">
-                              Response Status
-                            </p>
-                            <Badge
-                              variant="outline"
-                              className={`font-medium ${getResponseStatusColor(campaign.responseStatus as 'interested' | 'not_interested' | null)}`}
-                            >
-                              {formatResponseStatus(
-                                campaign.responseStatus as 'interested' | 'not_interested' | null,
-                              )}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <Copy className="h-10 w-10 text-muted-foreground/50 mb-3" />
-                    <p className="text-sm font-medium text-muted-foreground">Campaigns not found</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This record has not been used in any campaigns yet.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {selectedRecord.additionalData &&
-                Object.keys(selectedRecord.additionalData).length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h4 className="mb-3 text-sm font-semibold">Additional Information</h4>
-                      <div className="grid gap-2">
-                        {Object.entries(selectedRecord.additionalData).map(([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2"
-                          >
-                            <span className="text-xs font-medium capitalize text-muted-foreground">
-                              {key.replace(/_/g, ' ')}
-                            </span>
-                            <span className="text-sm font-medium">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <FileRecordDetailsSheet
+        record={selectedRecord}
+        onOpenChange={(open) => !open && setSelectedRecord(null)}
+      />
 
       <FileRecordEdit
         key={recordToEdit?.id || 'none'}
