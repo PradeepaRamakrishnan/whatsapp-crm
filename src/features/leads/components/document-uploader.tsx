@@ -17,6 +17,16 @@ import {
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -215,6 +225,7 @@ export function DocumentUploader({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
   const [draggedDocType, setDraggedDocType] = useState<string | null>(null);
+  const [docToDelete, setDocToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleFileUploadTrigger = (docType: string) => {
     activeDocTypeRef.current = docType;
@@ -327,6 +338,7 @@ export function DocumentUploader({
 
                 let aadhaarDocs: Document[] = [];
                 let isAadhaarComplete = false;
+                let hasAtLeastOneAadhaar = false;
 
                 if (doc.id === 'aadhaar') {
                   const frontDoc = documents.find(
@@ -336,14 +348,14 @@ export function DocumentUploader({
                     (d) => d.type === DocumentType.AadharBack && d.fileUrl,
                   );
 
-                  if (frontDoc && backDoc) {
-                    aadhaarDocs = [frontDoc, backDoc];
-                    isAadhaarComplete = true;
-                  }
+                  aadhaarDocs = [frontDoc, backDoc].filter((d): d is Document => !!d);
+                  hasAtLeastOneAadhaar = aadhaarDocs.length > 0;
+                  isAadhaarComplete = !!frontDoc && !!backDoc;
                 }
 
                 const isSingleComplete = doc.id !== 'aadhaar' && !!uploadedDoc;
                 const isAnyComplete = isAadhaarComplete || isSingleComplete;
+                const canPreview = isSingleComplete || hasAtLeastOneAadhaar;
 
                 return (
                   <div key={doc.id}>
@@ -367,7 +379,7 @@ export function DocumentUploader({
                             </div>
                           )}
                         </div>
-                        {isAnyComplete && (
+                        {canPreview && (
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
@@ -387,22 +399,7 @@ export function DocumentUploader({
                               variant="ghost"
                               className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                               disabled={isDeleting}
-                              onClick={async () => {
-                                if (doc.id === 'aadhaar') {
-                                  const heads = documents.filter(
-                                    (d) =>
-                                      d.type === DocumentType.AadharFront ||
-                                      d.type === DocumentType.AadharBack,
-                                  );
-                                  for (const d of heads) {
-                                    if (d.id) await deleteDocument(leadId, d.id);
-                                  }
-                                  queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
-                                  toast.success('Aadhaar documents deleted');
-                                } else if (uploadedDoc?.id) {
-                                  deleteDoc(uploadedDoc.id);
-                                }
-                              }}
+                              onClick={() => setDocToDelete({ id: doc.id, name: doc.name })}
                             >
                               <Trash2 className="size-3.5" />
                             </Button>
@@ -498,24 +495,34 @@ export function DocumentUploader({
                           </button>
                         ))}
 
-                      {isAnyComplete && expandedDocs[doc.id] && (
+                      {canPreview && expandedDocs[doc.id] && (
                         <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                           {doc.id === 'aadhaar' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {aadhaarDocs.map((aDoc, idx) => (
-                                <div key={aDoc.id || idx} className="space-y-2">
+                              {aadhaarDocs.map((aDoc) => (
+                                <div key={aDoc.id} className="space-y-2">
                                   <p className="text-[10px] font-bold uppercase text-muted-foreground text-center tracking-wider">
-                                    {idx === 0 ? 'Aadhaar Front' : 'Aadhaar Back'}
+                                    {aDoc.type === DocumentType.AadharFront
+                                      ? 'Aadhaar Front'
+                                      : 'Aadhaar Back'}
                                   </p>
-                                  <div className="w-fit mx-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
+                                  <div className="mx-auto w-fit max-w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
                                     {aDoc.fileUrl ? (
-                                      <Image
-                                        src={aDoc.fileUrl}
-                                        alt={aDoc.name}
-                                        width={600}
-                                        height={800}
-                                        className="w-auto h-[200px] object-contain transition-transform hover:scale-105 duration-500"
-                                      />
+                                      aDoc.fileUrl.toLowerCase().split('?')[0].endsWith('.pdf') ? (
+                                        <iframe
+                                          src={`${aDoc.fileUrl}#toolbar=0`}
+                                          className="w-[300px] sm:w-[500px] h-[400px] border-none"
+                                          title={aDoc.name}
+                                        />
+                                      ) : (
+                                        <Image
+                                          src={aDoc.fileUrl}
+                                          alt={aDoc.name}
+                                          width={600}
+                                          height={800}
+                                          className="w-auto h-[250px] object-contain transition-transform hover:scale-105 duration-500"
+                                        />
+                                      )
                                     ) : (
                                       <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
                                         <FileText className="size-8 mx-auto text-slate-300 mb-2" />
@@ -533,15 +540,26 @@ export function DocumentUploader({
                               <p className="text-[10px] font-bold uppercase text-muted-foreground text-center tracking-wider">
                                 {doc.name} Preview
                               </p>
-                              <div className="w-fit mx-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
+                              <div className="mx-auto w-fit max-w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
                                 {uploadedDoc?.fileUrl ? (
-                                  <Image
-                                    src={uploadedDoc.fileUrl}
-                                    alt={uploadedDoc.name}
-                                    width={600}
-                                    height={800}
-                                    className="w-auto h-[300px] object-contain transition-transform hover:scale-105 duration-500"
-                                  />
+                                  uploadedDoc.fileUrl
+                                    .toLowerCase()
+                                    .split('?')[0]
+                                    .endsWith('.pdf') ? (
+                                    <iframe
+                                      src={`${uploadedDoc.fileUrl}#toolbar=0`}
+                                      className="w-[300px] sm:w-[600px] h-[600px] border-none"
+                                      title={uploadedDoc.name}
+                                    />
+                                  ) : (
+                                    <Image
+                                      src={uploadedDoc.fileUrl}
+                                      alt={uploadedDoc.name}
+                                      width={600}
+                                      height={800}
+                                      className="w-auto h-[400px] object-contain transition-transform hover:scale-105 duration-500"
+                                    />
+                                  )
                                 ) : (
                                   <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
                                     <FileText className="size-8 mx-auto text-slate-300 mb-2" />
@@ -603,6 +621,66 @@ export function DocumentUploader({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {docToDelete?.name}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this document? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!docToDelete) return;
+
+                try {
+                  if (docToDelete.id === 'aadhaar') {
+                    const heads = documents.filter(
+                      (d) =>
+                        d.type === DocumentType.AadharFront || d.type === DocumentType.AadharBack,
+                    );
+                    for (const d of heads) {
+                      if (d.id) await deleteDocument(leadId, d.id);
+                    }
+                    // Filter out Aadhaar documents from local state immediately
+                    setDocuments((prev) =>
+                      prev.filter(
+                        (d) =>
+                          d.type !== DocumentType.AadharFront && d.type !== DocumentType.AadharBack,
+                      ),
+                    );
+                    queryClient.invalidateQueries({ queryKey: ['lead-documents', leadId] });
+                    queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
+                    toast.success('Aadhaar documents deleted');
+                  } else {
+                    const uploadedDoc = documents.find(
+                      (d) => d.type === docToDelete.id && d.fileUrl,
+                    );
+                    if (uploadedDoc?.id) {
+                      // Also update local state for single docs
+                      setDocuments((prev) => prev.filter((d) => d.id !== uploadedDoc.id));
+                      deleteDoc(uploadedDoc.id);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Delete failed:', error);
+                  toast.error('Failed to delete document');
+                } finally {
+                  setDocToDelete(null);
+                }
+              }}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
