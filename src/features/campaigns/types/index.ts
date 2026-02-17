@@ -1,6 +1,14 @@
 import type { Template, WhatsAppTemplate } from '@/features/settings/types';
 
-export type CampaignStatus = 'active' | 'running' | 'paused' | 'failed' | 'completed';
+export type CampaignStatus =
+  | 'active'
+  | 'running'
+  | 'paused'
+  | 'failed'
+  | 'completed'
+  | 'pending'
+  | 'draft'
+  | 'scheduled';
 
 export interface CampaignErrorDetails {
   message: string;
@@ -100,6 +108,44 @@ export interface FileContentStats {
   excludedRecords: number;
 }
 
+export interface ExecutionSummary {
+  totalContacts: number;
+  successful: {
+    email: number;
+    sms: number;
+    whatsapp: number;
+  };
+  skipped: {
+    duplicateEmail: number;
+    duplicatePhone: number;
+    alreadySent: {
+      email: number;
+      sms: number;
+      whatsapp: number;
+    };
+    notWhitelisted: {
+      email: number;
+      sms: number;
+      whatsapp: number;
+    };
+    campaignPaused: {
+      email: number;
+      sms: number;
+      whatsapp: number;
+    };
+  };
+  failed: {
+    email: number;
+    sms: number;
+    whatsapp: number;
+    details: Array<{
+      channel: string;
+      reason: string;
+      count: number;
+    }>;
+  };
+}
+
 export interface CampaignDetails {
   id: string;
   name: string;
@@ -112,6 +158,7 @@ export interface CampaignDetails {
   responseRate: number;
   messageSent: MessageSentStats;
   contactMessageSent: ContactMessageSent;
+  executionSummary?: ExecutionSummary | null;
   createdAt: string;
   updatedAt: string;
 }

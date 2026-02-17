@@ -474,6 +474,176 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Campaign Summary Card */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+                Campaign Summary
+              </CardTitle>
+              <CardDescription>Real-time delivery performance across all channels</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {campaign.status === 'active' ||
+              campaign.status === 'pending' ||
+              campaign.status === 'draft' ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Activity className="h-12 w-12 text-muted-foreground/50" />
+                  <p className="mt-4 text-sm font-medium text-muted-foreground">
+                    Campaign summary will be available once the campaign starts running
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Click the "Run" button to start the campaign
+                  </p>
+                </div>
+              ) : campaign.executionSummary ? (
+                <div className="space-y-6">
+                  {/* Email Channel */}
+                  <div className="flex items-start gap-4 rounded-lg border p-4">
+                    <div className="rounded-lg bg-blue-100 p-2.5 dark:bg-blue-950/30">
+                      <Mail className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Channel
+                        </p>
+                        <p className="text-base font-semibold">Email</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="border-l-2 border-emerald-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Total Sent
+                          </p>
+                          <p className="text-xl font-bold">
+                            {campaign.executionSummary.successful.email.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-rose-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Failed
+                          </p>
+                          <p className="text-xl font-bold text-rose-600">
+                            {campaign.executionSummary.failed.email.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-amber-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Skipped
+                          </p>
+                          <p className="text-xl font-bold text-amber-600">
+                            {(
+                              campaign.executionSummary.skipped.alreadySent.email +
+                              campaign.executionSummary.skipped.notWhitelisted.email +
+                              campaign.executionSummary.skipped.campaignPaused.email
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Channel */}
+                  <div className="flex items-start gap-4 rounded-lg border p-4">
+                    <div className="rounded-lg bg-emerald-100 p-2.5 dark:bg-emerald-950/30">
+                      <MessageCircle className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Channel
+                        </p>
+                        <p className="text-base font-semibold">WhatsApp</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="border-l-2 border-emerald-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Total Sent
+                          </p>
+                          <p className="text-xl font-bold">
+                            {campaign.executionSummary.successful.whatsapp.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-rose-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Failed
+                          </p>
+                          <p className="text-xl font-bold text-rose-600">
+                            {campaign.executionSummary.failed.whatsapp.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-amber-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Skipped
+                          </p>
+                          <p className="text-xl font-bold text-amber-600">
+                            {(
+                              campaign.executionSummary.skipped.alreadySent.whatsapp +
+                              campaign.executionSummary.skipped.notWhitelisted.whatsapp +
+                              campaign.executionSummary.skipped.campaignPaused.whatsapp
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SMS Channel */}
+                  <div className="flex items-start gap-4 rounded-lg border p-4">
+                    <div className="rounded-lg bg-purple-100 p-2.5 dark:bg-purple-950/30">
+                      <MessageSquare className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Channel
+                        </p>
+                        <p className="text-base font-semibold">SMS</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="border-l-2 border-emerald-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Total Sent
+                          </p>
+                          <p className="text-xl font-bold">
+                            {campaign.executionSummary.successful.sms.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-rose-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Failed
+                          </p>
+                          <p className="text-xl font-bold text-rose-600">
+                            {campaign.executionSummary.failed.sms.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="border-l-2 border-amber-500 pl-3">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Skipped
+                          </p>
+                          <p className="text-xl font-bold text-amber-600">
+                            {(
+                              campaign.executionSummary.skipped.alreadySent.sms +
+                              campaign.executionSummary.skipped.notWhitelisted.sms +
+                              campaign.executionSummary.skipped.campaignPaused.sms
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground/50" />
+                  <p className="mt-4 text-sm font-medium text-muted-foreground">
+                    No execution summary available
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Contacts Tab */}
