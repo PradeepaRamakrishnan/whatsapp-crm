@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import {
@@ -35,6 +36,7 @@ import {
   runCampaign,
 } from '../services';
 import { CampaignContactsTable } from './campaign-contacts-table';
+import { CampaignSummaryCard } from './campaign-summary-card';
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -109,8 +111,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
     },
     refetchOnWindowFocus: false,
   });
-
-  // console.log('Campaign Details:', campaign);
 
   // Fetch campaign timeline
   const { data: timelineResponse } = useQuery({
@@ -474,6 +474,9 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Card 3: Campaign Summary */}
+          <CampaignSummaryCard campaign={campaign} />
         </TabsContent>
 
         {/* Contacts Tab */}
@@ -549,7 +552,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                               </span>
                             )}
                             {item.metadata.bankName && (
-                              <span className="text-xs text-muted-foreground capitalize">
+                              <span className="text-xs font-medium text-muted-foreground capitalize">
                                 Bank: {item.metadata.bankName}
                               </span>
                             )}

@@ -100,6 +100,42 @@ export interface FileContentStats {
   excludedRecords: number;
 }
 
+export interface ExecutionSummary {
+  totalContacts: number;
+  successful: { email: number; sms: number; whatsapp: number };
+  skipped: {
+    duplicateEmail: number;
+    duplicatePhone: number;
+    alreadySent: { email: number; sms: number; whatsapp: number };
+    notWhitelisted: { email: number; sms: number; whatsapp: number };
+    campaignPaused: { email: number; sms: number; whatsapp: number };
+  };
+  failed: {
+    email: number;
+    sms: number;
+    whatsapp: number;
+    details: Array<{ channel: string; reason: string; count: number }>;
+  };
+}
+
+export interface ExecutionSummary {
+  totalContacts: number;
+  successful: { email: number; sms: number; whatsapp: number };
+  skipped: {
+    duplicateEmail: number;
+    duplicatePhone: number;
+    alreadySent: { email: number; sms: number; whatsapp: number };
+    notWhitelisted: { email: number; sms: number; whatsapp: number };
+    campaignPaused: { email: number; sms: number; whatsapp: number };
+  };
+  failed: {
+    email: number;
+    sms: number;
+    whatsapp: number;
+    details: Array<{ channel: string; reason: string; count: number }>;
+  };
+}
+
 export interface CampaignDetails {
   id: string;
   name: string;
@@ -114,6 +150,7 @@ export interface CampaignDetails {
   contactMessageSent: ContactMessageSent;
   createdAt: string;
   updatedAt: string;
+  executionSummary?: ExecutionSummary | null;
 }
 
 // API returns campaign data directly, not wrapped
