@@ -1,10 +1,10 @@
+/** biome-ignore-all lint/performance/noImgElement: <explanation> */
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle2,
   CreditCard,
-  Eye,
   FileCheck,
   FileText,
   //   Image,
@@ -14,7 +14,6 @@ import {
   X,
   // Loader2,
 } from 'lucide-react';
-import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -200,7 +199,11 @@ export function DocumentUploader({
   }, [initialDocuments]);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
+  const [previewDocument, setPreviewDocument] = useState<{
+    url: string;
+    name: string;
+    type: string;
+  } | null>(null);
 
   const { mutate: deleteDoc, isPending: isDeleting } = useMutation({
     mutationFn: async (documentId: string) => {
@@ -215,10 +218,6 @@ export function DocumentUploader({
       toast.error(error.message || 'Failed to delete document');
     },
   });
-
-  const toggleExpand = (docId: string) => {
-    setExpandedDocs((prev) => ({ ...prev, [docId]: !prev[docId] }));
-  };
 
   // console.log(documents, 'documents in uploader');
 
@@ -380,30 +379,15 @@ export function DocumentUploader({
                           )}
                         </div>
                         {canPreview && (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className={cn(
-                                'h-8 text-[11px] font-bold uppercase tracking-tight transition-colors',
-                                expandedDocs[doc.id] &&
-                                  'bg-slate-100 dark:bg-slate-800 border-slate-300',
-                              )}
-                              onClick={() => toggleExpand(doc.id)}
-                            >
-                              <Eye className="size-3.5 mr-1" />
-                              {/* {expandedDocs[doc.id] ? 'View Files' : 'Hide Files '} */}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              disabled={isDeleting}
-                              onClick={() => setDocToDelete({ id: doc.id, name: doc.name })}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                            disabled={isDeleting}
+                            onClick={() => setDocToDelete({ id: doc.id, name: doc.name })}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
                         )}
                       </div>
 
@@ -495,8 +479,8 @@ export function DocumentUploader({
                           </button>
                         ))}
 
-                      {canPreview && expandedDocs[doc.id] && (
-                        <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      {canPreview && (
+                        <div className="mt-4">
                           {doc.id === 'aadhaar' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {aadhaarDocs.map((aDoc) => (
@@ -509,19 +493,45 @@ export function DocumentUploader({
                                   <div className="mx-auto w-fit max-w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
                                     {aDoc.fileUrl ? (
                                       aDoc.fileUrl.toLowerCase().split('?')[0].endsWith('.pdf') ? (
-                                        <iframe
-                                          src={`${aDoc.fileUrl}#toolbar=0`}
-                                          className="w-[300px] sm:w-[500px] h-[400px] border-none"
-                                          title={aDoc.name}
-                                        />
+                                        <button
+                                          type="button"
+                                          className="cursor-pointer w-full"
+                                          onClick={() => {
+                                            if (aDoc.fileUrl) {
+                                              setPreviewDocument({
+                                                url: aDoc.fileUrl,
+                                                name: aDoc.name,
+                                                type: 'pdf',
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <iframe
+                                            src={`${aDoc.fileUrl}#toolbar=0`}
+                                            className="w-[300px] sm:w-[500px] h-[400px] border-none pointer-events-none"
+                                            title={aDoc.name}
+                                          />
+                                        </button>
                                       ) : (
-                                        <Image
-                                          src={aDoc.fileUrl}
-                                          alt={aDoc.name}
-                                          width={600}
-                                          height={800}
-                                          className="w-auto h-[250px] object-contain transition-transform hover:scale-105 duration-500"
-                                        />
+                                        <button
+                                          type="button"
+                                          className="cursor-pointer"
+                                          onClick={() => {
+                                            if (aDoc.fileUrl) {
+                                              setPreviewDocument({
+                                                url: aDoc.fileUrl,
+                                                name: aDoc.name,
+                                                type: 'image',
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <img
+                                            src={aDoc.fileUrl}
+                                            alt={aDoc.name}
+                                            className="w-auto h-[250px] object-contain"
+                                          />
+                                        </button>
                                       )
                                     ) : (
                                       <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
@@ -546,19 +556,45 @@ export function DocumentUploader({
                                     .toLowerCase()
                                     .split('?')[0]
                                     .endsWith('.pdf') ? (
-                                    <iframe
-                                      src={`${uploadedDoc.fileUrl}#toolbar=0`}
-                                      className="w-[300px] sm:w-[600px] h-[600px] border-none"
-                                      title={uploadedDoc.name}
-                                    />
+                                    <button
+                                      type="button"
+                                      className="cursor-pointer w-full"
+                                      onClick={() => {
+                                        if (uploadedDoc.fileUrl) {
+                                          setPreviewDocument({
+                                            url: uploadedDoc.fileUrl,
+                                            name: uploadedDoc.name,
+                                            type: 'pdf',
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <iframe
+                                        src={`${uploadedDoc.fileUrl}#toolbar=0`}
+                                        className="w-[300px] sm:w-[600px] h-[600px] border-none pointer-events-none"
+                                        title={uploadedDoc.name}
+                                      />
+                                    </button>
                                   ) : (
-                                    <Image
-                                      src={uploadedDoc.fileUrl}
-                                      alt={uploadedDoc.name}
-                                      width={600}
-                                      height={800}
-                                      className="w-auto h-[400px] object-contain transition-transform hover:scale-105 duration-500"
-                                    />
+                                    <button
+                                      type="button"
+                                      className="cursor-pointer"
+                                      onClick={() => {
+                                        if (uploadedDoc.fileUrl) {
+                                          setPreviewDocument({
+                                            url: uploadedDoc.fileUrl,
+                                            name: uploadedDoc.name,
+                                            type: 'image',
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <img
+                                        src={uploadedDoc.fileUrl}
+                                        alt={uploadedDoc.name}
+                                        className="w-auto h-[400px] object-contain"
+                                      />
+                                    </button>
                                   )
                                 ) : (
                                   <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
@@ -681,6 +717,31 @@ export function DocumentUploader({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!previewDocument} onOpenChange={(open) => !open && setPreviewDocument(null)}>
+        <DialogContent className="max-w-7xl h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle>{previewDocument?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto p-6">
+            {previewDocument?.type === 'pdf' ? (
+              <iframe
+                src={`${previewDocument.url}#toolbar=0`}
+                className="w-full h-full min-h-[70vh] border-none rounded-lg"
+                title={previewDocument.name}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <img
+                  src={previewDocument?.url || ''}
+                  alt={previewDocument?.name || 'Document preview'}
+                  className="max-w-full h-auto object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
