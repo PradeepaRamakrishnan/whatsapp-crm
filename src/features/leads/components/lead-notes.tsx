@@ -57,40 +57,62 @@ export function LeadNotes({ leadId, initialNotes }: LeadNotesProps) {
     },
   });
 
+  // Helper to parse notes string into individual note objects
+  const parsedNotes = notes?.trim()
+    ? notes
+        .split(/\n\n+/)
+        .filter(Boolean)
+        .map((note, idx) => {
+          const match = note.match(/^\[(.*?)\]\n([\s\S]*)$/);
+          return {
+            id: `${match ? match[1] : 'unknown'}-${idx}`,
+            timestamp: match ? match[1] : 'Unknown Date',
+            content: match ? match[2] : note,
+          };
+        })
+    : [];
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Notes
-        </h3>
+      <div className="flex items-center justify-between mb-6 px-1">
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold text-foreground  flex items-center gap-2">
+            <StickyNote className="w-4 h-4 text-primary" />
+            Lead Notes
+          </h3>
+          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+            Historical logs & internal updates
+          </p>
+        </div>
         <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-2 h-8">
-              <Plus className="w-3.5 h-3.5" />
+            <Button size="sm" className="gap-2 h-9 px-4 rounded-lg shadow-sm font-bold text-[11px]">
+              <Plus className="w-4 h-4" />
               Add Note
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[450px] rounded-xl">
             <DialogHeader>
-              <DialogTitle>Add Note</DialogTitle>
-              <DialogDescription>
-                Add a private note to this lead. Only team members can see this.
+              <DialogTitle className="text-lg tracking-tight">New Activity Note</DialogTitle>
+              <DialogDescription className="text-sm">
+                Records of conversations, follow-ups, or internal observations.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Textarea
-                placeholder="Type your note here..."
-                className="min-h-[100px]"
+                placeholder="What did you discuss with this lead?"
+                className="min-h-[120px] resize-none focus-visible:ring-primary rounded-xl border-slate-200"
                 value={newNoteContent}
                 onChange={(e) => setNewNoteContent(e.target.value)}
               />
             </div>
             <DialogFooter>
               <Button
+                className="w-full sm:w-auto"
                 onClick={() => addNote(newNoteContent)}
                 disabled={isAddingNote || !newNoteContent.trim()}
               >
-                {isAddingNote ? 'Saving...' : 'Save Note'}
+                {isAddingNote ? 'Saving...' : 'Save Activity'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -98,19 +120,37 @@ export function LeadNotes({ leadId, initialNotes }: LeadNotesProps) {
       </div>
 
       <ScrollArea className="flex-1 -mx-6 px-6">
-        <div className="pb-6">
-          {notes ? (
-            <div className="bg-card border rounded-lg p-6 shadow-sm whitespace-pre-wrap leading-relaxed text-sm text-foreground">
-              {notes}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-              <div className="p-4 rounded-full bg-muted/40 mb-3">
-                <StickyNote className="w-6 h-6 text-muted-foreground/50" />
+        <div className="pb-8 space-y-4">
+          {parsedNotes.length > 0 ? (
+            parsedNotes.map((note, index) => (
+              <div
+                key={note.id}
+                className="group relative bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      {note.timestamp}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                  {note.content}
+                </div>
               </div>
-              <p className="text-sm font-medium">No notes yet</p>
-              <p className="text-xs opacity-70 mt-1">
-                Add a note to keep track of important details.
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-full bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center mb-6">
+                <StickyNote className="w-8 h-8 text-slate-200 dark:text-slate-800" />
+              </div>
+              <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">
+                No Notes Found
+              </h4>
+              <p className="text-sm text-slate-500 max-w-[240px] leading-relaxed">
+                There are currently no notes or activities recorded for this lead.
               </p>
             </div>
           )}

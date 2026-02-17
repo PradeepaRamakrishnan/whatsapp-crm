@@ -11,6 +11,7 @@ import {
   //   Info,
   Trash2,
   Upload,
+  X,
   // Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -29,7 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { uploadDocument } from '../services';
+import { deleteDocument, uploadDocument } from '../services';
 import type { Document } from '../types';
 import { DocumentType } from '../types';
 
@@ -169,6 +170,7 @@ export function DocumentUploader({
   contactId,
   initialDocuments = [],
   onUploadSuccess,
+  isLoading,
 }: DocumentUploaderProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -190,9 +192,25 @@ export function DocumentUploader({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
 
+  const { mutate: deleteDoc, isPending: isDeleting } = useMutation({
+    mutationFn: async (documentId: string) => {
+      await deleteDocument(leadId, documentId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-documents', leadId] });
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
+      toast.success('Document deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete document');
+    },
+  });
+
   const toggleExpand = (docId: string) => {
     setExpandedDocs((prev) => ({ ...prev, [docId]: !prev[docId] }));
   };
+
+  // console.log(documents, 'documents in uploader');
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
@@ -335,8 +353,18 @@ export function DocumentUploader({
                           <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base">
                             {doc.name}
                           </h3>
-                          {isAnyComplete && (
-                            <CheckCircle2 className="size-5 text-green-600 dark:text-green-500 fill-green-100 dark:fill-green-900/30" />
+                          {isAnyComplete ? (
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-100 dark:border-emerald-800/50">
+                              <CheckCircle2 className="size-3" />
+                              <span className="text-[10px] font-bold  tracking-tight ">
+                                Verified
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md border border-red-100 dark:border-red-800/50">
+                              <X className="size-3" />
+                              {/* <span className="text-[10px] font-bold  tracking-tight">Pending</span> */}
+                            </div>
                           )}
                         </div>
                         {isAnyComplete && (
@@ -352,23 +380,27 @@ export function DocumentUploader({
                               onClick={() => toggleExpand(doc.id)}
                             >
                               <Eye className="size-3.5 mr-1" />
-                              {expandedDocs[doc.id] ? 'View Files' : 'Hide Files '}
+                              {/* {expandedDocs[doc.id] ? 'View Files' : 'Hide Files '} */}
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
+                              disabled={isDeleting}
+                              onClick={async () => {
                                 if (doc.id === 'aadhaar') {
-                                  setDocuments(
-                                    documents.filter(
-                                      (d) =>
-                                        d.type !== DocumentType.AadharFront &&
-                                        d.type !== DocumentType.AadharBack,
-                                    ),
+                                  const heads = documents.filter(
+                                    (d) =>
+                                      d.type === DocumentType.AadharFront ||
+                                      d.type === DocumentType.AadharBack,
                                   );
-                                } else {
-                                  setDocuments(documents.filter((d) => d.id !== uploadedDoc?.id));
+                                  for (const d of heads) {
+                                    if (d.id) await deleteDocument(leadId, d.id);
+                                  }
+                                  queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
+                                  toast.success('Aadhaar documents deleted');
+                                } else if (uploadedDoc?.id) {
+                                  deleteDoc(uploadedDoc.id);
                                 }
                               }}
                             >
@@ -422,13 +454,13 @@ export function DocumentUploader({
                                     'mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2',
                                     item.data
                                       ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
-                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+                                      : 'bg-red-50 dark:bg-red-950 text-red-500 dark:text-red-400',
                                   )}
                                 >
                                   {item.data ? (
                                     <CheckCircle2 className="size-5" />
                                   ) : (
-                                    <Upload className="size-5" />
+                                    <X className="size-5" />
                                   )}
                                 </div>
                                 <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -454,8 +486,8 @@ export function DocumentUploader({
                             onDrop={(e) => handleDrop(e, doc.id)}
                             onClick={() => handleFileUploadTrigger(doc.id)}
                           >
-                            <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-                              <Upload className="size-6 text-slate-500 dark:text-slate-400" />
+                            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/50 flex items-center justify-center mb-3 text-red-500 dark:text-red-400">
+                              <Upload className="size-6" />
                             </div>
                             <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                               Upload {doc.name}
@@ -469,37 +501,30 @@ export function DocumentUploader({
                       {isAnyComplete && expandedDocs[doc.id] && (
                         <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                           {doc.id === 'aadhaar' ? (
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {aadhaarDocs.map((aDoc, idx) => (
-                                <div key={aDoc.id || idx}>
-                                  <div className="space-y-2">
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground text-center tracking-wider">
-                                      {idx === 0 ? 'Aadhaar Front' : 'Aadhaar Back'}
-                                    </p>
-                                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
-                                      {aDoc.fileUrl ? (
-                                        <Image
-                                          src={aDoc.fileUrl}
-                                          alt={aDoc.name}
-                                          width={600}
-                                          height={800}
-                                          className="w-full h-auto max-h-[300px] object-contain mx-auto transition-transform hover:scale-105 duration-500"
-                                        />
-                                      ) : (
-                                        <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
-                                          <FileText className="size-8 mx-auto text-slate-300 mb-2" />
-                                          <p className="text-[10px] text-muted-foreground font-medium uppercase">
-                                            File content unavailable
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
+                                <div key={aDoc.id || idx} className="space-y-2">
+                                  <p className="text-[10px] font-bold uppercase text-muted-foreground text-center tracking-wider">
+                                    {idx === 0 ? 'Aadhaar Front' : 'Aadhaar Back'}
+                                  </p>
+                                  <div className="w-fit mx-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
+                                    {aDoc.fileUrl ? (
+                                      <Image
+                                        src={aDoc.fileUrl}
+                                        alt={aDoc.name}
+                                        width={600}
+                                        height={800}
+                                        className="w-auto h-[200px] object-contain transition-transform hover:scale-105 duration-500"
+                                      />
+                                    ) : (
+                                      <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">
+                                        <FileText className="size-8 mx-auto text-slate-300 mb-2" />
+                                        <p className="text-[10px] text-muted-foreground font-medium uppercase">
+                                          File content unavailable
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
-
-                                  {/* Separator between Aadhaar front and back */}
-                                  {idx < aadhaarDocs.length - 1 && (
-                                    <div className="my-4 border-t border-slate-200 dark:border-slate-800" />
-                                  )}
                                 </div>
                               ))}
                             </div>
@@ -508,14 +533,14 @@ export function DocumentUploader({
                               <p className="text-[10px] font-bold uppercase text-muted-foreground text-center tracking-wider">
                                 {doc.name} Preview
                               </p>
-                              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
+                              <div className="w-fit mx-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm ring-1 ring-slate-950/5">
                                 {uploadedDoc?.fileUrl ? (
                                   <Image
                                     src={uploadedDoc.fileUrl}
                                     alt={uploadedDoc.name}
                                     width={600}
                                     height={800}
-                                    className="w-full h-auto max-h-[400px] object-contain mx-auto transition-transform hover:scale-105 duration-500"
+                                    className="w-auto h-[300px] object-contain transition-transform hover:scale-105 duration-500"
                                   />
                                 ) : (
                                   <div className="p-8 text-center bg-slate-50 dark:bg-slate-950/50">

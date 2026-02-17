@@ -147,6 +147,7 @@ export async function uploadDocument(leadId: string, formData: FormData): Promis
 
 export async function generateUploadLink(
   leadId: string,
+  email?: string,
 ): Promise<{ message: string; link: string; token: string; expiresAt: string }> {
   try {
     const cookieStore = await cookies();
@@ -154,6 +155,7 @@ export async function generateUploadLink(
     const response = await axiosClient({
       method: 'POST',
       url: `/${leadId}/generate-document-link`,
+      data: { email },
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -163,6 +165,25 @@ export async function generateUploadLink(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to generate upload link');
+    }
+    throw error;
+  }
+}
+
+export async function deleteDocument(id: string, documentId: string): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'DELETE',
+      url: `/${id}/documents/${documentId}`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete document');
     }
     throw error;
   }
