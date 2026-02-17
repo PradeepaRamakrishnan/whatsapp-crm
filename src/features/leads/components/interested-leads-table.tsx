@@ -205,7 +205,11 @@ export function InterestedLeadsTable() {
               <Link
                 href={`/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`}
                 className="font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors"
-                onMouseEnter={() => prefetchLead(row.original.id)}
+                onMouseEnter={() => {
+                  if (row.original.campaign?.id) {
+                    prefetchLead(row.original.campaign.id);
+                  }
+                }}
               >
                 {row.original.campaign.name}
               </Link>
@@ -356,12 +360,14 @@ export function InterestedLeadsTable() {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    onMouseEnter={() => prefetchLead(row.original.id)}
-                    onClick={() =>
-                      router.push(
-                        `/leads/${slugify(row.original.customerName, { lower: true })}/${row.original.id}`,
-                      )
-                    }
+                    onMouseEnter={() => prefetchLead(row.original.campaign?.id || '')}
+                    onClick={() => {
+                      if (row.original.campaign?.id) {
+                        router.push(
+                          `/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`,
+                        );
+                      }
+                    }}
                     className="hover:bg-muted/50 cursor-pointer"
                   >
                     {row.getVisibleCells().map((cell) => (

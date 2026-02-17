@@ -1,6 +1,6 @@
 'use client';
 
-import { Award, CheckCircle2, Clock, Shield } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 // import { Button } from '@/components/ui/button';
 // import { useRouter } from 'nextjs-toploader/app';
@@ -10,7 +10,10 @@ interface SuccessVerificationProps {
   contactId?: string | null;
 }
 
-export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificationProps) => {
+export const SuccessVerification = ({
+  campaignId: _campaignId,
+  contactId: _contactId,
+}: SuccessVerificationProps) => {
   // const router = useRouter();
 
   return (
@@ -31,7 +34,7 @@ export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificati
             <p className="text-muted-foreground text-lg leading-relaxed">
               Thanks for submitting all the required documents as requested by our partner NBFC (
               <a
-                href="https://a1loans.cloudbankin.com"
+                href="https://anchorage.cloudbankin.com/onboard/#/home/welcome"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
@@ -46,45 +49,6 @@ export const SuccessVerification = ({ campaignId, contactId }: SuccessVerificati
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Information Cards */}
-      <div className="grid grid-cols-3 gap-3 py-2">
-        <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs">
-          <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Secure
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs">
-          <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Fast
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs">
-          <Award className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Trusted
-          </span>
-        </div>
-      </div>
-
-      {/* <div className="pt-4">
-        <Button
-          variant="outline"
-          onClick={() => router.push('/')}
-          className="w-full h-12 text-base font-semibold border-2"
-        >
-          Back to Home
-        </Button>
-      </div> */}
-
-      <div className="flex flex-col items-center justify-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          <Shield className="h-3 w-3" />
-          Powered by Samatva Secure
         </div>
       </div>
     </div>

@@ -93,7 +93,7 @@ export function LeadDetailsPage({ leadId }: LeadDetailsPageProps) {
               variant="outline"
               className="capitalize text-xs font-medium px-2 py-1 border bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300"
             >
-              Consent
+              consented
             </Badge>
           ) : isInterested ? (
             <Badge

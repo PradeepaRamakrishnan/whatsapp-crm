@@ -23,7 +23,10 @@ const getStatusColor = (status: string | undefined) => {
     return 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-950 dark:text-slate-300';
 
   const s = status.toLowerCase();
-  if (s === 'interested' || s === 'consent_provided') {
+  if (s === 'consent_provided') {
+    return 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300';
+  }
+  if (s === 'interested') {
     return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300';
   }
   if (s === 'not_interested') {
@@ -34,6 +37,7 @@ const getStatusColor = (status: string | undefined) => {
 
 const formatStatus = (status: string | undefined) => {
   if (!status) return 'No Response';
+  if (status.toLowerCase() === 'consent_provided') return 'Consented';
   return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
@@ -357,8 +361,8 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
               Campaign Response
             </span>
           </div>
-          <Badge className={getStatusColor(contact.contact?.status)} variant="secondary">
-            {formatStatus(contact.contact?.status)}
+          <Badge className={getStatusColor(contact.status)} variant="secondary">
+            {formatStatus(contact.status)}
           </Badge>
         </div>
       </div>
