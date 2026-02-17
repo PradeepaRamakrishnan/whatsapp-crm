@@ -1,13 +1,26 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Calendar, Database, FileText, Mail, XCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  CheckCircle2,
+  Database,
+  FileText,
+  Info,
+  Mail,
+  UserCheck,
+  UserX,
+  XCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getFileById } from '../services';
 import type { FileDetailData } from '../types/file.types';
 import { FileActions } from './file-actions';
@@ -201,7 +214,97 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           onClick={() => updateFilter('excluded')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Excluded</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">Excluded</CardTitle>
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger
+                    asChild
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="rounded-full p-0.5 hover:bg-muted transition-colors"
+                    >
+                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="max-w-md p-0 bg-card border shadow-lg overflow-hidden"
+                  >
+                    <div className="space-y-0">
+                      <div className="bg-muted/50 px-4 py-3 border-b">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-foreground">
+                          <Info className="h-4 w-4" />
+                          Campaign Exclusion Rules
+                        </h4>
+                      </div>
+                      <div className="p-3 space-y-3 text-xs">
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="h-6 w-6 rounded-full bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
+                              <UserCheck className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">Previously Interested</p>
+                            <p className="text-muted-foreground mt-1 leading-relaxed">
+                              Borrowers marked as interested in any prior campaign are excluded
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="h-6 w-6 rounded-full bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
+                              <UserX className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">Not Interested</p>
+                            <p className="text-muted-foreground mt-1 leading-relaxed">
+                              Borrowers marked as not interested in any prior campaign are excluded
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">Up to 2 Non-Responses</p>
+                            <p className="text-muted-foreground mt-1 leading-relaxed">
+                              Borrowers with less than 3 non-responses are included
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="h-6 w-6 rounded-full bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center">
+                              <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">3+ Non-Responses</p>
+                            <p className="text-muted-foreground mt-1 leading-relaxed">
+                              After 3 non-responses, routed to Manual Follow-up instead of new
+                              campaign
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-950/30">
               <XCircle className="h-4 w-4 text-gray-600" />
             </div>
