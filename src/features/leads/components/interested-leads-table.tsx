@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import slugify from 'slugify';
@@ -200,19 +200,11 @@ export function InterestedLeadsTable() {
         id: 'campaign',
         header: 'Campaign Name',
         cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col">
             {row.original.campaign?.name ? (
-              <Link
-                href={`/leads/${slugify(row.original.campaign.name, { lower: true })}/${row.original.campaign.id}`}
-                className="font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors"
-                onMouseEnter={() => {
-                  if (row.original.campaign?.id) {
-                    prefetchLead(row.original.campaign.id);
-                  }
-                }}
-              >
+              <span className="font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors">
                 {row.original.campaign.name}
-              </Link>
+              </span>
             ) : (
               <div className="text-sm text-muted-foreground">-</div>
             )}

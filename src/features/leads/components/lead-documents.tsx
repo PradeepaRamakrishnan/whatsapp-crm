@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { generateUploadLink, getDocuments } from '../services';
-import type { Document } from '../types';
+import type { Document, TimelineEntry } from '../types';
 import { DocumentUploader } from './document-uploader';
 
 interface LeadDocumentsProps {
@@ -17,6 +17,7 @@ interface LeadDocumentsProps {
   campaignId?: string;
   contactId?: string;
   initialDocuments?: Document[];
+  timeline?: TimelineEntry[] | null;
   email?: string;
 }
 
@@ -25,6 +26,7 @@ export function LeadDocuments({
   campaignId,
   contactId,
   initialDocuments,
+  timeline,
   email,
 }: LeadDocumentsProps) {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export function LeadDocuments({
         campaignId={campaignId}
         contactId={contactId}
         initialDocuments={documents}
+        timeline={timeline}
         isLoading={isLoading}
       />
     </div>

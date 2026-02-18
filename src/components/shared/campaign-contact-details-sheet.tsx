@@ -317,9 +317,7 @@ export function CampaignContactDetailsSheet({
                     <div className="rounded-lg bg-primary/10 p-2 text-primary">
                       <CheckCircle2 className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                      Campaign Response
-                    </span>
+                    <span className="text-sm font-semibold tracking-wider ">Campaign Response</span>
                   </div>
                   <Badge
                     className={getResponseStatusColor(selectedContact.responseStatus)}

@@ -18,15 +18,17 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { updateLead } from '@/features/leads/services';
+import { addTimelineEntry, updateLead } from '@/features/leads/services';
+import type { TimelineEntry } from '@/features/leads/types';
 
 interface LeadNotesProps {
   leadId: string;
   initialNotes?: string | null;
+  timeline?: TimelineEntry[] | null;
   onNotesUpdated?: (newNotes: string) => void;
 }
 
-export function LeadNotes({ leadId, initialNotes }: LeadNotesProps) {
+export function LeadNotes({ leadId, initialNotes, timeline }: LeadNotesProps) {
   const router = useRouter();
   const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState('');
@@ -43,6 +45,16 @@ export function LeadNotes({ leadId, initialNotes }: LeadNotesProps) {
       const updatedNotes = notes ? `${formattedNote}\n\n${notes}` : formattedNote;
 
       await updateLead(leadId, { notes: updatedNotes });
+      // Add timeline entry
+      addTimelineEntry(
+        leadId,
+        {
+          type: 'note_added',
+          title: 'Note Added',
+          description: note.length > 80 ? `${note.slice(0, 80)}…` : note,
+        },
+        timeline,
+      ).catch(() => {});
       return updatedNotes;
     },
     onSuccess: (updatedNotes) => {

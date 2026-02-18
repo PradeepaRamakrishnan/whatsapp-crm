@@ -67,10 +67,20 @@ export interface Document {
   updatedAt: string;
 }
 
+export interface TimelineEntry {
+  id: string;
+  type: 'note_added' | 'document_uploaded' | 'moved_to_nbfc' | 'status_changed' | 'custom';
+  title: string;
+  description?: string;
+  timestamp: string;
+  meta?: Record<string, string>;
+}
+
 export interface Lead {
   id: string;
   customerName: string;
   status: string;
+  movetoNbfc: boolean;
   campaign?: {
     id: string;
     name: string;
@@ -131,6 +141,7 @@ export interface Lead {
   panNumber?: string;
   consentGivenAt: string | null;
   notes?: string | null;
+  timeline?: TimelineEntry[] | null;
   createdAt: string;
   updatedAt: string;
   documents?: Document[];

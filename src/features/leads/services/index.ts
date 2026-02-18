@@ -9,6 +9,7 @@ import type {
   LeadsResponse,
   ManualFollowupCase,
   ManualFollowupsResponse,
+  TimelineEntry,
 } from '../types';
 
 const axiosClient = axios.create({
@@ -230,6 +231,21 @@ export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead>
     }
     throw error;
   }
+}
+
+export async function addTimelineEntry(
+  leadId: string,
+  entry: Omit<TimelineEntry, 'id' | 'timestamp'>,
+  currentTimeline?: TimelineEntry[] | null,
+): Promise<Lead> {
+  const newEntry: TimelineEntry = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    timestamp: new Date().toISOString(),
+    ...entry,
+  };
+
+  const updatedTimeline = [newEntry, ...(currentTimeline || [])];
+  return updateLead(leadId, { timeline: updatedTimeline } as Partial<Lead>);
 }
 export async function getManualFollowups(
   page: number,
