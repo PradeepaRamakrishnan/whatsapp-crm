@@ -67,7 +67,6 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
 
         {record && (
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 mt-4 pb-4">
-            {/* Excluded Alert */}
             {record.isExcluded && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -89,9 +88,7 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
             )}
 
             <div>
-              <h4 className="my-6 text-sm font-bold text-muted-foreground  tracking-widest">
-                Campaign History
-              </h4>
+              <h4 className="my-6 text-sm font-bold text-muted-foreground  ">Campaign History</h4>
               {record.campaigns && record.campaigns.length > 0 ? (
                 <div className="space-y-6">
                   {record.campaigns.map((campaign) => (
@@ -106,16 +103,16 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
                             <Copy className="h-4 w-4 text-blue-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <dt className="text-[10px] font-bold text-muted-foreground  tracking-widest mb-0.5">
+                            <dt className="text-[10px] font-bold text-muted-foreground  mb-0.5">
                               Campaign
                             </dt>
-                            <dd className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            <dd className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                               {campaign.name}
                             </dd>
                           </div>
                           {campaign.lastRun && (
                             <div className="text-right">
-                              <dt className="text-[10px] font-bold text-muted-foreground  tracking-widest mb-0.5">
+                              <dt className="text-[10px] font-bold text-muted-foreground  mb-0.5">
                                 Execution Date
                               </dt>
                               <dd className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
@@ -127,132 +124,139 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
                       </div>
 
                       <div className="p-4 space-y-4">
-                        <h5 className="text-sm  text-muted-foreground   px-1">
+                        <h5 className="text-sm font-semibold tracking-wider px-1">
                           Campaign Engagement
                         </h5>
 
-                        <div className="space-y-3">
+                        <div className="grid gap-3">
                           {/* Email Channel Card */}
-                          <div className="rounded-2xl border bg-white dark:bg-slate-950 p-4 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-4">
-                                <div className="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-2.5">
-                                  <Mail className="h-5 w-5 text-blue-600" />
+                          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-blue-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                                  <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                 </div>
-                                <div>
-                                  <h6 className="text-sm font-bold text-slate-900 dark:text-white">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-semibold text-foreground">
                                     Email Channel
-                                  </h6>
-                                  <p className="text-[11px] text-muted-foreground font-medium">
-                                    {campaign.channels?.email?.sentAt
-                                      ? `Sent: ${dayjs(campaign.channels.email.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                      : 'Not Scheduled'}
-                                  </p>
+                                  </span>
+                                  {campaign.channels?.email?.sentAt && (
+                                    <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                      Sent:{' '}
+                                      {dayjs(campaign.channels.email.sentAt).format(
+                                        'MMM DD, YYYY hh:mm A',
+                                      )}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span
-                                  className={`text-[10px] font-bold tracking-wider ${campaign.channels?.email?.sent ? 'text-emerald-600' : 'text-rose-600'}`}
+                                  className={`text-[10px] font-semibold ${campaign.channels?.email?.sent ? 'text-muted-foreground' : 'text-muted-foreground'}`}
                                 >
-                                  {campaign.channels?.email?.sent ? 'Sent' : 'Not Sent'}
+                                  {campaign.channels?.email?.sent ? 'SENT' : 'NOT SENT'}
                                 </span>
                                 {campaign.channels?.email?.sent ? (
-                                  <CheckCircle2 className="h-5 w-5 text-emerald-500 fill-emerald-50" />
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                                 ) : (
-                                  <XCircle className="h-5 w-5 text-rose-500 fill-rose-50" />
+                                  <XCircle className="h-5 w-5 text-muted-foreground/30" />
                                 )}
                               </div>
                             </div>
-
                             {campaign.channels?.email?.deliveredAt && (
-                              <div className="bg-emerald-50/40 dark:bg-emerald-950/20 border-l-2 border-emerald-500 rounded-r-xl p-3 ml-12">
-                                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400  tracking-wider mb-1">
-                                  Delivered
-                                </p>
-                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                  {dayjs(campaign.channels.email.deliveredAt).format(
-                                    'hh:mm A, MMM DD',
-                                  )}
-                                </p>
+                              <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-blue-100 dark:border-blue-900/40 ml-4 pb-1">
+                                <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                    Delivered
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-foreground truncate">
+                                    {dayjs(campaign.channels.email.deliveredAt).format(
+                                      'hh:mm A, MMM DD',
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                             )}
                           </div>
 
                           {/* SMS Channel Card */}
-                          <div className="rounded-2xl border bg-white dark:bg-slate-950 p-4 shadow-sm">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-2.5">
-                                  <MessageSquare className="h-5 w-5 text-slate-500" />
+                          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-green-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
+                                  <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 </div>
-                                <div>
-                                  <h6 className="text-sm font-bold text-slate-900 dark:text-white">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-semibold text-foreground">
                                     SMS Channel
-                                  </h6>
-                                  <p className="text-[11px] text-muted-foreground font-medium">
-                                    {campaign.channels?.sms?.sentAt
-                                      ? `Sent: ${dayjs(campaign.channels.sms.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                      : 'Channel Inactive'}
-                                  </p>
+                                  </span>
+                                  {campaign.channels?.sms?.sentAt && (
+                                    <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                      Sent:{' '}
+                                      {dayjs(campaign.channels.sms.sentAt).format(
+                                        'MMM DD, YYYY hh:mm A',
+                                      )}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span
-                                  className={`text-[10px] font-bold tracking-wider ${campaign.channels?.sms?.sent ? 'text-emerald-600' : 'text-rose-600'}`}
-                                >
-                                  {campaign.channels?.sms?.sent ? 'Sent' : 'Not Sent'}
+                                <span className="text-[10px] font-semibold text-muted-foreground">
+                                  {campaign.channels?.sms?.sent ? 'SENT' : 'NOT SENT'}
                                 </span>
                                 {campaign.channels?.sms?.sent ? (
-                                  <CheckCircle2 className="h-5 w-5 text-emerald-500 fill-emerald-50" />
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                                 ) : (
-                                  <XCircle className="h-5 w-5 text-rose-500 fill-rose-50" />
+                                  <XCircle className="h-5 w-5 text-muted-foreground/30" />
                                 )}
                               </div>
                             </div>
                           </div>
 
                           {/* WhatsApp Channel Card */}
-                          <div className="rounded-2xl border bg-white dark:bg-slate-950 p-4 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-4">
-                                <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5">
-                                  <MessageCircle className="h-5 w-5 text-emerald-600" />
+                          <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-emerald-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-900/20">
+                                  <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                 </div>
-                                <div>
-                                  <h6 className="text-sm font-bold text-slate-900 dark:text-white">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-semibold text-foreground">
                                     WhatsApp Channel
-                                  </h6>
-                                  <p className="text-[11px] text-muted-foreground font-medium">
-                                    {campaign.channels?.whatsapp?.sentAt
-                                      ? `Sent: ${dayjs(campaign.channels.whatsapp.sentAt).format('MMM DD, YYYY hh:mm A')}`
-                                      : 'Not Triggered'}
-                                  </p>
+                                  </span>
+                                  {campaign.channels?.whatsapp?.sentAt && (
+                                    <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                      Sent:{' '}
+                                      {dayjs(campaign.channels.whatsapp.sentAt).format(
+                                        'MMM DD, YYYY hh:mm A',
+                                      )}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span
-                                  className={`text-[10px] font-bold tracking-wider ${campaign.channels?.whatsapp?.sent ? 'text-emerald-600' : 'text-rose-600'}`}
-                                >
-                                  {campaign.channels?.whatsapp?.sent ? 'Sent' : 'Not Sent'}
+                                <span className="text-[10px] font-semibold text-muted-foreground">
+                                  {campaign.channels?.whatsapp?.sent ? 'SENT' : 'NOT SENT'}
                                 </span>
                                 {campaign.channels?.whatsapp?.sent ? (
-                                  <CheckCircle2 className="h-5 w-5 text-emerald-500 fill-emerald-50" />
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                                 ) : (
-                                  <XCircle className="h-5 w-5 text-rose-500 fill-rose-50" />
+                                  <XCircle className="h-5 w-5 text-muted-foreground/30" />
                                 )}
                               </div>
                             </div>
-
                             {campaign.channels?.whatsapp?.deliveredAt && (
-                              <div className="bg-emerald-50/40 dark:bg-emerald-950/20 border-l-2 border-emerald-500 rounded-r-xl p-3 ml-12">
-                                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400  tracking-wider mb-1">
-                                  Delivered
-                                </p>
-                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                  {dayjs(campaign.channels.whatsapp.deliveredAt).format(
-                                    'hh:mm A, MMM DD',
-                                  )}
-                                </p>
+                              <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-emerald-100 dark:border-emerald-900/40 ml-4 pb-1">
+                                <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
+                                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                    Delivered
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-foreground truncate">
+                                    {dayjs(campaign.channels.whatsapp.deliveredAt).format(
+                                      'hh:mm A, MMM DD',
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -260,13 +264,13 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
 
                         {/* Response Status */}
                         {campaign.responseStatus && (
-                          <div className="flex items-center justify-between pt-4 mt-2 border-t">
-                            <span className="text-[10px] font-bold text-muted-foreground  tracking-widest">
-                              Member Response
+                          <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm mt-2">
+                            <span className="text-sm font-semibold tracking-wider">
+                              Campaign Response
                             </span>
                             <Badge
-                              variant="outline"
-                              className={`font-bold h-6 text-[10px]  px-2 ${getResponseStatusColor(campaign.responseStatus as 'interested' | 'not_interested' | null)}`}
+                              variant="secondary"
+                              className={`font-bold h-6 text-[10px] px-2 ${getResponseStatusColor(campaign.responseStatus as 'interested' | 'not_interested' | null)}`}
                             >
                               {formatResponseStatus(
                                 campaign.responseStatus as 'interested' | 'not_interested' | null,

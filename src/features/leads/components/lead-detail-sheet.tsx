@@ -1,10 +1,35 @@
-import { Activity, CheckCircle2, FileText, Mail, MessageCircle, Phone, User } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Activity,
+  ArrowRightCircle,
+  CheckCircle2,
+  Loader2,
+  Mail,
+  Phone,
+  StickyNote,
+  Upload,
+  User,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { CampaignConversation } from '@/components/shared/campaign-conversation';
-// import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import type { Lead } from '../types';
+import { addTimelineEntry, updateLead } from '../services';
+import type { Lead, TimelineEntry } from '../types';
 import { ContactDetailsPage } from './contact-detail';
 import { LeadDocuments } from './lead-documents';
 import { LeadNotes } from './lead-notes';
@@ -16,57 +41,85 @@ interface LeadDetailSheetProps {
 }
 
 export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetProps) {
+  const queryClient = useQueryClient();
+
+  const [showMoveConfirm, setShowMoveConfirm] = useState(false);
+  const [movedToNbfc, setMovedToNbfc] = useState(false);
+
+  const { mutate: moveToNbfc, isPending: isMoving } = useMutation({
+    mutationFn: () => {
+      if (!lead) throw new Error('Lead not found');
+      return updateLead(lead.id, { movetoNbfc: true });
+    },
+    onSuccess: () => {
+      toast.success('Lead moved to NBFC successfully');
+      setShowMoveConfirm(false);
+      setMovedToNbfc(true);
+      // Add timeline entry
+      if (lead) {
+        addTimelineEntry(
+          lead.id,
+          {
+            type: 'moved_to_nbfc',
+            title: 'Moved to NBFC',
+            description: 'Lead was moved to NBFC for further processing.',
+          },
+          lead.timeline,
+        ).catch(() => {});
+      }
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      if (lead) {
+        queryClient.invalidateQueries({ queryKey: ['lead', lead.id] });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to move lead to NBFC');
+    },
+  });
+
   if (!lead) return null;
 
-  // Construct timeline events from lead data
-  const timelineEvents = [
-    {
-      id: 'created',
-      title: 'Lead Created',
-      description: 'Lead was added to the campaign database',
-      date: lead.createdAt,
-      icon: <FileText className="h-4 w-4 text-blue-600" />,
-      type: 'created',
-    },
-    {
-      id: 'email-sent',
-      title: 'Email Sent',
-      description: 'Campaign email was sent to the lead',
-      date: lead.email?.sentAt || lead.contact?.email?.sentAt,
-      show: lead.email?.sent || lead.contact?.email?.sent,
-      icon: <Mail className="h-4 w-4 text-indigo-600" />,
-      type: 'sent',
-    },
-    {
-      id: 'whatsapp-sent',
-      title: 'WhatsApp Sent',
-      description: 'Campaign WhatsApp message was sent to the lead',
-      date: lead.whatsapp?.sentAt || lead.contact?.whatsapp?.sentAt,
-      show: lead.whatsapp?.sent || lead.contact?.whatsapp?.sent,
-      icon: <MessageCircle className="h-4 w-4 text-emerald-600" />,
-      type: 'sent',
-    },
-    {
-      id: 'interested',
-      title: 'Interested',
-      description: 'Lead expressed interest in the campaign',
-      date: lead.interestedAt,
-      show: !!lead.interestedAt,
-      icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
-      type: 'milestone',
-    },
-    {
-      id: 'consent',
-      title: 'Consent Provided',
-      description: 'Lead provided consent for further processing',
-      date: lead.consentGivenAt,
-      show: !!lead.consentGivenAt,
-      icon: <CheckCircle2 className="h-4 w-4 text-purple-600" />,
-      type: 'milestone',
-    },
-  ]
-    .filter((event) => event.show !== false && event.date)
-    .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime());
+  // Helper: icon per timeline entry type
+  const getTimelineIcon = (type: TimelineEntry['type']) => {
+    switch (type) {
+      case 'note_added':
+        return <StickyNote className="h-4 w-4 text-amber-600" />;
+      case 'document_uploaded':
+        return <Upload className="h-4 w-4 text-violet-600" />;
+      case 'moved_to_nbfc':
+        return <ArrowRightCircle className="h-4 w-4 text-blue-600" />;
+      case 'status_changed':
+        return <Activity className="h-4 w-4 text-orange-600" />;
+      default:
+        return <Activity className="h-4 w-4 text-slate-500" />;
+    }
+  };
+
+  const getTimelineIconBg = (type: TimelineEntry['type']) => {
+    switch (type) {
+      case 'note_added':
+        return 'bg-amber-50 dark:bg-amber-900/30';
+      case 'document_uploaded':
+        return 'bg-violet-50 dark:bg-violet-900/30';
+      case 'moved_to_nbfc':
+        return 'bg-blue-50 dark:bg-blue-900/30';
+      case 'status_changed':
+        return 'bg-orange-50 dark:bg-orange-900/30';
+      default:
+        return 'bg-slate-50 dark:bg-slate-900/30';
+    }
+  };
+
+  const allTimelineEvents = (lead.timeline || [])
+    .map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      description: entry.description || '',
+      date: entry.timestamp,
+      icon: getTimelineIcon(entry.type),
+      iconBg: getTimelineIconBg(entry.type),
+    }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -93,6 +146,19 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="absolute right-12 top-4">
+            {movedToNbfc || lead.movetoNbfc === true ? (
+              <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+                Moved to NBFC
+              </Badge>
+            ) : (
+              <Button size="sm" onClick={() => setShowMoveConfirm(true)}>
+                Move to NBFC
+              </Button>
+            )}
           </div>
         </SheetHeader>
 
@@ -124,14 +190,15 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
               campaignId={lead.campaign?.id}
               contactId={lead.contact?.id}
               initialDocuments={lead.documents}
+              timeline={lead.timeline}
               email={lead.fileContent?.emailId}
             />
           </TabsContent>
 
           <TabsContent value="timeline" className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
             <div className="relative space-y-3 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-              {timelineEvents.length > 0 ? (
-                timelineEvents.map((event, idx) => (
+              {allTimelineEvents.length > 0 ? (
+                allTimelineEvents.map((event, idx) => (
                   <div
                     key={event.id}
                     className="group relative flex items-start gap-3 transition-all duration-300"
@@ -141,12 +208,7 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
                       <div
                         className={cn(
                           'flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300',
-                          event.type === 'created' &&
-                            'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-                          event.type === 'sent' &&
-                            'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-                          event.type === 'milestone' &&
-                            'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+                          event.iconBg,
                         )}
                       >
                         {event.icon}
@@ -154,7 +216,7 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
                     </div>
 
                     {/* Content Card */}
-                    <div className="flex-1 bg-card border border-border/60 p-2 rounded-lg  group-hover:border-primary/20 group-hover:shadow-md">
+                    <div className="flex-1 bg-card border border-border/60 p-2 rounded-lg group-hover:border-primary/20 group-hover:shadow-md">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-sm tracking-tight">{event.title}</p>
@@ -166,7 +228,7 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground bg-muted/30 px-2 py-1 rounded-md border border-border/40">
                           <Activity className="h-3 w-3" />
-                          {new Date(event.date!).toLocaleString('en-IN', {
+                          {new Date(event.date).toLocaleString('en-IN', {
                             day: '2-digit',
                             month: 'short',
                             hour: '2-digit',
@@ -174,9 +236,11 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
                           })}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                        {event.description}
-                      </p>
+                      {event.description && (
+                        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                          {event.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))
@@ -195,10 +259,36 @@ export function LeadDetailSheet({ lead, isOpen, onOpenChange }: LeadDetailSheetP
           </TabsContent>
 
           <TabsContent value="notes" className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
-            {lead.id && <LeadNotes leadId={lead.id} initialNotes={lead.notes} />}
+            {lead.id && (
+              <LeadNotes leadId={lead.id} initialNotes={lead.notes} timeline={lead.timeline} />
+            )}
           </TabsContent>
         </Tabs>
       </SheetContent>
+
+      <AlertDialog open={showMoveConfirm} onOpenChange={setShowMoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move to NBFC</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to move this lead to NBFC? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMoving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                moveToNbfc();
+              }}
+              disabled={isMoving}
+            >
+              {isMoving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Move to NBFC
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

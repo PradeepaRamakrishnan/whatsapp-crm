@@ -8,23 +8,11 @@ import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { EmailTemplatePreviewSheet } from '@/features/settings/components/email-template-preview-sheet';
+import { SmsTemplatePreviewSheet } from '@/features/settings/components/sms-template-preview-sheet';
+import { WhatsAppTemplatePreviewSheet } from '@/features/settings/components/whatsapp-template-preview-sheet';
 import { getAllConfiguration } from '@/features/settings/services';
-
-// import { ChannelOrderItem } from '@/features/campaigns/types';
-
-interface TemplatePreview {
-  type: 'email' | 'sms' | 'whatsapp';
-  name: string;
-  content: string;
-  bank: string;
-}
+import type { Template, WhatsAppTemplate } from '@/features/settings/types';
 
 const channelConfig: Record<
   string,
@@ -85,7 +73,17 @@ const formatDelay = (ms: number) => {
 
 const ConfigurationPage = () => {
   const router = useRouter();
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplatePreview | null>(null);
+  // const [selectedTemplate, setSelectedTemplate] = useState<TemplatePreview | null>(null);
+  const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string | null>(null);
+  const [isEmailSheetOpen, setIsEmailSheetOpen] = useState(false);
+
+  const [selectedSmsTemplate, setSelectedSmsTemplate] = useState<Template | null>(null);
+  const [isSmsSheetOpen, setIsSmsSheetOpen] = useState(false);
+
+  const [selectedWhatsAppTemplate, setSelectedWhatsAppTemplate] = useState<WhatsAppTemplate | null>(
+    null,
+  );
+  const [isWhatsAppSheetOpen, setIsWhatsAppSheetOpen] = useState(false);
 
   const { data: configurationResponse, isLoading } = useQuery({
     queryKey: ['configurations'],
@@ -220,8 +218,14 @@ const ConfigurationPage = () => {
                 {/* Email Card */}
                 <button
                   type="button"
-                  onClick={() => setSelectedTemplate(templates.email)}
-                  className="rounded-xl  p-4 text-left hover:bg-muted/40 border border-blue-200 transition"
+                  onClick={() => {
+                    if (config?.emailTemplate?.id) {
+                      setSelectedEmailTemplateId(config.emailTemplate.id);
+                      setIsEmailSheetOpen(true);
+                      return;
+                    }
+                  }}
+                  className="rounded-xl cursor-pointer  p-4 text-left hover:bg-muted/40 border border-blue-200 transition"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="rounded-lg bg-blue-100 p-2">
@@ -243,8 +247,14 @@ const ConfigurationPage = () => {
                 {/* SMS Card */}
                 <button
                   type="button"
-                  onClick={() => setSelectedTemplate(templates.sms)}
-                  className="rounded-xl border p-4 text-left  border-green-200 hover:bg-muted/40 transition"
+                  onClick={() => {
+                    if (config?.smsTemplate) {
+                      setSelectedSmsTemplate(config.smsTemplate);
+                      setIsSmsSheetOpen(true);
+                      return;
+                    }
+                  }}
+                  className="rounded-xl cursor-pointer border p-4 text-left  border-green-200 hover:bg-muted/40 transition"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="rounded-lg bg-green-100 p-2">
@@ -266,8 +276,14 @@ const ConfigurationPage = () => {
                 {/* WhatsApp Card */}
                 <button
                   type="button"
-                  onClick={() => setSelectedTemplate(templates.whatsapp)}
-                  className="rounded-xl border p-4 text-left border-emerald-200 hover:bg-muted/40 transition"
+                  onClick={() => {
+                    if (config?.whatsappTemplate) {
+                      setSelectedWhatsAppTemplate(config.whatsappTemplate);
+                      setIsWhatsAppSheetOpen(true);
+                      return;
+                    }
+                  }}
+                  className="rounded-xl cursor-pointer border p-4 text-left border-emerald-200 hover:bg-muted/40 transition"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="rounded-lg bg-emerald-100 p-2">
@@ -375,46 +391,23 @@ const ConfigurationPage = () => {
         </div>
       )}
 
-      {/* Template Preview Modal */}
-      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedTemplate?.type === 'email' && <Mail className="h-5 w-5 text-blue-600" />}
-              {selectedTemplate?.type === 'sms' && (
-                <MessageSquare className="h-5 w-5 text-green-600" />
-              )}
-              {selectedTemplate?.type === 'whatsapp' && (
-                <Send className="h-5 w-5 text-emerald-600" />
-              )}
-              <span>{selectedTemplate?.name}</span>
-            </DialogTitle>
-            <DialogDescription>Template preview for {selectedTemplate?.bank}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedTemplate?.type === 'email' ? (
-              <div
-                className="text-sm bg-background rounded p-3 border overflow-auto"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized email template content
-                dangerouslySetInnerHTML={{
-                  // biome-ignore lint/style/useNamingConvention: React API requirement
-                  __html: selectedTemplate?.content || '',
-                }}
-              />
-            ) : (
-              <div className="text-sm whitespace-pre-wrap font-mono bg-background rounded p-3 border">
-                {selectedTemplate?.content || 'No content available'}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{selectedTemplate?.bank}</Badge>
-              {/* <Badge variant="outline" className="capitalize">
-                {selectedTemplate?.type}
-              </Badge> */}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EmailTemplatePreviewSheet
+        templateId={selectedEmailTemplateId}
+        isOpen={isEmailSheetOpen}
+        onClose={() => setIsEmailSheetOpen(false)}
+      />
+
+      <SmsTemplatePreviewSheet
+        template={selectedSmsTemplate}
+        isOpen={isSmsSheetOpen}
+        onClose={() => setIsSmsSheetOpen(false)}
+      />
+
+      <WhatsAppTemplatePreviewSheet
+        template={selectedWhatsAppTemplate}
+        isOpen={isWhatsAppSheetOpen}
+        onClose={() => setIsWhatsAppSheetOpen(false)}
+      />
     </div>
   );
 };

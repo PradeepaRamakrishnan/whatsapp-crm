@@ -39,8 +39,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { deleteDocument, uploadDocument } from '../services';
-import type { Document } from '../types';
+import { addTimelineEntry, deleteDocument, uploadDocument } from '../services';
+import type { Document, TimelineEntry } from '../types';
 import { DocumentType } from '../types';
 
 interface DocumentUploaderProps {
@@ -48,6 +48,7 @@ interface DocumentUploaderProps {
   campaignId?: string;
   contactId?: string;
   initialDocuments?: Document[];
+  timeline?: TimelineEntry[] | null;
   onUploadSuccess?: (doc: Document) => void;
   isLoading?: boolean;
 }
@@ -178,6 +179,7 @@ export function DocumentUploader({
   campaignId,
   contactId,
   initialDocuments = [],
+  timeline,
   onUploadSuccess,
   isLoading,
 }: DocumentUploaderProps) {
@@ -224,7 +226,10 @@ export function DocumentUploader({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
   const [draggedDocType, setDraggedDocType] = useState<string | null>(null);
-  const [docToDelete, setDocToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [docToDelete, setDocToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleFileUploadTrigger = (docType: string) => {
     activeDocTypeRef.current = docType;
@@ -258,6 +263,62 @@ export function DocumentUploader({
       setSelectedFile(null);
       activeDocTypeRef.current = null;
       toast.success('Document uploaded successfully');
+
+      // Add timeline entry logic
+      let shouldAddEntry = true;
+      let title = 'Document Uploaded';
+      let description = `${newDoc.name} has been successfully uploaded.`;
+
+      if (newDoc.type === DocumentType.AadharFront || newDoc.type === DocumentType.AadharBack) {
+        // Aadhaar specific logic
+        const otherType =
+          newDoc.type === DocumentType.AadharFront
+            ? DocumentType.AadharBack
+            : DocumentType.AadharFront;
+
+        // Check if the other side exists in the documents list (before the new one was added to state)
+        const otherSideUploaded = documents.some((d) => d.type === otherType);
+
+        if (otherSideUploaded) {
+          title = 'Aadhaar Card Uploaded';
+          description = 'Aadhaar Card (Front & Back) has been successfully uploaded.';
+          shouldAddEntry = true;
+        } else {
+          // Only one side uploaded so far
+          shouldAddEntry = false;
+        }
+      } else {
+        // Generic logic for other documents
+        switch (newDoc.type) {
+          case 'pan':
+            title = 'PAN Card Uploaded';
+            description = 'PAN Card has been successfully uploaded.';
+            break;
+          case 'income_proof':
+            title = 'Income Proof Uploaded';
+            description = 'Income Proof has been successfully uploaded.';
+            break;
+          case 'bank_statement':
+            title = 'Bank Statement Uploaded';
+            description = 'Bank Statement has been successfully uploaded.';
+            break;
+          case 'address_proof':
+            title = 'Address Proof Uploaded';
+            description = 'Address Proof has been successfully uploaded.';
+            break;
+          default:
+            title = `${newDoc.name} Uploaded`;
+            description = `${newDoc.name} has been successfully uploaded.`;
+        }
+      }
+
+      if (shouldAddEntry) {
+        addTimelineEntry(
+          leadId,
+          { type: 'document_uploaded', title: title, description: description },
+          timeline,
+        ).catch(() => {});
+      }
       queryClient.invalidateQueries({ queryKey: ['lead-documents', leadId] });
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
       if (onUploadSuccess) onUploadSuccess(newDoc);
@@ -691,8 +752,12 @@ export function DocumentUploader({
                           d.type !== DocumentType.AadharFront && d.type !== DocumentType.AadharBack,
                       ),
                     );
-                    queryClient.invalidateQueries({ queryKey: ['lead-documents', leadId] });
-                    queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
+                    queryClient.invalidateQueries({
+                      queryKey: ['lead-documents', leadId],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ['leads', leadId],
+                    });
                     toast.success('Aadhaar documents deleted');
                   } else {
                     const uploadedDoc = documents.find(
