@@ -1,4 +1,11 @@
-import { Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
+import {
+  Briefcase,
+  FileText,
+  LayoutDashboard,
+  MessageCircle,
+  Settings,
+  UserCheck,
+} from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -94,6 +101,12 @@ export const dashboardData = {
           url: '/settings/nbfc',
         },
       ],
+    },
+
+    {
+      name: 'Whatsapp',
+      url: '/whatsapp/list',
+      icon: MessageCircle,
     },
   ],
   navSecondary: [

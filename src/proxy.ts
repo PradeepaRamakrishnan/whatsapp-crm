@@ -1,53 +1,7 @@
-import axios, { AxiosError } from 'axios';
 import { type NextRequest, NextResponse } from 'next/server';
-import type { User } from './features/auth/types/auth.types';
-
-const publicRoutes = ['/interested', '/not-interested', '/users/upload'];
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Skip auth check for public routes and static assets
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  try {
-    const url = process.env.NEXT_PUBLIC_USERS_API_URL;
-
-    const response = await axios<User>({
-      method: 'GET',
-      url: `${url}/me`,
-      headers: {
-        Cookie: request.headers.get('cookie') || '',
-      },
-      withCredentials: true,
-    });
-
-    console.info('Authenticated user:', response.data.id);
-
-    if (pathname.startsWith('/login')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-
-    // TODO: Add role-based access control here
-    // if (data.role !== 'admin' && pathname.startsWith('/admin')) {
-    //   return NextResponse.redirect(new URL('/unauthorized', request.url));
-    // }
-
-    return NextResponse.next();
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      console.error('Authentication error:', error.response?.data);
-    } else {
-      console.error('Authentication error:', error);
-    }
-    if (pathname.startsWith('/login')) {
-      return NextResponse.next();
-    }
-
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+  return NextResponse.next(); // ← எல்லாத்தையும் allow பண்ணு
 }
 
 export const config = {
