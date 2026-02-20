@@ -53,8 +53,25 @@ export function NavWorkflows({
       {/* <SidebarGroupLabel>Modules</SidebarGroupLabel> */}
       <SidebarMenu>
         {workflows.map((workflow) => {
-          // const isActive =
-          //   workflow.url === pathname || workflow.items?.some((item) => item.url === pathname);
+          const hasSubItems = !!(workflow.items && workflow.items.length > 0);
+          const workflowBase = `/${workflow.url.split('/').filter(Boolean)[0] || ''}`;
+          const isActive =
+            workflow.url === pathname ||
+            workflow.items?.some((item) => item.url === pathname) ||
+            (workflowBase !== '/' && pathname.startsWith(`${workflowBase}/`));
+
+          if (!hasSubItems) {
+            return (
+              <SidebarMenuItem key={workflow.name}>
+                <SidebarMenuButton asChild tooltip={workflow.name} isActive={isActive}>
+                  <a href={workflow.url}>
+                    {workflow.icon && <workflow.icon />}
+                    <span>{workflow.name}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          }
 
           return (
             <Collapsible
@@ -68,7 +85,7 @@ export function NavWorkflows({
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={workflow.name} isActive={workflow.url === pathname}>
+                  <SidebarMenuButton tooltip={workflow.name} isActive={isActive}>
                     {workflow.icon && <workflow.icon />}
                     <span>{workflow.name}</span>
                     {workflow.items && workflow.items.length > 0 && (

@@ -22,7 +22,7 @@ export const LoginForm = () => {
         toast.loading('Logging in...', { id: 'login' });
         await login(value);
         toast.success('Logged in successfully!', { id: 'login' });
-
+        window.location.href = '/dashboard';
         router.replace('/dashboard');
       } catch (error) {
         if (error instanceof Error) {

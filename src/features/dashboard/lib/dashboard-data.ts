@@ -1,4 +1,13 @@
-import { Briefcase, FileText, Instagram, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
+/** biome-ignore-all assist/source/organizeImports: <> */
+import {
+  Briefcase,
+  FileText,
+  Instagram,
+  MessageCircle,
+  LayoutDashboard,
+  Settings,
+  UserCheck,
+} from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -109,6 +118,12 @@ export const dashboardData = {
           url: '/settings/nbfc',
         },
       ],
+    },
+
+    {
+      name: 'Whatsapp',
+      url: '/whatsapp/list',
+      icon: MessageCircle,
     },
   ],
   navSecondary: [
