@@ -191,10 +191,10 @@ export function InstagramInbox() {
 
       {!isLoading && filtered.length > 0 && firstActiveAccount && (
         <div className="flex flex-col gap-3">
-          {filtered.map((conv) => {
+          {filtered.map((conv, index) => {
             return (
               <ConversationRow
-                key={conv.instagramId}
+                key={`${firstActiveAccount.id}:${conv.instagramId}:${conv.lastMessageAt ?? 'no-date'}:${index}`}
                 conversation={conv}
                 account={firstActiveAccount}
                 onClick={() => setSelected({ conversation: conv, account: firstActiveAccount })}
