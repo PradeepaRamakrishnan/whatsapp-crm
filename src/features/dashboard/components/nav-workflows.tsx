@@ -41,6 +41,11 @@ export function NavWorkflows({
   // Always start null (closed) on the server to prevent aria-controls hydration mismatch.
   // The useEffect below sets the correct open item after client hydration.
   const [openWorkflow, setOpenWorkflow] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Update open workflow when pathname changes (client-only)
   useEffect(() => {
@@ -48,9 +53,8 @@ export function NavWorkflows({
     setOpenWorkflow(activeWorkflow);
   }, [getActiveWorkflow]);
 
-  return (
+  const content = (
     <SidebarGroup>
-      {/* <SidebarGroupLabel>Modules</SidebarGroupLabel> */}
       <SidebarMenu>
         {workflows.map((workflow) => {
           const hasSubItems = !!(workflow.items && workflow.items.length > 0);
@@ -115,4 +119,23 @@ export function NavWorkflows({
       </SidebarMenu>
     </SidebarGroup>
   );
+
+  if (!mounted) {
+    return (
+      <SidebarGroup>
+        <SidebarMenu>
+          {workflows.map((workflow) => (
+            <SidebarMenuItem key={workflow.name}>
+              <SidebarMenuButton tooltip={workflow.name}>
+                {workflow.icon && <workflow.icon />}
+                <span>{workflow.name}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+
+  return content;
 }

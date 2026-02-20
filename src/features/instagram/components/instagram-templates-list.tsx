@@ -1,8 +1,17 @@
 'use client';
 
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, RefreshCw, Search } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import type { InstagramAccount } from '../types';
 import { InstagramTemplateSheet } from './instagram-template-sheet';
 
@@ -12,41 +21,78 @@ interface InstagramTemplatesListProps {
 
 export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps) {
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const handleSync = () => {
+    setIsSyncing(true);
+    // Simulate sync or trigger mutation
+    setTimeout(() => setIsSyncing(false), 1500);
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 py-8">
-      <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-16 text-center">
+    <div className="flex flex-1 flex-col gap-6 py-4">
+      {/* Action Bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-1 rounded-xl">
+        <div className="flex flex-1 items-center gap-3 max-w-2xl">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name..."
+              className="pl-9 bg-muted/50 border-none h-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px] h-10 bg-muted/50 border-none">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 px-4 gap-2"
+            onClick={handleSync}
+            disabled={isSyncing}
+          >
+            <RefreshCw className={cn('h-4 w-4', isSyncing && 'animate-spin')} />
+            Sync Templates
+          </Button>
+          <Button
+            size="sm"
+            className="h-10 px-4 bg-orange-500 hover:bg-orange-600 text-white gap-2 border-none shadow-sm shadow-orange-200"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content Area (Placeholder for now) */}
+      <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-16 text-center bg-white/50">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
           <FileText className="h-6 w-6 text-muted-foreground" />
         </div>
         <div className="max-w-[420px] space-y-2">
-          <h3 className="text-xl font-semibold">No Templates </h3>
+          <h3 className="text-xl font-semibold">No Templates Found</h3>
           <p className="text-sm text-muted-foreground">
-            Create reusable message templates for your Instagram Business accounts. Templates help
-            you respond faster and maintain a consistent brand voice.
+            {searchQuery || statusFilter !== 'all'
+              ? 'No templates match your current filters. Try adjusting your search or status selection.'
+              : 'Create reusable message templates for your Instagram Business accounts. Templates help you respond faster and maintain a consistent brand voice.'}
           </p>
         </div>
-        <Button className="mt-4" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Template
-        </Button>
-      </div>
-
-      {/* Hint for the user */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="group relative rounded-xl border bg-card p-6 opacity-40 grayscale transition-all shadow-sm"
-          >
-            <div className="mb-4 h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="h-4 w-24 bg-muted rounded mb-2" />
-            <div className="h-3 w-full bg-muted rounded mb-1" />
-            <div className="h-3 w-2/3 bg-muted rounded" />
-          </div>
-        ))}
       </div>
 
       <InstagramTemplateSheet open={createOpen} onOpenChange={setCreateOpen} accounts={accounts} />

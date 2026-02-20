@@ -89,16 +89,6 @@ export const dashboardData = {
       name: 'Instagram',
       url: '/instagram/accounts',
       icon: Instagram,
-      items: [
-        {
-          title: 'Accounts',
-          url: '/instagram/accounts',
-        },
-        {
-          title: 'Inbox',
-          url: '/instagram/inbox',
-        },
-      ],
     },
     {
       name: 'Settings',

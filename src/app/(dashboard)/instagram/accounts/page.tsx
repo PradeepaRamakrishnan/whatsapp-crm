@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { InstagramAccountsList } from '@/features/instagram/components/instagram-accounts-list';
 
 export const metadata: Metadata = {
-  title: 'Instagram Accounts',
+  title: 'Instagram Configuration',
   description: 'Manage connected Instagram Business accounts.',
 };
 
@@ -11,7 +11,7 @@ const InstagramAccountsPage = () => {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-1 flex-col gap-6 p-6">
+        <div className="flex flex-1 flex-col gap-6 p-2">
           <div className="space-y-2 animate-pulse">
             <div className="h-8 w-72 bg-muted rounded" />
             <div className="h-4 w-96 bg-muted rounded" />

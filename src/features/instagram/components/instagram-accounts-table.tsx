@@ -159,7 +159,10 @@ const columns: ColumnDef<InstagramAccount>[] = [
   },
 ];
 
+import { useRouter } from 'next/navigation';
+
 export function InstagramAccountsTable({ accounts }: InstagramAccountsTableProps) {
+  const router = useRouter();
   const table = useReactTable({
     data: accounts,
     columns,
@@ -185,7 +188,11 @@ export function InstagramAccountsTable({ accounts }: InstagramAccountsTableProps
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => router.push(`/instagram/inbox?accountId=${row.original.id}`)}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
