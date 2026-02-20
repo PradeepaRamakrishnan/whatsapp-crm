@@ -1,7 +1,8 @@
+/** biome-ignore-all assist/source/organizeImports: <> */
 'use client';
 
-import { ExternalLink, Instagram, Loader2 } from 'lucide-react';
 import React from 'react';
+import { Instagram, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -11,6 +12,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { connectInstagramAccount } from '../services';
+import { cn } from '@/lib/utils';
 
 interface ConnectAccountSheetProps {
   open: boolean;
@@ -40,6 +42,7 @@ function openOAuthPopup(): Window | null {
 export function ConnectAccountSheet({ open, onOpenChange, onSuccess }: ConnectAccountSheetProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
+  const [isSelected, setIsSelected] = React.useState(true); // Default to selected since there's only one option
 
   const handleOpenChange = (value: boolean) => {
     if (!value) setError(null);
@@ -89,43 +92,75 @@ export function ConnectAccountSheet({ open, onOpenChange, onSuccess }: ConnectAc
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex flex-col sm:max-w-md">
-        <SheetHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400">
-              <Instagram className="h-5 w-5 text-white" />
+      <SheetContent className="p-0 overflow-hidden gap-0 flex flex-col sm:max-w-[700px]">
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          <div className="p-6">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-xl font-semibold text-[#1e293b]">
+                Connect Instagram Account
+              </SheetTitle>
+              <SheetDescription className="text-sm text-[#64748b]">
+                Choose how you would like to connect your Instagram account.
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setIsSelected(true)}
+                className={cn(
+                  'group relative flex w-full flex-col items-start rounded-xl border-2 p-5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20',
+                  isSelected
+                    ? 'border-primary bg-primary/[0.02]'
+                    : 'border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:bg-[#f8fafc]',
+                )}
+              >
+                <div
+                  className={cn(
+                    'mb-4 flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                    isSelected ? 'bg-primary/10 text-primary' : 'bg-[#f1f5f9] text-[#64748b]',
+                  )}
+                >
+                  <Instagram className="h-5 w-5" />
+                </div>
+                <h3
+                  className={cn(
+                    'text-base font-semibold transition-colors',
+                    isSelected ? 'text-[#1e293b]' : 'text-[#475569]',
+                  )}
+                >
+                  Connect your Professional account
+                </h3>
+                <p className="mt-1 text-sm text-[#64748b] leading-relaxed">
+                  Link your Instagram Professional account via Meta. You'll be able to manage your
+                  messages and automation here.
+                </p>
+              </button>
             </div>
-            <div>
-              <SheetTitle>Connect Instagram Account</SheetTitle>
-              <SheetDescription>Link your Instagram Business account via Meta</SheetDescription>
-            </div>
+
+            {error && (
+              <div className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </div>
+            )}
           </div>
-        </SheetHeader>
+        </div>
 
-        <div className="flex flex-1 flex-col gap-5 py-6">
-          <p className="text-sm text-muted-foreground">
-            Click below to open the Meta login popup. Grant the requested Instagram permissions and
-            your account will be connected automatically.
-          </p>
-
+        <div className="mt-auto border-t bg-[#f8fafc] px-6 py-4 flex justify-end">
           <Button
-            className="w-full gap-2 bg-[#1877F2] hover:bg-[#1864d9] text-white"
+            className="px-8 font-medium"
             onClick={handleMetaLogin}
-            disabled={isPending}
+            disabled={isPending || !isSelected}
           >
             {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
             ) : (
-              <ExternalLink className="h-4 w-4" />
+              'Next'
             )}
-            {isPending ? 'Connecting…' : 'Continue with Meta'}
           </Button>
-
-          {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          )}
         </div>
       </SheetContent>
     </Sheet>

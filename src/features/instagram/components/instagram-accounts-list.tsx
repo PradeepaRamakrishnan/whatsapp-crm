@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getInstagramAccounts } from '../services';
 import type { InstagramAccount } from '../types';
-import { ConnectAccountSheet } from './connect-account-dialog';
+import { ConnectAccountSheet } from './connect-account-sheet';
 import { InstagramAccountsTable } from './instagram-accounts-table';
 import { InstagramTemplatesList } from './instagram-templates-list';
 
@@ -128,7 +128,7 @@ export function InstagramAccountsList() {
         </TabsContent>
 
         <TabsContent value="templates">
-          <InstagramTemplatesList />
+          <InstagramTemplatesList accounts={accounts} />
         </TabsContent>
       </Tabs>
 

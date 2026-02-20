@@ -1,9 +1,18 @@
 'use client';
 
 import { FileText, Plus } from 'lucide-react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
+import type { InstagramAccount } from '../types';
+import { InstagramTemplateSheet } from './instagram-template-sheet';
 
-export function InstagramTemplatesList() {
+interface InstagramTemplatesListProps {
+  accounts: InstagramAccount[];
+}
+
+export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps) {
+  const [createOpen, setCreateOpen] = React.useState(false);
+
   return (
     <div className="flex flex-1 flex-col gap-6 py-8">
       <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-16 text-center">
@@ -17,7 +26,7 @@ export function InstagramTemplatesList() {
             you respond faster and maintain a consistent brand voice.
           </p>
         </div>
-        <Button className="mt-4" disabled>
+        <Button className="mt-4" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Create Template
         </Button>
@@ -39,6 +48,8 @@ export function InstagramTemplatesList() {
           </div>
         ))}
       </div>
+
+      <InstagramTemplateSheet open={createOpen} onOpenChange={setCreateOpen} accounts={accounts} />
     </div>
   );
 }

@@ -47,3 +47,16 @@ export interface InstagramConversation {
   lastDirection: 'inbound' | 'outbound' | null;
   unreadCount: number;
 }
+
+export interface InstagramTemplate {
+  id: string;
+  name: string;
+  category: string;
+  language: string;
+  body: string;
+  headerType: 'None' | 'Text' | 'Image';
+  headerText?: string;
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
