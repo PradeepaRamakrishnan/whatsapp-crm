@@ -1,4 +1,4 @@
-import { Briefcase, FileText, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
+import { Briefcase, FileText, Instagram, LayoutDashboard, Settings, UserCheck } from 'lucide-react';
 
 export const dashboardData = {
   user: {
@@ -74,6 +74,21 @@ export const dashboardData = {
         //   title: 'Ready for Disbursal',
         //   url: '/leads/ready-for-disbursal',
         // },
+      ],
+    },
+    {
+      name: 'Instagram',
+      url: '/instagram/accounts',
+      icon: Instagram,
+      items: [
+        {
+          title: 'Accounts',
+          url: '/instagram/accounts',
+        },
+        {
+          title: 'Inbox',
+          url: '/instagram/inbox',
+        },
       ],
     },
     {

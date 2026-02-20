@@ -38,14 +38,14 @@ export function NavWorkflows({
     );
   }, [workflows, pathname]);
 
-  const [openWorkflow, setOpenWorkflow] = useState<string | null>(getActiveWorkflow);
+  // Always start null (closed) on the server to prevent aria-controls hydration mismatch.
+  // The useEffect below sets the correct open item after client hydration.
+  const [openWorkflow, setOpenWorkflow] = useState<string | null>(null);
 
-  // Update open workflow when pathname changes
+  // Update open workflow when pathname changes (client-only)
   useEffect(() => {
     const activeWorkflow = getActiveWorkflow();
-    if (activeWorkflow) {
-      setOpenWorkflow(activeWorkflow);
-    }
+    setOpenWorkflow(activeWorkflow);
   }, [getActiveWorkflow]);
 
   return (
