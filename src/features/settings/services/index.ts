@@ -302,6 +302,29 @@ export async function toggleEmailTemplateDefault(
   }
 }
 
+export async function createWhatsAppTemplate(
+  data: Record<string, unknown>,
+): Promise<{ success: boolean; message: string; data?: unknown }> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/whatsapp-templates`,
+      data,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to create WhatsApp template');
+    }
+    throw error;
+  }
+}
+
 export async function toggleWhatsAppTemplateDefault(
   id: string,
 ): Promise<{ success: boolean; message: string }> {
