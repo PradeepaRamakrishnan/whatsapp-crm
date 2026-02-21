@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from 'boring-avatars';
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -35,6 +36,12 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fullName = `${user.firstName} ${user.lastName}`;
 
   const logoutMutation = useMutation({
@@ -53,6 +60,23 @@ export function NavUser({
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  if (!mounted) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
+            <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{fullName}</span>
+              <span className="truncate text-xs">{user.email}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4 opacity-50" />
+          </div>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>

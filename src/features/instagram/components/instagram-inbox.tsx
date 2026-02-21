@@ -9,11 +9,13 @@ import {
   Instagram,
   Loader2,
   MessageSquare,
+  RefreshCw,
   Search,
   Send,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
+import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,8 +23,14 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { getInstagramAccounts, getInstagramConversations, sendInstagramMessage } from '../services';
-import type { InstagramAccount, InstagramConversation } from '../types';
+import {
+  getInstagramAccounts,
+  getInstagramConversations,
+  getInstagramMessagesByUsername,
+  sendInstagramMessage,
+  syncInstagramMessages,
+} from '../services';
+import type { InstagramAccount, InstagramConversation, InstagramMessage } from '../types';
 
 function EmptyState() {
   return (
@@ -138,32 +146,65 @@ export function InstagramInbox() {
     queryFn: () => getInstagramConversations(activeAccount?.id),
     enabled: !!activeAccount,
     retry: 1,
+    refetchInterval: 10000,
+  });
+
+  const { data: messages = [], isLoading: isMessagesLoading } = useQuery<InstagramMessage[]>({
+    queryKey: ['instagram-messages', activeAccount?.id, selected?.username],
+    queryFn: () => {
+      if (!selected?.username) {
+        return Promise.resolve([]);
+      }
+      return getInstagramMessagesByUsername(selected.username, activeAccount?.id);
+    },
+    enabled: !!activeAccount && !!selected?.username,
+    retry: 1,
+    refetchInterval: 10000,
   });
 
   const sendMessage = useMutation({
-    mutationFn: (to: string) => {
+    mutationFn: ({ to, text }: { to: string; text: string }) => {
       if (!activeAccount) throw new Error('No active account');
-      return sendInstagramMessage(activeAccount.id, to, messageText);
+      return sendInstagramMessage(activeAccount.id, to, text);
     },
     onSuccess: () => {
-      setMessageText('');
       queryClient.invalidateQueries({ queryKey: ['instagram-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['instagram-messages'] });
+    },
+  });
+
+  const syncMessages = useMutation({
+    mutationFn: () => {
+      if (!activeAccount) throw new Error('No active account');
+      return syncInstagramMessages(activeAccount.id);
+    },
+    onSuccess: (data) => {
+      toast.success(`Synced successfully! Stored ${data.storedMessages} new messages.`);
+      queryClient.invalidateQueries({ queryKey: ['instagram-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['instagram-messages'] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to sync messages');
     },
   });
 
   const handleSend = () => {
     if (!selected || !messageText.trim() || sendMessage.isPending) return;
-    sendMessage.mutate(selected.instagramId);
+    const textToSend = messageText;
+    setMessageText(''); // Clear instantly for immediate feedback
+    sendMessage.mutate({ to: selected.instagramId, text: textToSend });
   };
 
-  const filtered = conversations.filter((c) => {
-    const q = search.toLowerCase();
-    return (
-      c.username?.toLowerCase().includes(q) ||
-      c.instagramId.toLowerCase().includes(q) ||
-      c.lastMessage?.toLowerCase().includes(q)
-    );
-  });
+  const filtered = Array.isArray(conversations)
+    ? conversations.filter((c) => {
+        const q = search.toLowerCase();
+        return (
+          c.username?.toLowerCase().includes(q) ||
+          c.instagramId.toLowerCase().includes(q) ||
+          c.lastMessage?.toLowerCase().includes(q)
+        );
+      })
+    : [];
 
   return (
     <div className="flex h-[calc(100vh-140px)] w-full overflow-hidden bg-white border rounded-2xl shadow-sm">
@@ -171,13 +212,24 @@ export function InstagramInbox() {
       <div className="flex w-full max-w-[320px] flex-col border-r bg-zinc-50/30">
         <div className="p-4 border-b space-y-3 bg-white">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-lg flex items-center gap-2">
+            <h2 className=" text-lg flex items-center gap-2">
               <Instagram className="h-5 w-5 text-purple-600" />
-              Directs
-            </h2>
-            <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-wider">
               {activeAccount?.username || 'Account'}
-            </Badge>
+            </h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => syncMessages.mutate()}
+                disabled={syncMessages.isPending || !activeAccount}
+                title="Refresh messages"
+              >
+                <RefreshCw
+                  className={cn('h-3.5 w-3.5', syncMessages.isPending && 'animate-spin')}
+                />
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -244,7 +296,7 @@ export function InstagramInbox() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-sm font-bold">{selected.username || selected.instagramId}</h3>
+                  <h3 className="text-sm ">{selected.username || selected.instagramId}</h3>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                     Active on Instagram
@@ -260,43 +312,39 @@ export function InstagramInbox() {
             {/* Message Area */}
             <ScrollArea className="flex-1 p-6">
               <div className="flex flex-col gap-6 justify-end min-h-full">
-                {/* Last received message (mock or real from conv) */}
-                {selected.lastMessage && (
-                  <div
-                    className={cn(
-                      'flex flex-col max-w-[80%] gap-1',
-                      selected.lastDirection === 'outbound' ? 'ml-auto items-end' : 'items-start',
-                    )}
-                  >
+                {isMessagesLoading ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground italic text-xs">
+                    No message history found for this user.
+                  </div>
+                ) : (
+                  messages.map((msg) => (
                     <div
+                      key={msg.id}
                       className={cn(
-                        'group relative rounded-2xl px-4 py-2.5 text-sm shadow-sm',
-                        selected.lastDirection === 'outbound'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white border text-foreground',
+                        'flex flex-col max-w-[80%] gap-1',
+                        msg.direction === 'outbound' ? 'ml-auto items-end' : 'items-start',
                       )}
                     >
-                      {selected.lastMessage}
+                      <div
+                        className={cn(
+                          'group relative rounded-2xl px-4 py-2.5 text-sm shadow-sm',
+                          msg.direction === 'outbound'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-white border text-foreground',
+                        )}
+                      >
+                        {msg.text}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground px-1">
+                        {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground px-1">
-                      {selected.lastMessageAt &&
-                        formatDistanceToNow(new Date(selected.lastMessageAt), { addSuffix: true })}
-                    </span>
-                  </div>
+                  ))
                 )}
-
-                <div className="py-4 text-center">
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] opacity-40 uppercase tracking-widest font-mono"
-                  >
-                    Conversation Details
-                  </Badge>
-                </div>
-
-                <div className="flex flex-col gap-2 p-4 bg-muted/20 rounded-xl border border-dashed border-muted-foreground/20 italic text-center">
-                  <p className="text-xs text-muted-foreground">IGSID: {selected.instagramId}</p>
-                </div>
               </div>
             </ScrollArea>
 

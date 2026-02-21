@@ -8,6 +8,8 @@ export interface InstagramAccount {
   tokenType: 'long_lived' | 'system_user' | 'short_lived';
   tokenExpiry: string | null;
   isVerified: boolean;
+  autoReplyEnabled?: boolean;
+  autoReplyTemplateId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,7 +23,7 @@ export interface InstagramMessage {
   direction: 'inbound' | 'outbound';
   from: string;
   to: string;
-  content: string;
+  text: string;
   type: string;
   status: string;
   externalMessageId: string | null;
@@ -52,11 +54,17 @@ export interface InstagramTemplate {
   id: string;
   name: string;
   category: string;
-  language: string;
-  body: string;
-  headerType: 'None' | 'Text' | 'Image';
+  language?: string;
+  locale?: string;
+  body?: string;
+  description?: string;
+  imageUrl?: string;
+  buttonLabel?: string;
+  buttonUrl?: string;
+  headerType?: 'None' | 'Text' | 'Image';
   headerText?: string;
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'APPROVED';
+  isCustom?: boolean;
   createdAt: string;
   updatedAt: string;
 }

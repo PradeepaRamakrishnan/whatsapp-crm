@@ -1,9 +1,10 @@
 /** biome-ignore-all assist/source/organizeImports: <> */
 'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Instagram, Sun, Moon, ChevronLeft, MoreVertical, Send } from 'lucide-react';
+import { Instagram, Sun, Moon, ChevronLeft, MoreVertical, Send, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,27 +16,65 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { InstagramAccount } from '../types';
+import type { InstagramAccount, InstagramTemplate } from '../types';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { createCustomInstagramTemplate, updateInstagramTemplate } from '../services';
 
 interface InstagramTemplateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: InstagramAccount[];
+  template?: InstagramTemplate | null;
 }
 
 export function InstagramTemplateSheet({
   open,
   onOpenChange,
   accounts,
+  template,
 }: InstagramTemplateSheetProps) {
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: '',
     accountId: '',
     category: 'utility',
     language: 'en',
-    headerType: 'none',
-    body: '',
+    description: '',
+    imageUrl: '',
+    buttonLabel: '',
+    buttonUrl: '',
+    isCustom: true,
   });
+
+  React.useEffect(() => {
+    if (template) {
+      setFormData({
+        name: template.name || '',
+        accountId: '', // We don't necessarily have accountId in template yet, but we can try to find it or let user select
+        category: template.category || 'utility',
+        language: template.language || template.locale || 'en',
+        description: template.description || template.body || '',
+        imageUrl: template.imageUrl || '',
+        buttonLabel: template.buttonLabel || '',
+        buttonUrl: template.buttonUrl || '',
+        isCustom: template.isCustom ?? true,
+      });
+    } else {
+      setFormData({
+        name: '',
+        accountId: '',
+        category: 'utility',
+        language: 'en',
+        description: '',
+        imageUrl: '',
+        buttonLabel: '',
+        buttonUrl: '',
+        isCustom: true,
+      });
+    }
+  }, [template]);
   const [previewMode, setPreviewMode] = React.useState<'light' | 'dark'>('light');
 
   const handleInputChange = (field: string, value: string) => {
@@ -44,11 +83,42 @@ export function InstagramTemplateSheet({
 
   const selectedAccount = accounts.find((a) => a.id === formData.accountId);
 
+  const handleSubmit = async () => {
+    if (!formData.accountId || !formData.name) {
+      toast.error('Please fill in required fields (Name and Account)');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (template) {
+        // Find accountId if missing
+        const accId = formData.accountId || accounts[0]?.id;
+        await updateInstagramTemplate(accId, template.id, formData);
+        toast.success('Template updated successfully');
+      } else {
+        await createCustomInstagramTemplate(formData.accountId, formData);
+        toast.success('Custom template created successfully');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['instagram-templates'] });
+      onOpenChange(false);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save template');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isEdit = !!template;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 overflow-hidden gap-0 flex flex-col sm:max-w-[1100px]">
         <SheetHeader className="p-6 border-b shrink-0">
-          <SheetTitle className="text-xl font-bold">Create Instagram Template</SheetTitle>
+          <SheetTitle className="text-xl font-bold">
+            {isEdit ? 'Edit Instagram Template' : 'Create Instagram Template'}
+          </SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-white">
@@ -125,35 +195,50 @@ export function InstagramTemplateSheet({
               </section>
 
               <section className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Template content
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Template content
+                  </h3>
+                </div>
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label>Header Type</Label>
-                    <Select
-                      onValueChange={(value) => handleInputChange('headerType', value)}
-                      value={formData.headerType}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="text">Text</SelectItem>
-                        <SelectItem value="image">Image</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="imageUrl">Image URL (Optional)</Label>
+                    <Input
+                      id="imageUrl"
+                      placeholder="https://example.com/image.jpg"
+                      value={formData.imageUrl}
+                      onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="body">Body</Label>
+                    <Label htmlFor="description">Description / Body</Label>
                     <Textarea
-                      id="body"
-                      placeholder="Enter message body"
-                      className="min-h-[120px] resize-none"
-                      value={formData.body}
-                      onChange={(e) => handleInputChange('body', e.target.value)}
+                      id="description"
+                      placeholder="Enter message description"
+                      className="min-h-[100px] resize-none"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="buttonLabel">Button Label</Label>
+                      <Input
+                        id="buttonLabel"
+                        placeholder="Click Here"
+                        value={formData.buttonLabel}
+                        onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="buttonUrl">Button URL</Label>
+                      <Input
+                        id="buttonUrl"
+                        placeholder="https://..."
+                        value={formData.buttonUrl}
+                        onChange={(e) => handleInputChange('buttonUrl', e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               </section>
@@ -240,11 +325,37 @@ export function InstagramTemplateSheet({
                       </div>
                       <div
                         className={cn(
-                          'rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed shadow-sm',
-                          previewMode === 'dark' ? 'bg-[#262626]' : 'bg-[#f2f2f2]',
+                          'rounded-2xl overflow-hidden shadow-sm flex flex-col',
+                          previewMode === 'dark' ? 'bg-[#262626]' : 'bg-[#e5e7eb]',
                         )}
                       >
-                        {formData.body || 'Type in the body field to see how your message looks...'}
+                        {formData.imageUrl && (
+                          <div className="w-full aspect-square bg-zinc-200 relative">
+                            <Image
+                              src={formData.imageUrl}
+                              alt="Template"
+                              fill
+                              unoptimized
+                              className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="px-4 py-3 space-y-2">
+                          <p className="text-[13px] leading-relaxed">
+                            {formData.description ||
+                              'Type in the description field to see how your message looks...'}
+                          </p>
+                          {formData.buttonLabel && (
+                            <div className="pt-2 border-t border-zinc-500/20 text-center">
+                              <span className="text-blue-500 font-bold text-sm">
+                                {formData.buttonLabel}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -274,16 +385,18 @@ export function InstagramTemplateSheet({
           </div>
         </div>
 
-        <div className="p-4 border-t flex justify-between bg-white shrink-0 mt-auto z-10">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="p-4 border-t flex justify-between bg-white shrink-0 mt-auto z-10 gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <div className="flex gap-2">
-            <Button variant="ghost" className="text-muted-foreground">
-              Save as Draft
-            </Button>
-            <Button className="bg-[#0f172a] text-white hover:bg-[#1e293b] min-w-[120px]">
-              Submit Template
+            <Button
+              className="bg-[#0f172a] text-white hover:bg-[#1e293b] min-w-[140px]"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isEdit ? 'Update Template' : 'Create Template'}
             </Button>
           </div>
         </div>

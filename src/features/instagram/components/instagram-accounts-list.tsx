@@ -2,7 +2,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, Instagram, Plus, Table, Search, RefreshCw } from 'lucide-react';
+import { FileText, Instagram, Plus, Table, Search, RefreshCw, Bot } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import type { InstagramAccount } from '../types';
 import { ConnectAccountSheet } from './connect-account-sheet';
 import { InstagramAccountsTable } from './instagram-accounts-table';
 import { InstagramTemplatesList } from './instagram-templates-list';
+import { InstagramAutomationSettings } from './instagram-automation-settings';
 import { cn } from '@/lib/utils';
 
 export function InstagramAccountsList() {
@@ -31,7 +32,7 @@ export function InstagramAccountsList() {
     retry: 1,
   });
 
-  const filteredAccounts = accounts.filter(
+  const filteredAccounts = (Array.isArray(accounts) ? accounts : []).filter(
     (account) =>
       account.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       account.instagramId?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -46,7 +47,7 @@ export function InstagramAccountsList() {
             <Instagram className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Instagram Configuration</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Instagram Configuration</h1>
             <p className="text-muted-foreground">Manage connected Instagram Business accounts</p>
           </div>
         </div>
@@ -59,7 +60,7 @@ export function InstagramAccountsList() {
         </div>
       )}
 
-      <Tabs defaultValue="accounts" className="w-full">
+      <Tabs id="instagram-accounts-tabs" defaultValue="accounts" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="accounts" className="gap-2">
             <Table className="h-4 w-4" />
@@ -68,6 +69,10 @@ export function InstagramAccountsList() {
           <TabsTrigger value="templates" className="gap-2">
             <FileText className="h-4 w-4" />
             Templates
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="gap-2">
+            <Bot className="h-4 w-4" />
+            Automation
           </TabsTrigger>
         </TabsList>
 
@@ -113,6 +118,9 @@ export function InstagramAccountsList() {
 
         <TabsContent value="templates">
           <InstagramTemplatesList accounts={accounts} />
+        </TabsContent>
+        <TabsContent value="automation">
+          <InstagramAutomationSettings accounts={accounts} />
         </TabsContent>
       </Tabs>
 
