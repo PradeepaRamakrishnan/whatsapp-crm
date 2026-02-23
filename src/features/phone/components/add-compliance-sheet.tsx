@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useAuth } from '@/context';
+import { phoneNumberService } from '../services/phone.service';
 
 interface AddComplianceSheetProps {
   open: boolean;
@@ -25,6 +27,7 @@ interface AddComplianceSheetProps {
 }
 
 export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplianceSheetProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     alias: '',
@@ -43,14 +46,35 @@ export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplia
       return;
     }
 
+    if (!user?.id) {
+      toast.error('User session not found');
+      return;
+    }
+
+    if (!formData.alias || !formData.country || !formData.numberType) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const submissionData = new FormData();
+    submissionData.append('alias', formData.alias);
+    submissionData.append('country', formData.country);
+    submissionData.append('numberType', formData.numberType);
+    submissionData.append('userId', user.id);
+    if (formData.businessName) submissionData.append('businessName', formData.businessName);
+    if (formData.certificateFile)
+      submissionData.append('certificateRegistration', formData.certificateFile);
+    if (formData.gstFile) submissionData.append('gstCertificate', formData.gstFile);
+
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await phoneNumberService.submitCompliance(submissionData);
       toast.success('Compliance documents submitted successfully');
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (_error) {
-      toast.error('Submission failed');
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || 'Submission failed';
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

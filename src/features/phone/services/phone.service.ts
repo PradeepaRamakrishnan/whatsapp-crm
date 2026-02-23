@@ -54,4 +54,22 @@ export const phoneNumberService = {
     );
     return response.data;
   },
+
+  async submitCompliance(data: FormData) {
+    const response = await axios.post(`${API_URL}/instagram/plivo/compliance`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  },
+
+  async getMyCompliance(userId: string) {
+    const response = await axios.get(`${API_URL}/instagram/plivo/compliance`, {
+      params: { userId },
+      withCredentials: true,
+    });
+    return response.data;
+  },
 };

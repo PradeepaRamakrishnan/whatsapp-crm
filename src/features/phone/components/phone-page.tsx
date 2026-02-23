@@ -2,7 +2,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Loader2, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react';
+import { Loader2, Pencil, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,22 @@ export default function PhoneNumberPage() {
 
   // Compliance state
   const [complianceSearchTerm, setComplianceSearchTerm] = useState('');
-  const [complianceData] = useState<any[]>([]);
+  const [complianceData, setComplianceData] = useState<any[]>([]);
+  const [isComplianceLoading, setIsComplianceLoading] = useState(false);
+
+  const loadCompliance = useCallback(async () => {
+    if (!user?.id) return;
+    setIsComplianceLoading(true);
+    try {
+      const response = await phoneNumberService.getMyCompliance(user.id);
+      setComplianceData(response.data || []);
+    } catch (error) {
+      console.error('Failed to load compliance data', error);
+      toast.error('Failed to load compliance data');
+    } finally {
+      setIsComplianceLoading(false);
+    }
+  }, [user?.id]);
 
   const loadMyNumbers = useCallback(async () => {
     if (!user?.id) return;
@@ -56,7 +71,8 @@ export default function PhoneNumberPage() {
 
   useEffect(() => {
     loadMyNumbers();
-  }, [loadMyNumbers]);
+    loadCompliance();
+  }, [loadMyNumbers, loadCompliance]);
 
   const handleSelectForPurchase = (numberData: any) => {
     setSelectedNumber(numberData);
@@ -120,7 +136,7 @@ export default function PhoneNumberPage() {
       .toLowerCase()
       .includes(query);
   });
-
+  console.info('filteredRentalSummary', filteredRentalSummary);
   const getCountryFlag = (country?: string) => {
     const c = (country || 'india').toLowerCase();
     if (c.includes('india')) return '🇮🇳';
@@ -149,7 +165,7 @@ export default function PhoneNumberPage() {
         ) : activeTab === 'sender-id' ? (
           <Button
             onClick={() => toast.info('Add Sender ID feature coming soon')}
-            className="gap-2 bg-slate-900 hover:bg-slate-800"
+            className="gap-2 "
           >
             <Plus className="h-4 w-4" />
             Add Sender ID
@@ -199,7 +215,6 @@ export default function PhoneNumberPage() {
                     <TableHeader className="bg-slate-50/50">
                       <TableRow>
                         <TableHead className="font-bold">Phone Number</TableHead>
-                        <TableHead className="font-bold">Alias</TableHead>
                         <TableHead className="font-bold">Type</TableHead>
                         <TableHead className="font-bold">Capability</TableHead>
                         <TableHead className="font-bold">Compliance Status</TableHead>
@@ -225,9 +240,7 @@ export default function PhoneNumberPage() {
                                 {num.phoneNumber}
                               </div>
                             </TableCell>
-                            <TableCell className="text-slate-600 italic">
-                              {num.alias || '-'}
-                            </TableCell>
+
                             <TableCell>{num.type || 'Local'}</TableCell>
                             <TableCell>
                               <Phone className="h-4 w-4 text-primary" />
@@ -299,7 +312,24 @@ export default function PhoneNumberPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {complianceData.length === 0 ? (
+                    {isComplianceLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-48 text-center">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-300" />
+                        </TableCell>
+                      </TableRow>
+                    ) : (complianceData || []).filter((item) => {
+                        const query = complianceSearchTerm.trim().toLowerCase();
+                        if (!query) return true;
+                        return (
+                          String(item.alias || '')
+                            .toLowerCase()
+                            .includes(query) ||
+                          String(item.country || '')
+                            .toLowerCase()
+                            .includes(query)
+                        );
+                      }).length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={5}
@@ -309,15 +339,64 @@ export default function PhoneNumberPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      complianceData.map((item) => (
-                        <TableRow key={`${item.alias}-${item.country}-${item.numberType}`}>
-                          <TableCell>{item.alias}</TableCell>
-                          <TableCell>{item.country}</TableCell>
-                          <TableCell>{item.numberType}</TableCell>
-                          <TableCell>{item.documents}</TableCell>
-                          <TableCell>{item.status}</TableCell>
-                        </TableRow>
-                      ))
+                      (complianceData || [])
+                        .filter((item) => {
+                          const query = complianceSearchTerm.trim().toLowerCase();
+                          if (!query) return true;
+                          return (
+                            String(item.alias || '')
+                              .toLowerCase()
+                              .includes(query) ||
+                            String(item.country || '')
+                              .toLowerCase()
+                              .includes(query)
+                          );
+                        })
+                        .map((item) => (
+                          <TableRow key={item.id || `${item.alias}-${item.country}`}>
+                            <TableCell className="font-medium">{item.alias}</TableCell>
+                            <TableCell>{item.country}</TableCell>
+                            <TableCell className="capitalize">{item.numberType}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                {item.certificateRegistrationUrl && (
+                                  <a
+                                    href={item.certificateRegistrationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                                  >
+                                    <ShieldCheck className="h-3 w-3" /> Certificate
+                                  </a>
+                                )}
+                                {item.gstCertificateUrl && (
+                                  <a
+                                    href={item.gstCertificateUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                                  >
+                                    <ShieldCheck className="h-3 w-3" /> GST Certificate
+                                  </a>
+                                )}
+                                {!item.certificateRegistrationUrl && !item.gstCertificateUrl && '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                  item.status === 'approved'
+                                    ? 'bg-green-100 text-green-800'
+                                    : item.status === 'rejected'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
+                                {item.status}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))
                     )}
                   </TableBody>
                 </Table>
@@ -417,15 +496,15 @@ export default function PhoneNumberPage() {
                               {num.phoneNumber}
                             </div>
                           </TableCell>
-                          <TableCell>{num.country || 'India'}</TableCell>
-                          <TableCell>{num.type || 'Local'}</TableCell>
+                          <TableCell>{num.country || ''}</TableCell>
+                          <TableCell>{num.type || ''}</TableCell>
                           <TableCell>
                             <div className="inline-flex items-center justify-center p-2 bg-slate-100 rounded-lg">
                               <Phone className="h-4 w-4 text-primary" />
                             </div>
                           </TableCell>
                           <TableCell className="font-medium text-slate-700">
-                            ₹{num.monthlyRentalRate || '250.00'}
+                            ₹{num.amount || ''}
                           </TableCell>
                         </TableRow>
                       ))
@@ -451,7 +530,11 @@ export default function PhoneNumberPage() {
         onSuccess={handlePurchaseSuccess}
       />
 
-      <AddComplianceSheet open={isComplianceSheetOpen} onOpenChange={setIsComplianceSheetOpen} />
+      <AddComplianceSheet
+        open={isComplianceSheetOpen}
+        onOpenChange={setIsComplianceSheetOpen}
+        onSuccess={loadCompliance}
+      />
     </div>
   );
 }
