@@ -117,7 +117,7 @@ export const dashboardData = {
     },
 
     {
-      name: 'Whatsapp',
+      name: 'WhatsApp',
       url: '/whatsapp/list',
       icon: MessageCircle,
     },
