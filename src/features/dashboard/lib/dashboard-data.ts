@@ -107,16 +107,6 @@ export const dashboardData = {
       name: 'WhatsApp',
       url: '/whatsapp/list',
       icon: MessageCircle,
-      items: [
-        {
-          title: 'Numbers',
-          url: '/whatsapp/list',
-        },
-        {
-          title: 'Templates',
-          url: '/whatsapp/templates',
-        },
-      ],
     },
   ],
   navSecondary: [

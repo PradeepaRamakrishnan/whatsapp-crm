@@ -3,7 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bold,
+  Check,
   ChevronDown,
+  ChevronsUpDown,
   ExternalLink,
   FileText,
   Image as ImageIcon,
@@ -24,6 +26,14 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,6 +41,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -60,6 +71,8 @@ import {
   syncWhatsAppTemplates,
 } from '@/features/settings/services';
 import type { WhatsAppComponent, WhatsAppTemplate } from '@/features/settings/types';
+import { getAllAccounts } from '@/features/whatsapp/services';
+import type { WhatsappAccount } from '@/features/whatsapp/types';
 import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -79,6 +92,7 @@ interface ButtonConfig {
 
 interface FormState {
   name: string;
+  accountId: string;
   category: CategoryType;
   language: string;
   headerType: HeaderType;
@@ -90,6 +104,7 @@ interface FormState {
 
 const INITIAL_FORM: FormState = {
   name: '',
+  accountId: '',
   category: 'UTILITY',
   language: 'en',
   headerType: 'NONE',
@@ -504,8 +519,9 @@ export function WhatsAppTemplatesContent() {
 
   // Create sheet state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('dark');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('light');
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  const [accountPopoverOpen, setAccountPopoverOpen] = useState(false);
 
   // Local drafts (optimistic, not persisted)
   const [drafts, setDrafts] = useState<WhatsAppTemplate[]>([]);
@@ -518,6 +534,14 @@ export function WhatsAppTemplatesContent() {
     queryKey: ['whatsapp-templates'],
     queryFn: getAllWhatsAppTemplates,
   });
+
+  const { data: accountsData, isLoading: accountsLoading } = useQuery({
+    queryKey: ['whatsapp-accounts'],
+    queryFn: getAllAccounts,
+    enabled: isCreateOpen,
+  });
+
+  const accounts: WhatsappAccount[] = useMemo(() => accountsData?.data ?? [], [accountsData]);
 
   const syncMutation = useMutation({
     mutationFn: syncWhatsAppTemplates,
@@ -649,7 +673,7 @@ export function WhatsAppTemplatesContent() {
         buttons: form.buttons.map((btn) => {
           const button: Record<string, unknown> = { type: btn.type, text: btn.text };
           if (btn.type === 'URL') button.url = btn.url;
-          if (btn.type === 'PHONE_NUMBER') button['phone_number'] = btn.phone;
+          if (btn.type === 'PHONE_NUMBER') button.phone_number = btn.phone;
           return button;
         }),
       });
@@ -688,6 +712,10 @@ export function WhatsAppTemplatesContent() {
       toast.error('Template name is required');
       return;
     }
+    if (!form.accountId) {
+      toast.error('Please select a WhatsApp Business Account');
+      return;
+    }
     if (!form.body.trim()) {
       toast.error('Message body is required');
       return;
@@ -698,6 +726,7 @@ export function WhatsAppTemplatesContent() {
     }
     createMutation.mutate({
       name: form.name,
+      accountId: form.accountId,
       language: form.language,
       category: form.category,
       components: buildComponents(),
@@ -843,16 +872,16 @@ export function WhatsAppTemplatesContent() {
             <div className="flex min-h-0 flex-col overflow-hidden border-r">
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
                 <div className="mx-auto max-w-[680px] space-y-7 pb-4">
-                  {/* ── Section 1: Template Info ────────────────────────── */}
+                  {/* ── Section 1: Template Configuration ───────────────── */}
                   <section className="space-y-4">
                     <h3 className="border-b pb-2 text-sm font-semibold text-slate-900">
-                      Template Information
+                      Template configuration
                     </h3>
 
                     {/* Name */}
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium text-slate-600">
-                        Template Name <span className="text-rose-500">*</span>
+                        Name <span className="text-rose-500">*</span>
                       </Label>
                       <Input
                         value={form.name}
@@ -869,6 +898,104 @@ export function WhatsAppTemplatesContent() {
                         Lowercase letters, numbers, and underscores only.
                       </p>
                     </div>
+
+                    {/* WhatsApp Business Account */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-slate-600">
+                        WhatsApp Business Account <span className="text-rose-500">*</span>
+                      </Label>
+                      <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={accountPopoverOpen}
+                            className="h-10 w-full justify-between font-normal text-slate-700"
+                          >
+                            {form.accountId
+                              ? (accounts.find((a) => a.id === form.accountId)?.wabaName ??
+                                'Select WhatsApp Business Account')
+                              : 'Select WhatsApp Business Account'}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[--radix-popover-trigger-width] p-0"
+                          align="start"
+                        >
+                          <Command>
+                            <CommandInput placeholder="Search..." className="h-9" />
+                            <CommandList>
+                              {accountsLoading ? (
+                                <CommandEmpty>Loading accounts…</CommandEmpty>
+                              ) : accounts.length === 0 ? (
+                                <CommandEmpty>
+                                  No connected accounts found. Connect a WhatsApp Business Account
+                                  first.
+                                </CommandEmpty>
+                              ) : (
+                                <CommandGroup>
+                                  {accounts.map((account) => (
+                                    <CommandItem
+                                      key={account.id}
+                                      value={account.wabaName}
+                                      onSelect={() => {
+                                        setForm((prev) => ({ ...prev, accountId: account.id }));
+                                        setAccountPopoverOpen(false);
+                                      }}
+                                    >
+                                      <div className="flex flex-1 flex-col">
+                                        <span className="font-medium">{account.wabaName}</span>
+                                        <span className="text-xs text-slate-400">
+                                          {account.phoneNumber}
+                                        </span>
+                                      </div>
+                                      <Check
+                                        className={cn(
+                                          'ml-2 h-4 w-4 shrink-0',
+                                          form.accountId === account.id
+                                            ? 'text-slate-900 opacity-100'
+                                            : 'opacity-0',
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Language */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-slate-600">
+                        Language <span className="text-rose-500">*</span>
+                      </Label>
+                      <Select
+                        value={form.language}
+                        onValueChange={(v) => setForm((prev) => ({ ...prev, language: v }))}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LANGUAGES.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </section>
+
+                  {/* ── Section 2: Category ─────────────────────────────── */}
+                  <section className="space-y-4">
+                    <h3 className="border-b pb-2 text-sm font-semibold text-slate-900">
+                      Template content
+                    </h3>
 
                     {/* Category cards */}
                     <div className="space-y-1.5">
@@ -901,31 +1028,9 @@ export function WhatsAppTemplatesContent() {
                         ))}
                       </div>
                     </div>
-
-                    {/* Language */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium text-slate-600">
-                        Language <span className="text-rose-500">*</span>
-                      </Label>
-                      <Select
-                        value={form.language}
-                        onValueChange={(v) => setForm((prev) => ({ ...prev, language: v }))}
-                      >
-                        <SelectTrigger className="h-10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LANGUAGES.map((lang) => (
-                            <SelectItem key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </section>
 
-                  {/* ── Section 2: Header ───────────────────────────────── */}
+                  {/* ── Header ──────────────────────────────────────────── */}
                   <section className="space-y-4">
                     <h3 className="border-b pb-2 text-sm font-semibold text-slate-900">
                       Header <span className="font-normal text-slate-400">(optional)</span>
@@ -998,7 +1103,7 @@ export function WhatsAppTemplatesContent() {
                     ) : null}
                   </section>
 
-                  {/* ── Section 3: Body ─────────────────────────────────── */}
+                  {/* ── Body ────────────────────────────────────────────── */}
                   <section className="space-y-4">
                     <h3 className="border-b pb-2 text-sm font-semibold text-slate-900">
                       Body <span className="text-rose-500">*</span>
@@ -1077,7 +1182,7 @@ export function WhatsAppTemplatesContent() {
                     </div>
                   </section>
 
-                  {/* ── Section 4: Footer ───────────────────────────────── */}
+                  {/* ── Footer ──────────────────────────────────────────── */}
                   <section className="space-y-4">
                     <h3 className="border-b pb-2 text-sm font-semibold text-slate-900">
                       Footer <span className="font-normal text-slate-400">(optional)</span>
