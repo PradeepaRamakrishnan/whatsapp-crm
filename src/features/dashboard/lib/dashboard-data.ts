@@ -4,6 +4,7 @@ import {
   FileText,
   Instagram,
   MessageCircle,
+  AudioLines,
   LayoutDashboard,
   Settings,
   UserCheck,
@@ -89,6 +90,11 @@ export const dashboardData = {
       name: 'Instagram',
       url: '/instagram/accounts',
       icon: Instagram,
+    },
+    {
+      name: 'PhoneNumber',
+      url: '/phone',
+      icon: AudioLines,
     },
     {
       name: 'Settings',

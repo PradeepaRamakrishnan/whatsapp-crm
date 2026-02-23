@@ -136,6 +136,92 @@ export function ConnectAccountSheet({ open, onOpenChange, onSuccess }: ConnectAc
                   messages and automation here.
                 </p>
               </button>
+
+              <div className="rounded-xl border border-[#e2e8f0] bg-white mt-6 overflow-hidden shadow-sm">
+                <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-5 py-3">
+                  <h4 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary">
+                      <Instagram className="w-3 h-3" />
+                    </div>
+                    How to connect your account
+                  </h4>
+                </div>
+
+                <div className="p-5 space-y-6">
+                  {/* Stage 1: Prep */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                      Step 1: Account Preparation
+                    </p>
+                    <ul className="space-y-3">
+                      {[
+                        {
+                          title: 'Professional Switch',
+                          desc: "Go to Instagram Settings > Account Type and switch to 'Business' or 'Creator'.",
+                        },
+                        {
+                          title: 'Link to Facebook',
+                          desc: 'Connect your Instagram account to his Facebook Page in your Page Settings.',
+                        },
+                        {
+                          title: 'Enable Message Access',
+                          desc: "Settings > Messages > 'Allow Access to Messages' must be ON.",
+                        },
+                      ].map((item) => (
+                        <li key={item.title} className="flex gap-3">
+                          <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#cbd5e1] flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-[#334155] leading-none">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-[#64748b] mt-1">{item.desc}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Stage 2: Connection */}
+                  <div className="space-y-3 pt-4 border-t border-[#f1f5f9]">
+                    <p className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                      Step 2: Self-Connection
+                    </p>
+                    <div className="flex gap-3">
+                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#cbd5e1] flex-shrink-0" />
+                      <p className="text-xs text-[#64748b]">
+                        Click the <span className="font-semibold text-[#334155]">Next</span> button
+                        below. A Meta popup will open where you will log into your{' '}
+                        <span className="font-semibold text-[#334155]">own Meta account</span>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Stage 3: Permissions */}
+                  <div className="space-y-3 pt-4 border-t border-[#f1f5f9]">
+                    <p className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                      Step 3: Grant Permissions
+                    </p>
+                    <div className="flex gap-3">
+                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#cbd5e1] flex-shrink-0" />
+                      <p className="text-xs text-[#64748b]">
+                        Select all the{' '}
+                        <span className="font-semibold text-[#334155]">
+                          Instagram accounts and Facebook Pages
+                        </span>{' '}
+                        you want to manage. Ensure all permissions are granted for the connection to
+                        work.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#fffbeb] px-5 py-3 border-t border-[#fef3c7]">
+                  <p className="text-[10px] text-[#92400e] leading-relaxed italic font-medium">
+                    Note: We securely store your IDs and a temporary access token via Meta to enable
+                    your inbox.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {error && (
