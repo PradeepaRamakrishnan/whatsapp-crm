@@ -30,6 +30,9 @@ type InstagramTemplateMutationInput = {
   buttonLabel: string;
   buttonUrl: string;
   isCustom: boolean;
+  footer?: string;
+  headerType?: string;
+  headerText?: string;
 };
 
 async function getMe(): Promise<{ id: string; accessToken: string }> {

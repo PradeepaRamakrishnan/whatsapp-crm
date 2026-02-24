@@ -61,8 +61,19 @@ export interface InstagramTemplate {
   imageUrl?: string;
   buttonLabel?: string;
   buttonUrl?: string;
-  headerType?: 'None' | 'Text' | 'Image';
+  headerType?:
+    | 'None'
+    | 'Text'
+    | 'Image'
+    | 'Video'
+    | 'Document'
+    | 'NONE'
+    | 'TEXT'
+    | 'IMAGE'
+    | 'VIDEO'
+    | 'DOCUMENT';
   headerText?: string;
+  footer?: string;
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'APPROVED';
   isCustom?: boolean;
   createdAt: string;

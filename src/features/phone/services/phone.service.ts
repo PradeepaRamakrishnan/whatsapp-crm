@@ -11,12 +11,21 @@ export const phoneNumberService = {
     return response.data;
   },
 
-  async buyNumber(phoneNumber: string, userId: string) {
+  async buyNumber(
+    phoneNumber: string,
+    userId: string,
+    country?: string,
+    type?: string,
+    amount?: number,
+  ) {
     const response = await axios.post(
       `${API_URL}/instagram/plivo/numbers/buy`,
       {
         phoneNumber,
         userId,
+        country,
+        type,
+        amount,
       },
       {
         withCredentials: true,
