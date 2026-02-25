@@ -11,7 +11,6 @@ import {
   Smartphone,
   Star,
   Trash2,
-  Unlink,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,17 +26,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Label } from '@/components/ui/label';
 import {
   Sheet,
   SheetContent,
@@ -58,19 +49,16 @@ import {
   addPhoneNumber,
   connectWaba,
   fetchAvailableFromMeta,
+  getAccountById,
   getAllAccounts,
-  getUserLinks,
-  initiateUserLink,
   listPhoneNumbers,
   removePhoneNumber,
   resendOtp,
   sendOtp,
   setDefaultPhone,
-  unlinkUser,
   verifyOtp,
-  verifyUserLink,
 } from '../services';
-import type { ManagedPhone, PhoneNumber, UserLink } from '../types';
+import type { ManagedPhone, PhoneNumber } from '../types';
 
 // ─── Local types ─────────────────────────────────────────────────────────────
 type ConnectMethod = 'existing_app' | 'own_number';
@@ -94,6 +82,13 @@ interface WhatsappListRow {
   quality: string;
 }
 
+interface AccountSummary {
+  id: string;
+  wabaId: string;
+  wabaName: string;
+  status: string;
+}
+
 declare global {
   interface Window {
     // biome-ignore lint/style/useNamingConvention: Facebook SDK
@@ -111,6 +106,27 @@ declare global {
 // ─── Normalizers ─────────────────────────────────────────────────────────────
 function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object';
+}
+
+function parseRecord(value: unknown): Record<string, unknown> {
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return isObject(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return isObject(value) ? value : {};
+}
+
+function readString(source: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (typeof value === 'number') return String(value);
+  }
+  return '';
 }
 
 function normalizePhoneNumber(input: unknown): PhoneNumber | null {
@@ -131,21 +147,40 @@ function normalizePhoneNumber(input: unknown): PhoneNumber | null {
 function mapToListRow(input: unknown): WhatsappListRow | null {
   if (!isObject(input)) return null;
   const phoneNumber = String(
-    input.phoneNumber || input.display_phone_number || input.phone || '',
+    input.phoneNumber ||
+      input.displayNumber ||
+      input.displayPhoneNumber ||
+      input.display_phone_number ||
+      input.display_number ||
+      input.e164Number ||
+      input.e164_number ||
+      input.phone ||
+      '',
   ).trim();
   const phoneNumberId = String(
     input.phoneNumberId || input.phone_number_id || input.id || '',
   ).trim();
   const wabaName = String(
-    input.wabaName || input.waba_name || input.verified_name || input.name || '',
+    input.wabaName ||
+      input.waba_name ||
+      input.businessName ||
+      input.verifiedName ||
+      input.verified_name ||
+      input.name ||
+      '',
   ).trim();
   const wabaId = String(input.wabaId || input.waba_id || input.accountId || '').trim();
-  const status = String(input.status || input.code_verification_status || 'unknown').trim();
+  const status = String(
+    input.status || input.codeVerificationStatus || input.code_verification_status || 'unknown',
+  ).trim();
   const isVerified =
     Boolean(input.isVerified) ||
-    String(input.code_verification_status || '').toUpperCase() === 'VERIFIED';
+    String(input.codeVerificationStatus || input.code_verification_status || '').toUpperCase() ===
+      'VERIFIED';
   const quality = String(input.qualityRating || input.quality || (isVerified ? 'High' : 'Unknown'));
-  const id = String(input.id || `${wabaId}-${phoneNumberId || phoneNumber}`).trim();
+  const id = String(
+    input.accountId || input.account_id || input.id || `${wabaId}-${phoneNumberId || phoneNumber}`,
+  ).trim();
   if (!id || !phoneNumber) return null;
   return {
     id,
@@ -157,6 +192,23 @@ function mapToListRow(input: unknown): WhatsappListRow | null {
     isVerified,
     quality,
   };
+}
+
+function normalizeAccountSummary(input: unknown): AccountSummary | null {
+  if (!isObject(input)) return null;
+  const source =
+    (isObject(input.data) && input.data) ||
+    (isObject(input.result) && input.result) ||
+    (isObject(input.payload) && input.payload) ||
+    input;
+  const id = String(source.id || source.accountId || source.account_id || '').trim();
+  const wabaId = String(source.wabaId || source.waba_id || source.businessAccountId || id).trim();
+  const wabaName = String(
+    source.wabaName || source.waba_name || source.name || source.verified_name || 'Unnamed WABA',
+  ).trim();
+  const status = String(source.status || 'connected').trim();
+  if (!id) return null;
+  return { id, wabaId, wabaName, status };
 }
 
 function extractArraySources(response: unknown): unknown[] {
@@ -183,33 +235,44 @@ function extractArraySources(response: unknown): unknown[] {
   return [];
 }
 
-function normalizeAccounts(response: unknown): WhatsappListRow[] {
+function normalizeAccountSummaries(response: unknown): AccountSummary[] {
   const rawItems = extractArraySources(response);
-  const rows = rawItems.flatMap((item) => {
-    const primary = mapToListRow(item);
-    if (primary) return [primary];
-    if (!isObject(item) || !Array.isArray(item.phoneNumbers)) return [];
-    return item.phoneNumbers
-      .map((number) =>
-        mapToListRow({
-          ...number,
-          wabaId: item.wabaId || item.waba_id || item.id,
-          wabaName: item.wabaName || item.waba_name || item.name,
-          status: item.status || number?.status,
-        }),
-      )
-      .filter((row): row is WhatsappListRow => !!row);
-  });
-  const unique = new Map<string, WhatsappListRow>();
-  for (const row of rows) unique.set(`${row.id}-${row.phoneNumber}`, row);
+  const accountsFromList = rawItems
+    .map(normalizeAccountSummary)
+    .filter((account): account is AccountSummary => !!account);
+  const fallback = normalizeAccountSummary(response);
+  const accounts = fallback ? [...accountsFromList, fallback] : accountsFromList;
+  const unique = new Map<string, AccountSummary>();
+  for (const account of accounts) unique.set(account.id, account);
   return Array.from(unique.values());
+}
+
+function createAccountOnlyRow(account: AccountSummary): WhatsappListRow {
+  return {
+    id: account.id,
+    wabaId: account.wabaId,
+    wabaName: account.wabaName,
+    phoneNumber: '-',
+    phoneNumberId: '',
+    status: account.status || 'connected',
+    isVerified: false,
+    quality: 'Unknown',
+  };
 }
 
 function normalizeManagedPhone(input: unknown): ManagedPhone | null {
   if (!isObject(input)) return null;
   const id = String(input.id || '').trim();
   const phoneNumber = String(
-    input.phoneNumber || input.phone || input.displayPhoneNumber || '',
+    input.phoneNumber ||
+      input.phone ||
+      input.displayNumber ||
+      input.displayPhoneNumber ||
+      input.display_phone_number ||
+      input.display_number ||
+      input.e164Number ||
+      input.e164_number ||
+      '',
   ).trim();
   const phoneNumberId = String(input.phoneNumberId || input.id || '').trim();
   if (!id || !phoneNumber) return null;
@@ -217,22 +280,15 @@ function normalizeManagedPhone(input: unknown): ManagedPhone | null {
     id,
     phoneNumber,
     phoneNumberId: phoneNumberId || id,
-    verifiedName: String(input.verifiedName || input.displayName || '').trim() || undefined,
+    verifiedName:
+      String(input.verifiedName || input.verified_name || input.displayName || '').trim() ||
+      undefined,
     qualityRating: String(input.qualityRating || input.quality || '').trim() || undefined,
-    status: String(input.status || '').trim() || undefined,
+    status:
+      String(
+        input.status || input.codeVerificationStatus || input.code_verification_status || '',
+      ).trim() || undefined,
     isDefault: Boolean(input.isDefault || input.is_default),
-  };
-}
-
-function normalizeUserLink(input: unknown): UserLink | null {
-  if (!isObject(input)) return null;
-  const phoneNumber = String(input.phoneNumber || input.phone || '').trim();
-  if (!phoneNumber) return null;
-  return {
-    id: String(input.id || '').trim() || undefined,
-    phoneNumber,
-    status: String(input.status || 'linked').trim(),
-    linkedAt: String(input.linkedAt || input.createdAt || '').trim() || undefined,
   };
 }
 
@@ -290,7 +346,7 @@ function PhoneManagementSheet({
     setLoading(true);
     try {
       const res = await listPhoneNumbers(accountId);
-      const raw: unknown[] = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      const raw = extractArraySources(res);
       setPhones(raw.map(normalizeManagedPhone).filter((p): p is ManagedPhone => !!p));
     } catch {
     } finally {
@@ -693,291 +749,6 @@ function PhoneManagementSheet({
   );
 }
 
-// ─── UserLinkingSection ───────────────────────────────────────────────────────
-function UserLinkingSection() {
-  const [links, setLinks] = useState<UserLink[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [step, setStep] = useState<
-    'idle' | 'sending' | 'otp_sent' | 'verifying' | 'done' | 'error'
-  >('idle');
-  const [phoneInput, setPhoneInput] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [cooldown, setCooldown] = useState(0);
-  const [error, setError] = useState('');
-  const [unlinkingPhone, setUnlinkingPhone] = useState<string | null>(null);
-  const [phoneToUnlink, setPhoneToUnlink] = useState<string | null>(null);
-
-  const loadLinks = useCallback(async () => {
-    try {
-      const res = await getUserLinks();
-      const raw: unknown[] = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      setLinks(raw.map(normalizeUserLink).filter((l): l is UserLink => !!l));
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLinks().catch(() => undefined);
-  }, [loadLinks]);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(id);
-  }, [cooldown]);
-
-  const resetDialog = () => {
-    setStep('idle');
-    setPhoneInput('');
-    setOtpCode('');
-    setCooldown(0);
-    setError('');
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) resetDialog();
-  };
-
-  const handleSendOtp = async () => {
-    if (!phoneInput.trim()) return;
-    setStep('sending');
-    setError('');
-    try {
-      await initiateUserLink({ phoneNumber: phoneInput.trim() });
-      setStep('otp_sent');
-      setCooldown(60);
-      toast.success('OTP sent to WhatsApp');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to send OTP');
-      setStep('error');
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otpCode.length < 6) return;
-    setStep('verifying');
-    try {
-      await verifyUserLink({ phoneNumber: phoneInput.trim(), otp: otpCode });
-      setStep('done');
-      toast.success('Number linked successfully');
-      await loadLinks();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid OTP. Please try again.');
-      setStep('otp_sent');
-    }
-  };
-
-  const handleResend = async () => {
-    if (cooldown > 0) return;
-    setCooldown(60);
-    try {
-      await initiateUserLink({ phoneNumber: phoneInput.trim() });
-      toast.success('OTP resent');
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to resend OTP');
-      setCooldown(0);
-    }
-  };
-
-  const handleUnlink = async () => {
-    if (!phoneToUnlink) return;
-    setUnlinkingPhone(phoneToUnlink);
-    try {
-      await unlinkUser(phoneToUnlink);
-      toast.success(`${phoneToUnlink} unlinked`);
-      setPhoneToUnlink(null);
-      await loadLinks();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to unlink number');
-    } finally {
-      setUnlinkingPhone(null);
-    }
-  };
-
-  return (
-    <div className="rounded-xl border bg-card p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold">User WhatsApp Linking</h3>
-          <p className="text-sm text-muted-foreground">
-            Link personal WhatsApp numbers for two-way messaging
-          </p>
-        </div>
-        <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> Link Number
-        </Button>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      ) : links.length === 0 ? (
-        <div className="text-center py-6 text-sm text-muted-foreground">No linked numbers yet.</div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Phone Number</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Linked On</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {links.map((link) => (
-              <TableRow key={link.phoneNumber}>
-                <TableCell className="font-medium">{link.phoneNumber}</TableCell>
-                <TableCell>
-                  <Badge
-                    className={cn('text-xs capitalize', statusBadgeClass(link.status || 'linked'))}
-                  >
-                    {link.status || 'linked'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {link.linkedAt ? new Date(link.linkedAt).toLocaleDateString() : '-'}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setPhoneToUnlink(link.phoneNumber)}
-                    className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-50 hover:text-rose-700"
-                  >
-                    <Unlink className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-
-      <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Link WhatsApp Number</DialogTitle>
-            <DialogDescription>
-              Link a personal WhatsApp number to receive and send messages.
-            </DialogDescription>
-          </DialogHeader>
-
-          {(step === 'idle' || step === 'sending' || step === 'error') && (
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>WhatsApp Number</Label>
-                <Input
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="h-10"
-                  disabled={step === 'sending'}
-                />
-              </div>
-              {step === 'error' && error && (
-                <div className="flex items-center gap-2 text-sm text-rose-600 rounded-lg border border-rose-200 bg-rose-50 p-3">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => handleDialogClose(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handleSendOtp().catch(() => undefined)}
-                  disabled={!phoneInput.trim() || step === 'sending'}
-                >
-                  {step === 'sending' ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
-                    </>
-                  ) : (
-                    'Send OTP'
-                  )}
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-
-          {(step === 'otp_sent' || step === 'verifying') && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                OTP sent to <strong>{phoneInput}</strong> via WhatsApp.
-              </p>
-              <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                <InputOTPGroup>
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <InputOTPSlot key={i} index={i} />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-              <Button
-                onClick={() => handleVerifyOtp().catch(() => undefined)}
-                disabled={otpCode.length < 6 || step === 'verifying'}
-                className="w-full"
-              >
-                {step === 'verifying' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying…
-                  </>
-                ) : (
-                  'Verify & Link'
-                )}
-              </Button>
-              <button
-                type="button"
-                onClick={() => handleResend().catch(() => undefined)}
-                disabled={cooldown > 0}
-                className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 w-full"
-              >
-                <RefreshCw className="h-3 w-3" />
-                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend OTP'}
-              </button>
-            </div>
-          )}
-
-          {step === 'done' && (
-            <div className="flex flex-col items-center gap-3 py-4 text-emerald-600">
-              <CheckCircle2 className="h-10 w-10" />
-              <p className="text-sm font-medium">Number linked successfully!</p>
-              <Button onClick={() => handleDialogClose(false)} className="w-full">
-                Done
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={!!phoneToUnlink} onOpenChange={(open) => !open && setPhoneToUnlink(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unlink Number</AlertDialogTitle>
-            <AlertDialogDescription>
-              Unlink {phoneToUnlink}? This will remove the WhatsApp connection.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-rose-600 hover:bg-rose-700"
-              onClick={() => handleUnlink().catch(() => undefined)}
-            >
-              {unlinkingPhone ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Unlink
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
 // ─── ConnectWabaDialog ────────────────────────────────────────────────────────
 // Exact Plivo flow (confirmed from screenshots):
 //
@@ -1015,6 +786,53 @@ function ConnectWabaDialog({
   const [flowStep, setFlowStep] = useState<DialogFlowStep>('choose');
   const [error, setError] = useState('');
 
+  const extractSignupData = useCallback((message: Record<string, unknown>) => {
+    const direct = parseRecord(message.data);
+    const sessionInfo = parseRecord(
+      message.sessionInfo || direct.sessionInfo || direct.session_info || direct.data,
+    );
+    const nestedPayload = parseRecord(direct.payload || direct.data || direct.result);
+    const candidateSources = [message, direct, nestedPayload, sessionInfo];
+
+    let wabaId = '';
+    let phoneNumberId = '';
+
+    for (const source of candidateSources) {
+      if (!wabaId) {
+        wabaId = readString(source, [
+          'waba_id',
+          'wabaId',
+          'business_account_id',
+          'businessAccountId',
+          'whatsapp_business_account_id',
+        ]);
+      }
+      if (!phoneNumberId) {
+        phoneNumberId = readString(source, [
+          'phone_number_id',
+          'phoneNumberId',
+          'selected_phone_number_id',
+          'selectedPhoneNumberId',
+        ]);
+      }
+    }
+
+    if (!phoneNumberId) {
+      const phoneNumbers =
+        (Array.isArray(direct.phone_numbers) && direct.phone_numbers) ||
+        (Array.isArray(direct.phoneNumbers) && direct.phoneNumbers) ||
+        (Array.isArray(nestedPayload.phone_numbers) && nestedPayload.phone_numbers) ||
+        (Array.isArray(nestedPayload.phoneNumbers) && nestedPayload.phoneNumbers) ||
+        [];
+      const firstPhone = phoneNumbers.find((item) => isObject(item));
+      if (isObject(firstPhone)) {
+        phoneNumberId = readString(firstPhone, ['id', 'phone_number_id', 'phoneNumberId']);
+      }
+    }
+
+    return { wabaId, phoneNumberId };
+  }, []);
+
   // Listen for WA_EMBEDDED_SIGNUP postMessage from Meta popup
   useEffect(() => {
     const allowedOrigins = new Set([
@@ -1028,18 +846,11 @@ function ConnectWabaDialog({
     const handleFbMessage = (event: MessageEvent) => {
       if (!allowedOrigins.has(event.origin)) return;
       try {
-        const d =
-          typeof event.data === 'string'
-            ? (JSON.parse(event.data) as Record<string, unknown>)
-            : (event.data as Record<string, unknown>);
+        const d = parseRecord(event.data);
         if (d.type === 'WA_EMBEDDED_SIGNUP') {
+          const signup = extractSignupData(d);
           if (d.event === 'FINISH') {
-            const data =
-              d.data && typeof d.data === 'object' ? (d.data as Record<string, unknown>) : {};
-            embeddedSignupRef.current = {
-              wabaId: String(data.waba_id || ''),
-              phoneNumberId: String(data.phone_number_id || ''),
-            };
+            embeddedSignupRef.current = signup;
           } else if (d.event === 'CANCEL') {
             embeddedSignupRef.current = null;
           }
@@ -1048,7 +859,7 @@ function ConnectWabaDialog({
     };
     window.addEventListener('message', handleFbMessage);
     return () => window.removeEventListener('message', handleFbMessage);
-  }, []);
+  }, [extractSignupData]);
 
   const reset = useCallback(() => {
     setSelectedMethod(null);
@@ -1315,7 +1126,40 @@ export default function WhatsappConnect() {
     setLoadingAccounts(true);
     try {
       const response = await getAllAccounts();
-      setAccounts(normalizeAccounts(response));
+      const accountSummaries = normalizeAccountSummaries(response);
+
+      const accountRows = await Promise.all(
+        accountSummaries.map(async (account) => {
+          const [accountDetailResult, phonesResult] = await Promise.allSettled([
+            getAccountById(account.id),
+            listPhoneNumbers(account.id),
+          ]);
+
+          const resolvedAccount =
+            accountDetailResult.status === 'fulfilled'
+              ? normalizeAccountSummary(accountDetailResult.value) || account
+              : account;
+          const phonesRaw =
+            phonesResult.status === 'fulfilled' ? extractArraySources(phonesResult.value) : [];
+          const rows = phonesRaw
+            .map((phone) =>
+              mapToListRow({
+                ...(isObject(phone) ? phone : {}),
+                accountId: resolvedAccount.id,
+                wabaId: resolvedAccount.wabaId,
+                wabaName: resolvedAccount.wabaName,
+                status: isObject(phone)
+                  ? (phone.status ?? resolvedAccount.status)
+                  : resolvedAccount.status,
+              }),
+            )
+            .filter((row): row is WhatsappListRow => !!row);
+
+          return rows.length > 0 ? rows : [createAccountOnlyRow(resolvedAccount)];
+        }),
+      );
+
+      setAccounts(accountRows.flat());
     } catch {
     } finally {
       setLoadingAccounts(false);
@@ -1455,9 +1299,6 @@ export default function WhatsappConnect() {
 
       {/* ── Phone Management Sheet ── */}
       <PhoneManagementSheet account={managingAccount} onClose={() => setManagingAccount(null)} />
-
-      {/* ── User Linking Section ── */}
-      <UserLinkingSection />
 
       {/* ── Connect WABA Dialog (Plivo-style flow) ── */}
       <ConnectWabaDialog
