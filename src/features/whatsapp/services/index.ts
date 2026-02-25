@@ -49,6 +49,24 @@ type ConnectWabaPayload = {
   phoneNumberId?: string;
 };
 
+type WhatsappTemplatePayload = {
+  externalTemplateId?: string;
+  name: string;
+  language: string;
+  category?: string;
+  status?: string;
+  components?: Record<string, unknown>[];
+  accountId?: string;
+};
+
+type SubmitTemplatePayload = {
+  accountId: string;
+  name: string;
+  language: string;
+  category: 'UTILITY' | 'MARKETING' | 'AUTHENTICATION';
+  components: Record<string, unknown>[];
+};
+
 // POST /business-whatsapp/connect
 export const connectWaba = async (payload: ConnectWabaPayload) => {
   return request(`${API_URL}/connect`, {
@@ -75,6 +93,11 @@ export const getAllAccounts = async () => {
   return request(`${API_URL}/accounts`);
 };
 
+// GET /business-whatsapp/accounts/:id
+export const getAccountById = async (accountId: string) => {
+  return request(`${API_URL}/accounts/${accountId}`);
+};
+
 // POST /business-whatsapp/accounts/:id/disconnect
 export const disconnectAccount = async (accountId: string) => {
   return request(`${API_URL}/accounts/${accountId}/disconnect`, {
@@ -92,6 +115,47 @@ export const sendMessage = async (payload: {
   language?: string;
 }) => {
   return request(`${API_URL}/send`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+// GET /business-whatsapp/templates
+export const getAllTemplates = async (accountId?: string) => {
+  const query = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
+  return request(`${API_URL}/templates${query}`);
+};
+
+// POST /business-whatsapp/templates
+export const createTemplate = async (payload: WhatsappTemplatePayload) => {
+  return request(`${API_URL}/templates`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+// POST /business-whatsapp/templates/submit  (sends to Meta → PENDING)
+export const submitTemplate = async (payload: SubmitTemplatePayload) => {
+  return request(`${API_URL}/templates/submit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+// PATCH /business-whatsapp/templates/:id
+export const updateTemplate = async (
+  templateId: string,
+  payload: Partial<Omit<WhatsappTemplatePayload, 'externalTemplateId'>>,
+) => {
+  return request(`${API_URL}/templates/${templateId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+};
+
+// POST /business-whatsapp/templates/sync
+export const syncTemplates = async (payload: { accountId: string }) => {
+  return request(`${API_URL}/templates/sync`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });

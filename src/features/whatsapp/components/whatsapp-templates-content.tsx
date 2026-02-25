@@ -65,14 +65,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  createWhatsAppTemplate,
-  getAllWhatsAppTemplates,
-  syncWhatsAppTemplates,
-} from '@/features/settings/services';
 import type { WhatsAppComponent, WhatsAppTemplate } from '@/features/settings/types';
-import { getAllAccounts } from '@/features/whatsapp/services';
-import type { WhatsappAccount } from '@/features/whatsapp/types';
+import {
+  createTemplate,
+  getAllAccounts,
+  getAllTemplates,
+  submitTemplate,
+  syncTemplates,
+} from '@/features/whatsapp/services';
 import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -100,6 +100,13 @@ interface FormState {
   body: string;
   footer: string;
   buttons: ButtonConfig[];
+}
+
+interface TemplateAccountOption {
+  id: string;
+  wabaId: string;
+  wabaName: string;
+  phoneNumber: string;
 }
 
 const INITIAL_FORM: FormState = {
@@ -157,6 +164,161 @@ function statusBadgeClass(status: string) {
     default:
       return 'bg-slate-100 text-slate-700 border border-slate-200';
   }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
+function extractArraySources(response: unknown): unknown[] {
+  if (Array.isArray(response)) return response;
+  if (!isObject(response)) return [];
+  const containerCandidates = [response, response.data, response.result, response.payload].filter(
+    isObject,
+  );
+  const listKeys = ['accounts', 'templates', 'data', 'items', 'rows', 'results'] as const;
+  for (const container of containerCandidates) {
+    for (const key of listKeys) {
+      const value = container[key];
+      if (Array.isArray(value)) return value;
+    }
+  }
+  return [];
+}
+
+function normalizeTemplateAccount(input: unknown): TemplateAccountOption | null {
+  if (!isObject(input)) return null;
+  const source =
+    (isObject(input.data) && input.data) ||
+    (isObject(input.result) && input.result) ||
+    (isObject(input.payload) && input.payload) ||
+    input;
+  const id = String(source.id || source.accountId || source.account_id || '').trim();
+  if (!id) return null;
+  const wabaId = String(source.wabaId || source.waba_id || source.businessAccountId || id).trim();
+  const wabaName = String(
+    source.wabaName || source.waba_name || source.name || source.verified_name || 'Unnamed WABA',
+  ).trim();
+  const primaryPhone = Array.isArray(source.phoneNumbers)
+    ? source.phoneNumbers.find((phone) => isObject(phone))
+    : undefined;
+  const phoneNumber = String(
+    source.phoneNumber ||
+      source.phone ||
+      (isObject(primaryPhone)
+        ? primaryPhone.display_phone_number || primaryPhone.phoneNumber
+        : '') ||
+      '-',
+  ).trim();
+  return { id, wabaId, wabaName, phoneNumber: phoneNumber || '-' };
+}
+
+function normalizeTemplateAccounts(response: unknown): TemplateAccountOption[] {
+  const raw = extractArraySources(response);
+  const optionsFromList = raw
+    .map(normalizeTemplateAccount)
+    .filter((option): option is TemplateAccountOption => !!option);
+  const fallback = normalizeTemplateAccount(response);
+  const options = fallback ? [...optionsFromList, fallback] : optionsFromList;
+  const unique = new Map<string, TemplateAccountOption>();
+  for (const option of options) unique.set(option.id, option);
+  return Array.from(unique.values());
+}
+
+function normalizeTemplateComponents(input: unknown): WhatsAppComponent[] {
+  const toUiButtonType = (rawType: unknown): 'QUICK_REPLY' | 'URL' => {
+    const upper = String(rawType || '').toUpperCase();
+    return upper === 'URL' ? 'URL' : 'QUICK_REPLY';
+  };
+
+  if (Array.isArray(input)) {
+    return input
+      .filter((item) => isObject(item))
+      .map((item) => ({
+        type: String(item.type || 'BODY') as WhatsAppComponent['type'],
+        format: item.format ? (String(item.format) as WhatsAppComponent['format']) : undefined,
+        text: item.text ? String(item.text) : undefined,
+        buttons: Array.isArray(item.buttons)
+          ? item.buttons
+              .filter((button) => isObject(button))
+              .map((button) => ({
+                type: toUiButtonType(button.type),
+                text: String(button.text || ''),
+                url: button.url ? String(button.url) : undefined,
+              }))
+          : undefined,
+      }));
+  }
+
+  if (!isObject(input)) return [];
+
+  const components: WhatsAppComponent[] = [];
+  if (isObject(input.header)) {
+    components.push({
+      type: 'HEADER',
+      format: input.header.format
+        ? (String(input.header.format) as WhatsAppComponent['format'])
+        : 'TEXT',
+      text: input.header.text ? String(input.header.text) : undefined,
+    });
+  }
+  if (input.body) {
+    components.push({ type: 'BODY', text: String(input.body) });
+  }
+  if (input.footer) {
+    components.push({ type: 'FOOTER', text: String(input.footer) });
+  }
+  if (Array.isArray(input.buttons)) {
+    components.push({
+      type: 'BUTTONS',
+      buttons: input.buttons
+        .filter((button) => isObject(button))
+        .map((button) => ({
+          type: toUiButtonType(button.type),
+          text: String(button.text || ''),
+          url: button.url ? String(button.url) : undefined,
+        })),
+    });
+  }
+  return components;
+}
+
+function normalizeTemplate(input: unknown): WhatsAppTemplate | null {
+  if (!isObject(input)) return null;
+  const source =
+    (isObject(input.data) && input.data) ||
+    (isObject(input.result) && input.result) ||
+    (isObject(input.payload) && input.payload) ||
+    input;
+
+  const id = String(
+    source.id || source.externalTemplateId || source.externalId || source.name || '',
+  ).trim();
+  if (!id) return null;
+
+  return {
+    id,
+    externalId: String(source.externalId || source.externalTemplateId || id),
+    name: String(source.name || 'unnamed_template'),
+    language: String(source.language || 'en'),
+    status: String(source.status || 'PENDING'),
+    category: String(source.category || 'UTILITY'),
+    components: normalizeTemplateComponents(source.components),
+    active: source.active !== undefined ? Boolean(source.active) : true,
+    isDefault: Boolean(source.isDefault),
+    createdAt: String(source.createdAt || new Date().toISOString()),
+    updatedAt: String(source.updatedAt || source.createdAt || new Date().toISOString()),
+  };
+}
+
+function normalizeTemplatesResponse(response: unknown): WhatsAppTemplate[] {
+  const raw = extractArraySources(response);
+  const fromList = raw.map(normalizeTemplate).filter((row): row is WhatsAppTemplate => !!row);
+  const fallback = normalizeTemplate(response);
+  const rows = fallback ? [...fromList, fallback] : fromList;
+  const unique = new Map<string, WhatsAppTemplate>();
+  for (const row of rows) unique.set(row.id, row);
+  return Array.from(unique.values());
 }
 
 function normalizeTemplateName(raw: string): string {
@@ -523,28 +685,25 @@ export function WhatsAppTemplatesContent() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [accountPopoverOpen, setAccountPopoverOpen] = useState(false);
 
-  // Local drafts (optimistic, not persisted)
-  const [drafts, setDrafts] = useState<WhatsAppTemplate[]>([]);
-
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
   const { data, isLoading } = useQuery({
     queryKey: ['whatsapp-templates'],
-    queryFn: getAllWhatsAppTemplates,
+    queryFn: () => getAllTemplates(),
   });
 
   const { data: accountsData, isLoading: accountsLoading } = useQuery({
     queryKey: ['whatsapp-accounts'],
     queryFn: getAllAccounts,
-    enabled: isCreateOpen,
+    enabled: true,
   });
 
-  const accounts: WhatsappAccount[] = useMemo(() => accountsData?.data ?? [], [accountsData]);
+  const accounts = useMemo(() => normalizeTemplateAccounts(accountsData), [accountsData]);
 
   const syncMutation = useMutation({
-    mutationFn: syncWhatsAppTemplates,
+    mutationFn: syncTemplates,
     onMutate: () => toast.loading('Syncing…', { id: 'waba-sync' }),
     onSuccess: (res) => {
       toast.success(res.message || 'Templates synced', { id: 'waba-sync' });
@@ -553,24 +712,37 @@ export function WhatsAppTemplatesContent() {
     onError: (err: Error) => toast.error(err.message, { id: 'waba-sync' }),
   });
 
-  const createMutation = useMutation({
-    mutationFn: createWhatsAppTemplate,
-    onMutate: () => toast.loading('Submitting template…', { id: 'waba-create' }),
+  const draftMutation = useMutation({
+    mutationFn: createTemplate,
+    onMutate: () => toast.loading('Saving draft…', { id: 'waba-draft' }),
     onSuccess: () => {
-      toast.success('Template submitted for review', { id: 'waba-create' });
+      toast.success('Template saved as draft', { id: 'waba-draft' });
       setIsCreateOpen(false);
       setForm(INITIAL_FORM);
       queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
     },
     onError: (err: Error) =>
-      toast.error(err.message || 'Failed to create template', { id: 'waba-create' }),
+      toast.error(err.message || 'Failed to save draft', { id: 'waba-draft' }),
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: submitTemplate,
+    onMutate: () => toast.loading('Sending for verification…', { id: 'waba-submit' }),
+    onSuccess: () => {
+      toast.success('Template submitted for review', { id: 'waba-submit' });
+      setIsCreateOpen(false);
+      setForm(INITIAL_FORM);
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
+    },
+    onError: (err: Error) =>
+      toast.error(err.message || 'Failed to submit template', { id: 'waba-submit' }),
   });
 
   // ── Table rows ─────────────────────────────────────────────────────────────
 
-  const apiRows = useMemo(() => data?.data ?? [], [data]);
+  const apiRows = useMemo(() => normalizeTemplatesResponse(data), [data]);
 
-  const allRows = useMemo(() => [...drafts, ...apiRows], [drafts, apiRows]);
+  const allRows = useMemo(() => apiRows, [apiRows]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -689,22 +861,17 @@ export function WhatsAppTemplatesContent() {
       toast.error('Template name is required');
       return;
     }
-    const draft: WhatsAppTemplate = {
-      id: `draft-${Date.now()}`,
-      externalId: '',
-      name: form.name,
+    if (!form.accountId) {
+      toast.error('Please select a WhatsApp Business Account');
+      return;
+    }
+    draftMutation.mutate({
+      name: normalizeTemplateName(form.name),
+      accountId: form.accountId,
       language: form.language,
-      status: 'DRAFT',
       category: form.category,
-      components: buildComponents() as unknown as WhatsAppComponent[],
-      active: true,
-      isDefault: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setDrafts((prev) => [draft, ...prev]);
-    setIsCreateOpen(false);
-    toast.success('Saved as draft');
+      components: buildComponents(),
+    });
   };
 
   const handleSubmit = () => {
@@ -724,8 +891,8 @@ export function WhatsAppTemplatesContent() {
       toast.error('Header text is required when header type is Text');
       return;
     }
-    createMutation.mutate({
-      name: form.name,
+    submitMutation.mutate({
+      name: normalizeTemplateName(form.name),
       accountId: form.accountId,
       language: form.language,
       category: form.category,
@@ -786,7 +953,14 @@ export function WhatsAppTemplatesContent() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => syncMutation.mutate()}
+            onClick={() => {
+              const accountId = form.accountId || accounts[0]?.id;
+              if (!accountId) {
+                toast.error('Please connect/select a WhatsApp account to sync templates');
+                return;
+              }
+              syncMutation.mutate({ accountId });
+            }}
             disabled={syncMutation.isPending}
           >
             <RefreshCw className={cn('h-4 w-4', syncMutation.isPending && 'animate-spin')} />
@@ -1329,16 +1503,17 @@ export function WhatsAppTemplatesContent() {
                   <Button
                     variant="ghost"
                     onClick={handleSaveAsDraft}
+                    disabled={draftMutation.isPending}
                     className="h-10 text-slate-600 hover:bg-slate-100"
                   >
-                    Save as Draft
+                    {draftMutation.isPending ? 'Saving…' : 'Save as Draft'}
                   </Button>
                   <Button
                     onClick={handleSubmit}
-                    disabled={createMutation.isPending}
+                    disabled={submitMutation.isPending}
                     className="h-10 min-w-48"
                   >
-                    {createMutation.isPending ? 'Submitting…' : 'Send for Verification'}
+                    {submitMutation.isPending ? 'Submitting…' : 'Send for Verification'}
                   </Button>
                 </div>
               </div>
