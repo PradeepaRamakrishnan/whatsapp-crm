@@ -99,7 +99,7 @@ export function SearchNumbersSheet({
                         <TableRow key={item.number} className="bg-white overflow-y-auto">
                           <TableCell className="font-medium">{item.number}</TableCell>
                           <TableCell>{item.region || 'N/A'}</TableCell>
-                          <TableCell>${item.monthly_rental_rate || 'N/A'}</TableCell>
+                          <TableCell>₹{item.monthly_rental_rate_inr || 'N/A'}</TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="sm"

@@ -109,7 +109,7 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-[#64748b]">Monthly Rental</span>
                     <span className="font-bold text-[#1e293b]">
-                      ${numberData.monthly_rental_rate || '0.00'}
+                      ₹{numberData.monthly_rental_rate_inr || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">

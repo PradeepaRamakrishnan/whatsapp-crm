@@ -214,13 +214,6 @@ export function ConnectAccountSheet({ open, onOpenChange, onSuccess }: ConnectAc
                     </div>
                   </div>
                 </div>
-
-                <div className="bg-[#fffbeb] px-5 py-3 border-t border-[#fef3c7]">
-                  <p className="text-[10px] text-[#92400e] leading-relaxed italic font-medium">
-                    Note: We securely store your IDs and a temporary access token via Meta to enable
-                    your inbox.
-                  </p>
-                </div>
               </div>
             </div>
 

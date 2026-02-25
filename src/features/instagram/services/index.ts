@@ -116,6 +116,29 @@ export async function getInstagramMessagesByUsername(
   }
 }
 
+export async function getInstagramMessagesByPeerId(
+  peerId: string,
+  accountId?: string,
+): Promise<InstagramMessage[]> {
+  try {
+    const { id: userId } = await getMe();
+    const response = await axiosUrl.get('/messages/by-peer-id', {
+      params: { userId, peerId, ...(accountId ? { id: accountId } : {}) },
+    });
+    const data = response.data?.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      const data = error.response?.data;
+      throw new Error(
+        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to fetch messages'}`,
+      );
+    }
+    throw error;
+  }
+}
+
 export async function connectInstagramAccount(accessToken: string): Promise<InstagramAccount> {
   try {
     const { id: userId } = await getMe();

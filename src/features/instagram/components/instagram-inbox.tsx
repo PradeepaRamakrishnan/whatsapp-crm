@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,7 +15,7 @@ import {
   Send,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ import { cn } from '@/lib/utils';
 import {
   getInstagramAccounts,
   getInstagramConversations,
-  getInstagramMessagesByUsername,
+  getInstagramMessagesByPeerId,
   sendInstagramMessage,
   syncInstagramMessages,
 } from '../services';
@@ -121,10 +122,11 @@ export function InstagramInbox() {
   const searchParams = useSearchParams();
   const accountId = searchParams.get('accountId');
   const queryClient = useQueryClient();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [search, setSearch] = React.useState('');
-  const [selected, setSelected] = React.useState<InstagramConversation | null>(null);
-  const [messageText, setMessageText] = React.useState('');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<InstagramConversation | null>(null);
+  const [messageText, setMessageText] = useState('');
 
   const { data: accounts = [] } = useQuery<InstagramAccount[]>({
     queryKey: ['instagram-accounts'],
@@ -150,24 +152,53 @@ export function InstagramInbox() {
   });
 
   const { data: messages = [], isLoading: isMessagesLoading } = useQuery<InstagramMessage[]>({
-    queryKey: ['instagram-messages', activeAccount?.id, selected?.username],
+    queryKey: ['instagram-messages', activeAccount?.id, selected?.instagramId],
     queryFn: () => {
-      if (!selected?.username) {
+      if (!selected?.instagramId) {
         return Promise.resolve([]);
       }
-      return getInstagramMessagesByUsername(selected.username, activeAccount?.id);
+      return getInstagramMessagesByPeerId(selected.instagramId, activeAccount?.id);
     },
-    enabled: !!activeAccount && !!selected?.username,
+    enabled: !!activeAccount && !!selected?.instagramId,
     retry: 1,
-    refetchInterval: 10000,
+    refetchInterval: 3000,
   });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
   const sendMessage = useMutation({
     mutationFn: ({ to, text }: { to: string; text: string }) => {
       if (!activeAccount) throw new Error('No active account');
       return sendInstagramMessage(activeAccount.id, to, text);
     },
-    onSuccess: () => {
+    onMutate: async ({ text }) => {
+      const queryKey = ['instagram-messages', activeAccount?.id, selected?.instagramId];
+      await queryClient.cancelQueries({ queryKey });
+
+      const prevMessages = queryClient.getQueryData<InstagramMessage[]>(queryKey);
+
+      const optimisticMsg: InstagramMessage = {
+        id: `temp-${Date.now()}`,
+        text,
+        direction: 'outbound',
+        createdAt: new Date().toISOString(),
+        status: 'sending' as any,
+      } as any;
+
+      queryClient.setQueryData<InstagramMessage[]>(queryKey, (old = []) => [...old, optimisticMsg]);
+
+      return { prevMessages };
+    },
+    onError: (context: any) => {
+      const queryKey = ['instagram-messages', activeAccount?.id, selected?.instagramId];
+      queryClient.setQueryData(queryKey, context?.prevMessages);
+      toast.error('Failed to send message');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['instagram-conversations'] });
       queryClient.invalidateQueries({ queryKey: ['instagram-messages'] });
     },
@@ -341,10 +372,12 @@ export function InstagramInbox() {
                       </div>
                       <span className="text-[10px] text-muted-foreground px-1">
                         {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                        {msg.status === 'sending' && ' • Sending...'}
                       </span>
                     </div>
                   ))
                 )}
+                <div ref={scrollRef} className="h-0 w-0" />
               </div>
             </ScrollArea>
 
