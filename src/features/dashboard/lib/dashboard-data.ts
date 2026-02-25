@@ -1,8 +1,11 @@
+/** biome-ignore-all assist/source/organizeImports: <> */
 import {
   Briefcase,
   FileText,
-  LayoutDashboard,
+  Instagram,
   MessageCircle,
+  PhoneCall,
+  LayoutDashboard,
   Settings,
   UserCheck,
 } from 'lucide-react';
@@ -82,6 +85,16 @@ export const dashboardData = {
         //   url: '/leads/ready-for-disbursal',
         // },
       ],
+    },
+    {
+      name: 'Instagram',
+      url: '/instagram/accounts',
+      icon: Instagram,
+    },
+    {
+      name: 'PhoneNumber',
+      url: '/phone',
+      icon: PhoneCall,
     },
     {
       name: 'Settings',
