@@ -113,7 +113,10 @@ export function InstagramAccountsList() {
           </div>
 
           {/* Accounts Table */}
-          <InstagramAccountsTable accounts={filteredAccounts} />
+          <InstagramAccountsTable
+            accounts={filteredAccounts}
+            isLoading={isLoading || isRefetching}
+          />
         </TabsContent>
 
         <TabsContent value="templates">

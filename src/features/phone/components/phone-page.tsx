@@ -552,10 +552,10 @@ export default function PhoneNumberPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the phone number and may
-              unrent it from Plivo.
+              unrent.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

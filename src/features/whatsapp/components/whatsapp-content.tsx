@@ -1297,10 +1297,8 @@ export default function WhatsappConnect() {
         </Table>
       </div>
 
-      {/* ── Phone Management Sheet ── */}
       <PhoneManagementSheet account={managingAccount} onClose={() => setManagingAccount(null)} />
 
-      {/* ── Connect WABA Dialog (Plivo-style flow) ── */}
       <ConnectWabaDialog
         open={connectOpen}
         onOpenChange={setConnectOpen}

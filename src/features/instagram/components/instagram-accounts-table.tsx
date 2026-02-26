@@ -27,6 +27,7 @@ import type { InstagramAccount } from '../types';
 
 interface InstagramAccountsTableProps {
   accounts: InstagramAccount[];
+  isLoading?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -67,13 +68,13 @@ function ActionCell({ account }: { account: InstagramAccount }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['instagram-accounts'] }),
   });
 
-  const isLoading = disconnect.isPending || refresh.isPending;
+  const isActionLoading = disconnect.isPending || refresh.isPending;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
-          {isLoading ? (
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isActionLoading}>
+          {isActionLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <MoreHorizontal className="h-4 w-4" />
@@ -161,7 +162,7 @@ const columns: ColumnDef<InstagramAccount>[] = [
 
 import { useRouter } from 'next/navigation';
 
-export function InstagramAccountsTable({ accounts }: InstagramAccountsTableProps) {
+export function InstagramAccountsTable({ accounts, isLoading }: InstagramAccountsTableProps) {
   const router = useRouter();
   const table = useReactTable({
     data: accounts,
@@ -186,7 +187,16 @@ export function InstagramAccountsTable({ accounts }: InstagramAccountsTableProps
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.length ? (
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-24 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading accounts...</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}

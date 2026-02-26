@@ -69,8 +69,8 @@ export function ConnectAccountSheet({ open, onOpenChange, onSuccess }: ConnectAc
       const { accessToken } = event.data as { accessToken: string };
       try {
         await connectInstagramAccount(accessToken);
+        await onSuccess();
         handleOpenChange(false);
-        onSuccess();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to connect account');
       } finally {

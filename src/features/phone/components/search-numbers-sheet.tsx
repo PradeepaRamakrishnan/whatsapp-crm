@@ -82,7 +82,7 @@ export function SearchNumbersSheet({
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center p-12 text-slate-400">
                     <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                    <p>Searching Plivo inventory...</p>
+                    <p>Searching inventory...</p>
                   </div>
                 ) : availableNumbers.length > 0 ? (
                   <Table>

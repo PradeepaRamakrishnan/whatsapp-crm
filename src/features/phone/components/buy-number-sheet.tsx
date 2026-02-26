@@ -135,8 +135,8 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                 <div className="bg-amber-50 px-5 py-3 border-t border-amber-100 italic">
                   <p className="text-[10px] text-amber-800 leading-relaxed font-medium flex gap-2">
                     <Globe className="w-3 h-3 flex-shrink-0" />
-                    Purchasing this number will immediately deduct the monthly fee from your Plivo
-                    account balance.
+                    Purchasing this number will immediately deduct the monthly fee from your account
+                    balance.
                   </p>
                 </div>
               </div>
@@ -144,8 +144,8 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
               {/* Compliance Note */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  By clicking "Confirm Purchase", you agree to Plivo's terms of service and
-                  acknowledge that some regions require regulatory documentation for ownership.
+                  By clicking "Confirm Purchase", you agree to terms of service and acknowledge that
+                  some regions require regulatory documentation for ownership.
                 </p>
               </div>
             </div>
