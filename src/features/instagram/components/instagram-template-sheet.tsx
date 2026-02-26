@@ -9,19 +9,34 @@ import {
   Instagram,
   Sun,
   Moon,
-  ChevronLeft,
-  MoreVertical,
-  Send,
-  Loader2,
+  Type,
+  Minus,
+  Plus,
+  Trash2,
+  ExternalLink,
+  Phone,
+  MessageSquare,
+  Zap,
+  Copy,
+  Upload,
+  X,
+  FileText,
+  Video,
+  LucideImage,
   Bold,
   Italic,
   Strikethrough,
-  FileText,
-  Video,
-  Image as LucideImage,
-  Type,
-  Minus,
+  ChevronLeft,
+  MoreVertical,
+  Loader2,
+  Send,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -45,6 +60,18 @@ interface InstagramTemplateSheetProps {
   template?: InstagramTemplate | null;
 }
 
+type ButtonType = 'URL' | 'PHONE' | 'QUICK_REPLY' | 'COPY_CODE' | 'WHATSAPP' | 'FLOW';
+
+interface ButtonConfig {
+  id: string;
+  type: ButtonType;
+  text: string;
+  url?: string;
+  phone?: string;
+  code?: string;
+  flowId?: string;
+}
+
 export function InstagramTemplateSheet({
   open,
   onOpenChange,
@@ -53,6 +80,10 @@ export function InstagramTemplateSheet({
 }: InstagramTemplateSheetProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [buttons, setButtons] = React.useState<ButtonConfig[]>([]);
+  const [headerFile, setHeaderFile] = React.useState<File | null>(null);
+  const [headerPreview, setHeaderPreview] = React.useState<string | null>(null);
+
   const [formData, setFormData] = React.useState({
     name: '',
     accountId: '',
@@ -60,13 +91,9 @@ export function InstagramTemplateSheet({
     language: 'en',
     description: '',
     imageUrl: '',
-    buttonLabel: '',
-    buttonUrl: '',
     headerType: 'NONE',
     headerText: '',
     footer: '',
-    buttonLabel2: '',
-    buttonUrl2: '',
     isCustom: true,
   });
 
@@ -81,15 +108,37 @@ export function InstagramTemplateSheet({
         language: template.language || template.locale || 'en',
         description: template.body || template.description || '',
         imageUrl: template.imageUrl || '',
-        buttonLabel: template.buttonLabel || '',
-        buttonUrl: template.buttonUrl || '',
         headerType: (template.headerType || 'NONE').toUpperCase(),
         headerText: template.headerText || '',
         footer: template.footer || '',
-        buttonLabel2: template.buttonLabel2 || '',
-        buttonUrl2: template.buttonUrl2 || '',
         isCustom: template.isCustom ?? true,
       });
+
+      // Handle buttons from components or flat fields
+      if (template.components?.buttons) {
+        setButtons(template.components.buttons);
+      } else {
+        const legacyButtons: ButtonConfig[] = [];
+        if (template.buttonLabel) {
+          legacyButtons.push({
+            id: '1',
+            type: 'URL',
+            text: template.buttonLabel,
+            url: template.buttonUrl,
+          });
+        }
+        if (template.buttonLabel2) {
+          legacyButtons.push({
+            id: '2',
+            type: 'URL',
+            text: template.buttonLabel2,
+            url: template.buttonUrl2,
+          });
+        }
+        setButtons(legacyButtons);
+      }
+      setHeaderFile(null);
+      setHeaderPreview(template.imageUrl || null);
     } else {
       setFormData({
         name: '',
@@ -98,15 +147,14 @@ export function InstagramTemplateSheet({
         language: 'en',
         description: '',
         imageUrl: '',
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonLabel2: '',
-        buttonUrl2: '',
         headerType: 'NONE',
         headerText: '',
         footer: '',
         isCustom: true,
       });
+      setButtons([]);
+      setHeaderFile(null);
+      setHeaderPreview(null);
     }
   }, [template]);
 
@@ -152,11 +200,16 @@ export function InstagramTemplateSheet({
 
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
         isCustom: submitType === 'draft',
         status: submitType === 'draft' ? 'inprogress' : 'pending',
+        buttons: JSON.stringify(buttons),
       };
+
+      if (headerFile) {
+        payload.headerFile = headerFile;
+      }
 
       if (template) {
         const accId = formData.accountId || accounts[0]?.id;
@@ -182,6 +235,27 @@ export function InstagramTemplateSheet({
 
   const isEdit = !!template;
   const isAuthentication = formData.category === 'authentication';
+
+  const addButton = (type: ButtonType) => {
+    if (buttons.length >= 3) {
+      toast.error('Maximum 3 buttons allowed');
+      return;
+    }
+    const newButton: ButtonConfig = {
+      id: Math.random().toString(36).substr(2, 9),
+      type,
+      text: type === 'URL' ? 'Visit Website' : type === 'PHONE' ? 'Call Now' : 'Quick Reply',
+    };
+    setButtons([...buttons, newButton]);
+  };
+
+  const removeButton = (id: string) => {
+    setButtons(buttons.filter((b) => b.id !== id));
+  };
+
+  const updateButton = (id: string, updates: Partial<ButtonConfig>) => {
+    setButtons(buttons.map((b) => (b.id === id ? { ...b, ...updates } : b)));
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -343,11 +417,104 @@ export function InstagramTemplateSheet({
                     {(formData.headerType === 'IMAGE' ||
                       formData.headerType === 'VIDEO' ||
                       formData.headerType === 'DOCUMENT') && (
-                      <Input
-                        placeholder={`Enter ${formData.headerType.toLowerCase()} URL`}
-                        value={formData.imageUrl}
-                        onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                      />
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          className={cn(
+                            'w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer',
+                            headerFile
+                              ? 'border-emerald-200 bg-emerald-50/30'
+                              : 'border-slate-200 hover:border-slate-300 bg-slate-50/50',
+                          )}
+                          onClick={() => document.getElementById('header-file-input')?.click()}
+                        >
+                          <input
+                            id="header-file-input"
+                            type="file"
+                            className="hidden"
+                            accept={
+                              formData.headerType === 'IMAGE'
+                                ? 'image/*'
+                                : formData.headerType === 'VIDEO'
+                                  ? 'video/*'
+                                  : '.pdf,.doc,.docx,.txt'
+                            }
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setHeaderFile(file);
+                                setHeaderPreview(URL.createObjectURL(file));
+                              }
+                            }}
+                          />
+                          {headerPreview ? (
+                            <div className="relative w-full max-w-[200px] aspect-video rounded-lg overflow-hidden border bg-black shadow-sm">
+                              {formData.headerType === 'IMAGE' ? (
+                                <Image
+                                  src={headerPreview}
+                                  alt="Preview"
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : formData.headerType === 'VIDEO' ? (
+                                <>
+                                  {/* biome-ignore lint/a11y/useMediaCaption: <Preview video doesn't require captions> */}
+                                  <video
+                                    src={headerPreview}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </>
+                              ) : (
+                                <div className="flex h-full items-center justify-center bg-slate-100">
+                                  <FileText className="h-8 w-8 text-slate-400" />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setHeaderFile(null);
+                                  setHeaderPreview(null);
+                                }}
+                                className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-sm border">
+                                <Upload className="h-5 w-5 text-slate-400" />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm font-medium">
+                                  Click to upload {formData.headerType.toLowerCase()}
+                                </p>
+                                <p className="text-[11px] text-slate-400">or drag and drop here</p>
+                              </div>
+                            </>
+                          )}
+                        </button>
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-slate-100" />
+                          </div>
+                          <div className="relative flex justify-center text-[10px] uppercase">
+                            <span className="bg-white px-2 text-slate-400">or use URL</span>
+                          </div>
+                        </div>
+                        <Input
+                          placeholder={`Enter ${formData.headerType.toLowerCase()} URL`}
+                          value={formData.imageUrl}
+                          onChange={(e) => {
+                            handleInputChange('imageUrl', e.target.value);
+                            if (e.target.value) {
+                              setHeaderFile(null);
+                              setHeaderPreview(e.target.value);
+                            }
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 </section>
@@ -432,90 +599,158 @@ export function InstagramTemplateSheet({
 
               {/* Buttons Section */}
               <section className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2">
-                  Buttons <span className="font-normal lowercase">(optional)</span>
-                </h3>
-                <div className="space-y-6">
-                  {/* Button 1 */}
-                  <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                        1
-                      </div>
-                      <span className="text-xs font-semibold text-slate-700">Primary Button</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="buttonLabel"
-                          className="text-[11px] text-slate-500 uppercase"
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                    Buttons <span className="font-normal lowercase">(optional)</span>
+                  </h3>
+                  {buttons.length < 3 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
-                          Button Label
-                        </Label>
-                        <Input
-                          id="buttonLabel"
-                          placeholder="Visit Website"
-                          className="bg-white"
-                          value={formData.buttonLabel}
-                          onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="buttonUrl" className="text-[11px] text-slate-500 uppercase">
-                          Button URL
-                        </Label>
-                        <Input
-                          id="buttonUrl"
-                          placeholder="https://..."
-                          className="bg-white"
-                          value={formData.buttonUrl}
-                          onChange={(e) => handleInputChange('buttonUrl', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                          <Plus className="h-3.5 w-3.5" />
+                          Add Button
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem onClick={() => addButton('URL')} className="gap-2">
+                          <ExternalLink className="h-4 w-4" /> Visit Website
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => addButton('PHONE')} className="gap-2">
+                          <Phone className="h-4 w-4" /> Call Phone Number
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => addButton('QUICK_REPLY')}
+                          className="gap-2"
+                        >
+                          <MessageSquare className="h-4 w-4" /> Quick Reply
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => addButton('WHATSAPP')} className="gap-2">
+                          <Zap className="h-4 w-4" /> Call on WhatsApp
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => addButton('COPY_CODE')} className="gap-2">
+                          <Copy className="h-4 w-4" /> Copy Offer Code
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => addButton('FLOW')} className="gap-2">
+                          <Zap className="h-4 w-4" /> Complete Flow
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
 
-                  {/* Button 2 */}
-                  <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                        2
+                <div className="space-y-4">
+                  {buttons.map((button, index) => (
+                    <div
+                      key={button.id}
+                      className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200 group relative"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => removeButton(button.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
+                          {index + 1}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-700">
+                          {button.type === 'URL'
+                            ? 'Visit Website'
+                            : button.type === 'PHONE'
+                              ? 'Call Phone'
+                              : button.type === 'WHATSAPP'
+                                ? 'WhatsApp'
+                                : button.type === 'COPY_CODE'
+                                  ? 'Copy Code'
+                                  : button.type === 'FLOW'
+                                    ? 'Complete Flow'
+                                    : 'Quick Reply'}
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-slate-700">Secondary Button</span>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[11px] text-slate-500 uppercase">
+                            Button Text
+                          </Label>
+                          <Input
+                            placeholder="e.g. Visit Website"
+                            className="bg-white h-9 text-sm"
+                            value={button.text}
+                            onChange={(e) => updateButton(button.id, { text: e.target.value })}
+                          />
+                        </div>
+
+                        {button.type === 'URL' && (
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-slate-500 uppercase">
+                              Website URL
+                            </Label>
+                            <Input
+                              placeholder="https://..."
+                              className="bg-white h-9 text-sm"
+                              value={button.url}
+                              onChange={(e) => updateButton(button.id, { url: e.target.value })}
+                            />
+                          </div>
+                        )}
+
+                        {button.type === 'PHONE' && (
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-slate-500 uppercase">
+                              Phone Number
+                            </Label>
+                            <Input
+                              placeholder="+1234567890"
+                              className="bg-white h-9 text-sm"
+                              value={button.phone}
+                              onChange={(e) => updateButton(button.id, { phone: e.target.value })}
+                            />
+                          </div>
+                        )}
+
+                        {button.type === 'COPY_CODE' && (
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-slate-500 uppercase">
+                              Offer Code
+                            </Label>
+                            <Input
+                              placeholder="SAVE50"
+                              className="bg-white h-9 text-sm"
+                              value={button.code}
+                              onChange={(e) => updateButton(button.id, { code: e.target.value })}
+                            />
+                          </div>
+                        )}
+
+                        {button.type === 'FLOW' && (
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-slate-500 uppercase">Flow ID</Label>
+                            <Input
+                              placeholder="Enter Flow ID"
+                              className="bg-white h-9 text-sm"
+                              value={button.flowId}
+                              onChange={(e) => updateButton(button.id, { flowId: e.target.value })}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="buttonLabel2"
-                          className="text-[11px] text-slate-500 uppercase"
-                        >
-                          Button Label
-                        </Label>
-                        <Input
-                          id="buttonLabel2"
-                          placeholder="Contact Us"
-                          className="bg-white"
-                          value={formData.buttonLabel2}
-                          onChange={(e) => handleInputChange('buttonLabel2', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="buttonUrl2"
-                          className="text-[11px] text-slate-500 uppercase"
-                        >
-                          Button URL
-                        </Label>
-                        <Input
-                          id="buttonUrl2"
-                          placeholder="https://..."
-                          className="bg-white"
-                          value={formData.buttonUrl2}
-                          onChange={(e) => handleInputChange('buttonUrl2', e.target.value)}
-                        />
-                      </div>
+                  ))}
+
+                  {buttons.length === 0 && (
+                    <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-xl">
+                      <p className="text-sm text-slate-400">No buttons added yet</p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </section>
             </div>
@@ -608,10 +843,10 @@ export function InstagramTemplateSheet({
                         )}
                       >
                         {/* Header Image/Video Placeholder */}
-                        {formData.headerType === 'IMAGE' && formData.imageUrl && (
+                        {formData.headerType === 'IMAGE' && headerPreview && (
                           <div className="w-full aspect-square bg-zinc-200 relative">
                             <Image
-                              src={formData.imageUrl}
+                              src={headerPreview}
                               alt="Template"
                               fill
                               unoptimized
@@ -623,10 +858,10 @@ export function InstagramTemplateSheet({
                           </div>
                         )}
 
-                        {formData.headerType === 'VIDEO' && formData.imageUrl && (
+                        {formData.headerType === 'VIDEO' && headerPreview && (
                           <div className="w-full aspect-square bg-zinc-200 relative">
                             <video
-                              src={formData.imageUrl}
+                              src={headerPreview}
                               autoPlay
                               muted
                               loop
@@ -669,22 +904,23 @@ export function InstagramTemplateSheet({
                           )}
 
                           {/* Buttons */}
-                          {(formData.buttonLabel || formData.buttonLabel2) && (
+                          {buttons.length > 0 && (
                             <div className="pt-2 border-t border-zinc-500/20 divide-y divide-zinc-500/10">
-                              {formData.buttonLabel && (
-                                <div className="py-2 text-center">
-                                  <span className="font-bold text-sm text-blue-500">
-                                    {formData.buttonLabel}
-                                  </span>
+                              {buttons.map((btn) => (
+                                <div
+                                  key={btn.id}
+                                  className="py-2 text-center cursor-pointer hover:bg-black/5 active:bg-black/10 transition-colors"
+                                >
+                                  <div className="flex items-center justify-center gap-1.5 text-blue-500 text-sm">
+                                    {btn.type === 'URL' && <ExternalLink className="h-3.5 w-3.5" />}
+                                    {btn.type === 'PHONE' && <Phone className="h-3.5 w-3.5" />}
+                                    {btn.type === 'WHATSAPP' && <Zap className="h-3.5 w-3.5" />}
+                                    {btn.type === 'COPY_CODE' && <Copy className="h-3.5 w-3.5" />}
+                                    {btn.type === 'FLOW' && <Zap className="h-3.5 w-3.5" />}
+                                    <span className="font-bold">{btn.text}</span>
+                                  </div>
                                 </div>
-                              )}
-                              {formData.buttonLabel2 && (
-                                <div className="py-2 text-center">
-                                  <span className="font-bold text-sm text-blue-500">
-                                    {formData.buttonLabel2}
-                                  </span>
-                                </div>
-                              )}
+                              ))}
                             </div>
                           )}
                         </div>

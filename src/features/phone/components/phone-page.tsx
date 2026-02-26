@@ -2,8 +2,10 @@
 /** biome-ignore-all lint/performance/noImgElement: <> */
 'use client';
 
+import * as Flags from 'country-flag-icons/react/3x2';
 import dayjs from 'dayjs';
-import { Loader2, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { Edit, Loader2, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -57,6 +59,10 @@ export default function PhoneNumberPage() {
   // Delete state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [numberToDelete, setNumberToDelete] = useState<string | null>(null);
+
+  const [complianceToDelete, setComplianceToDelete] = useState<any | null>(null);
+  const [isDeleteComplianceDialogOpen, setIsDeleteComplianceDialogOpen] = useState(false);
+  const [complianceToEdit, setComplianceToEdit] = useState<any | null>(null);
 
   // Doc Viewer state
   const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
@@ -128,6 +134,25 @@ export default function PhoneNumberPage() {
     }
   };
 
+  const handleDeleteCompliance = (compliance: any) => {
+    setComplianceToDelete(compliance);
+    setIsDeleteComplianceDialogOpen(true);
+  };
+
+  const confirmDeleteCompliance = async () => {
+    if (!complianceToDelete || !user?.id) return;
+    try {
+      await phoneNumberService.deleteCompliance(complianceToDelete.id, user.id);
+      toast.success('Compliance record deleted successfully');
+      loadCompliance();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete compliance record');
+    } finally {
+      setIsDeleteComplianceDialogOpen(false);
+      setComplianceToDelete(null);
+    }
+  };
+
   const filteredNumbers = myNumbers.filter((num) => {
     const query = searchTerm.trim().toLowerCase();
     if (!query) return true;
@@ -146,20 +171,51 @@ export default function PhoneNumberPage() {
       .includes(query);
   });
   console.info('filteredRentalSummary', filteredRentalSummary);
-  const getCountryFlag = (country?: string) => {
-    const c = (country || 'india').toLowerCase();
-    if (c.includes('india')) return '🇮🇳';
-    if (c.includes('usa') || c.includes('united states')) return '🇺🇸';
-    if (c.includes('uk') || c.includes('united kingdom')) return '🇬🇧';
-    return '🌐';
+  const getCountryISO = (country?: string, phoneNumber?: string) => {
+    const normalize = (s?: string) => (s || '').toLowerCase().trim();
+    const c = normalize(country);
+
+    if (c.includes('india') || c === 'in') return 'IN';
+    if (c.includes('usa') || c.includes('united states') || c === 'us') return 'US';
+    if (c.includes('uk') || c.includes('united kingdom') || c === 'gb') return 'GB';
+    if (c.includes('uae') || c.includes('emirates') || c === 'ae') return 'AE';
+    if (c.includes('australia') || c === 'au') return 'AU';
+    if (c.includes('canada') || c === 'ca') return 'CA';
+    if (c.includes('singapore') || c === 'sg') return 'SG';
+
+    if (phoneNumber) {
+      try {
+        const parsed = parsePhoneNumberFromString(
+          phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`,
+        );
+        if (parsed?.country) return parsed.country;
+      } catch (err) {
+        console.warn('Failed to parse phone number for country ISO', err);
+      }
+    }
+
+    return null;
+  };
+
+  const getCountryFlag = (country?: string, phoneNumber?: string) => {
+    const isoCode = getCountryISO(country, phoneNumber);
+
+    if (isoCode) {
+      const FlagComponent = (Flags as any)[isoCode.toUpperCase()];
+      if (FlagComponent) {
+        return <FlagComponent className="w-full h-full" />;
+      }
+    }
+
+    return <Flags.IN className="w-full h-full opacity-20" />; // Fallback or global icon
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold">Phone Number</h1>
-          <p className="text-muted-foreground text-lg">Manage your business phone numbers.</p>
+          <h1 className="text-2xl font-bold">Phone Number</h1>
+          <p className="text-muted-foreground ">Manage your business phone numbers.</p>
         </div>
         {activeTab === 'purchased' ? (
           <Button onClick={() => setIsSearchSheetOpen(true)} className="gap-2">
@@ -243,8 +299,8 @@ export default function PhoneNumberPage() {
                           <TableRow key={num.id} className="hover:bg-slate-50/30 transition-colors">
                             <TableCell className="font-semibold text-slate-700">
                               <div className="flex items-center gap-2">
-                                <span className="flex items-center justify-center size-5 rounded-full bg-slate-100 text-xs overflow-hidden border border-slate-200">
-                                  {getCountryFlag(num.country)}
+                                <span className="flex items-center justify-center size-5 rounded-sm overflow-hidden border border-slate-200 shrink-0">
+                                  {getCountryFlag(num.country, num.phoneNumber)}
                                 </span>
                                 {num.phoneNumber}
                               </div>
@@ -309,12 +365,13 @@ export default function PhoneNumberPage() {
                       <TableHead className="font-bold">Number Type</TableHead>
                       <TableHead className="font-bold">Documents</TableHead>
                       <TableHead className="font-bold">Status</TableHead>
+                      <TableHead className="font-bold text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isComplianceLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-48 text-center">
+                        <TableCell colSpan={6} className="h-48 text-center">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-300" />
                         </TableCell>
                       </TableRow>
@@ -332,7 +389,7 @@ export default function PhoneNumberPage() {
                       }).length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={6}
                           className="h-48 text-center text-slate-500 text-base"
                         >
                           No data found.
@@ -407,6 +464,31 @@ export default function PhoneNumberPage() {
                               >
                                 {item.status}
                               </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors"
+                                  onClick={() => {
+                                    setComplianceToEdit(item);
+                                    setIsComplianceSheetOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                  onClick={() => handleDeleteCompliance(item)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -503,8 +585,8 @@ export default function PhoneNumberPage() {
                           </TableCell>
                           <TableCell className="font-semibold text-slate-700">
                             <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center size-5 rounded-full bg-slate-100 text-xs overflow-hidden border border-slate-200">
-                                {getCountryFlag(num.country)}
+                              <span className="flex items-center justify-center size-5 rounded-sm overflow-hidden border border-slate-200 shrink-0">
+                                {getCountryFlag(num.country, num.phoneNumber)}
                               </span>
                               {num.phoneNumber}
                             </div>
@@ -545,8 +627,12 @@ export default function PhoneNumberPage() {
 
       <AddComplianceSheet
         open={isComplianceSheetOpen}
-        onOpenChange={setIsComplianceSheetOpen}
+        onOpenChange={(open) => {
+          setIsComplianceSheetOpen(open);
+          if (!open) setComplianceToEdit(null);
+        }}
         onSuccess={loadCompliance}
+        initialData={complianceToEdit}
       />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -565,6 +651,29 @@ export default function PhoneNumberPage() {
               className="bg-red-500 hover:bg-red-600 text-white border-none"
             >
               Delete Number
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isDeleteComplianceDialogOpen}
+        onOpenChange={setIsDeleteComplianceDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Compliance?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the compliance record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteCompliance}
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+            >
+              Delete Compliance
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 
+import * as Flags from 'country-flag-icons/react/3x2';
 import { CheckCircle2, Globe, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
@@ -73,7 +74,21 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                     <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
                       Target Number
                     </p>
-                    <h3 className="text-2xl font-bold text-[#1e293b]">{numberData.number}</h3>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center size-8 rounded-sm overflow-hidden border border-primary/20 shrink-0">
+                        {(() => {
+                          const FlagComponent = (Flags as any)[
+                            (numberData.country_iso || 'IN').toUpperCase()
+                          ];
+                          return FlagComponent ? (
+                            <FlagComponent className="w-full h-full" />
+                          ) : (
+                            <Flags.IN className="w-full h-full opacity-20" />
+                          );
+                        })()}
+                      </span>
+                      <h3 className="text-2xl font-bold text-[#1e293b]">{numberData.number}</h3>
+                    </div>
                   </div>
                   <div className="px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">
                     Available

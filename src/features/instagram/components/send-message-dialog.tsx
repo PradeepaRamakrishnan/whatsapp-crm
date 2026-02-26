@@ -127,8 +127,8 @@ export function SendMessageDialog({
             <Button type="submit" disabled={isPending || success}>
               {isPending ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending…
+                  <Loader2 className="h-4 w-4 animate-spin text-white/80" />
+                  Sending Message...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">

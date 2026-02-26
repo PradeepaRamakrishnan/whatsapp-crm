@@ -91,4 +91,28 @@ export const phoneNumberService = {
       handleAxiosError(error, 'Failed to load compliance data');
     }
   },
+
+  async updateCompliance(id: string, data: FormData) {
+    try {
+      const response = await axios.patch(`${API_URL}/instagram/plivo/compliance/${id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (error) {
+      handleAxiosError(error, 'Failed to update compliance documents');
+    }
+  },
+
+  async deleteCompliance(id: string, userId: string) {
+    try {
+      const response = await axios.delete(`${API_URL}/instagram/plivo/compliance/${id}`, {
+        params: { userId },
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (error) {
+      handleAxiosError(error, 'Failed to delete compliance entry');
+    }
+  },
 };

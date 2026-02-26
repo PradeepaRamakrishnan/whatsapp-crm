@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 
+import * as Flags from 'country-flag-icons/react/3x2';
 import { Loader2, Phone, Search } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -97,7 +98,23 @@ export function SearchNumbersSheet({
                     <TableBody>
                       {availableNumbers.map((item) => (
                         <TableRow key={item.number} className="bg-white overflow-y-auto">
-                          <TableCell className="font-medium">{item.number}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center size-5 rounded-sm overflow-hidden border border-slate-200 shrink-0">
+                                {(() => {
+                                  const FlagComponent = (Flags as any)[
+                                    (item.country_iso || 'IN').toUpperCase()
+                                  ];
+                                  return FlagComponent ? (
+                                    <FlagComponent className="w-full h-full" />
+                                  ) : (
+                                    <Flags.IN className="w-full h-full opacity-20" />
+                                  );
+                                })()}
+                              </span>
+                              {item.number}
+                            </div>
+                          </TableCell>
                           <TableCell>{item.region || 'N/A'}</TableCell>
                           <TableCell>₹{item.monthly_rental_rate_inr || 'N/A'}</TableCell>
                           <TableCell className="text-right">

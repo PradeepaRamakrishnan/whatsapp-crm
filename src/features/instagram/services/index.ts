@@ -47,6 +47,8 @@ type InstagramTemplateMutationInput = {
   footer?: string;
   headerType?: string;
   headerText?: string;
+  headerFile?: File;
+  buttons?: string; // Stringified JSON
 };
 
 async function getMe(): Promise<{ id: string; accessToken: string }> {
@@ -159,10 +161,11 @@ export async function sendInstagramMessage(
   accountId: string,
   to: string,
   message: string,
+  templateId?: string | null,
 ): Promise<InstagramMessage> {
   try {
     const { id: userId } = await getMe();
-    const response = await axiosUrl.post('/send', { accountId, to, message, userId });
+    const response = await axiosUrl.post('/send', { accountId, to, message, userId, templateId });
     return response.data;
   } catch (error: unknown) {
     handleAxiosError(error, 'Failed to send Instagram message');
@@ -181,11 +184,14 @@ export async function syncInstagramTemplates(id: string): Promise<ApiResponse> {
   }
 }
 
-export async function getInstagramTemplates(id: string): Promise<InstagramTemplate[]> {
+export async function getInstagramTemplates(
+  id: string,
+  status?: string,
+): Promise<InstagramTemplate[]> {
   try {
     const { id: userId } = await getMe();
     const response = await axiosUrl.get(`/accounts/${id}/templates/stored`, {
-      params: { userId },
+      params: { userId, status },
     });
     return response.data?.data ?? response.data ?? [];
   } catch (error: unknown) {
@@ -210,9 +216,21 @@ export async function createCustomInstagramTemplate(
 ): Promise<ApiResponse> {
   try {
     const { id: userId } = await getMe();
-    const response = await axiosUrl.post(`/accounts/${accountId}/templates/custom`, {
-      ...data,
-      userId,
+    const formData = new FormData();
+    formData.append('userId', userId);
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        if (key === 'headerFile' && value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    }
+
+    const response = await axiosUrl.post(`/accounts/${accountId}/templates/custom`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   } catch (error: unknown) {
@@ -227,10 +245,26 @@ export async function updateInstagramTemplate(
 ): Promise<ApiResponse> {
   try {
     const { id: userId } = await getMe();
-    const response = await axiosUrl.patch(`/accounts/${accountId}/templates/${templateId}`, {
-      ...data,
-      userId,
-    });
+    const formData = new FormData();
+    formData.append('userId', userId);
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        if (key === 'headerFile' && value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    }
+
+    const response = await axiosUrl.patch(
+      `/accounts/${accountId}/templates/${templateId}`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
     return response.data;
   } catch (error: unknown) {
     handleAxiosError(error, 'Failed to update template');

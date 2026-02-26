@@ -3,7 +3,7 @@
 
 import { Loader2, ShieldCheck, Upload } from 'lucide-react';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,9 +24,15 @@ interface AddComplianceSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialData?: any;
 }
 
-export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplianceSheetProps) {
+export function AddComplianceSheet({
+  open,
+  onOpenChange,
+  onSuccess,
+  initialData,
+}: AddComplianceSheetProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,6 +44,31 @@ export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplia
     gstFile: null as File | null,
     agreed: false,
   });
+
+  useEffect(() => {
+    if (initialData && open) {
+      setFormData({
+        alias: initialData.alias || '',
+        country: initialData.country || 'India',
+        numberType: initialData.numberType || 'local',
+        businessName: initialData.businessName || '',
+        certificateFile: null,
+        gstFile: null,
+        agreed: true,
+      });
+    } else if (!open) {
+      // Reset on close
+      setFormData({
+        alias: '',
+        country: 'India',
+        numberType: 'local',
+        businessName: '',
+        certificateFile: null,
+        gstFile: null,
+        agreed: false,
+      });
+    }
+  }, [initialData, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +99,13 @@ export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplia
 
     setIsLoading(true);
     try {
-      await phoneNumberService.submitCompliance(submissionData);
-      toast.success('Compliance documents submitted successfully');
+      if (initialData?.id) {
+        await phoneNumberService.updateCompliance(initialData.id, submissionData);
+        toast.success('Compliance documents updated successfully');
+      } else {
+        await phoneNumberService.submitCompliance(submissionData);
+        toast.success('Compliance documents submitted successfully');
+      }
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (error: any) {
@@ -87,7 +123,7 @@ export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplia
           <div className="p-6">
             <SheetHeader className="mb-6">
               <SheetTitle className="text-xl font-bold flex items-center gap-2">
-                Add Compliance
+                {initialData ? 'Edit Compliance' : 'Add Compliance'}
               </SheetTitle>
             </SheetHeader>
 
@@ -278,7 +314,13 @@ export function AddComplianceSheet({ open, onOpenChange, onSuccess }: AddComplia
             disabled={isLoading || !formData.agreed}
             className=" text-white min-w-[120px] rounded-lg shadow-sm"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : initialData ? (
+              'Update'
+            ) : (
+              'Submit'
+            )}
           </Button>
         </div>
       </SheetContent>

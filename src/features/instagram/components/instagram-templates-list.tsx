@@ -54,7 +54,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [statusFilter, setStatusFilter] = React.useState('approved');
   const [selectedAccountId, setSelectedAccountId] = React.useState<string>(
     accounts.find((a) => a.status === 'active')?.id || accounts[0]?.id || '',
   );
@@ -110,7 +110,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-6 py-4">
+    <div className="flex flex-1 flex-col gap-6 py-2">
       {/* Action Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-1 rounded-xl">
         <div className="flex flex-1 items-center gap-3 max-w-2xl">
@@ -233,7 +233,9 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
                         )}
                       </div>
                       <span className="text-[11px] text-muted-foreground truncate max-w-[180px] mt-0.5">
-                        {template.description || template.body}
+                        {template.body ||
+                          template.description ||
+                          template.components?.find((c: any) => c.type === 'BODY')?.text}
                       </span>
                     </div>
                   </TableCell>
