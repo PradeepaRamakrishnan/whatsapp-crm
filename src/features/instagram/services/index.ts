@@ -1,4 +1,15 @@
 import axios, { AxiosError } from 'axios';
+
+function handleAxiosError(error: unknown, defaultMessage: string): never {
+  if (error instanceof AxiosError) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+    const message = data?.message || data?.error || error.message || defaultMessage;
+    throw new Error(status ? `[${status}] ${message}` : message);
+  }
+  throw error;
+}
+
 import type {
   InstagramAccount,
   InstagramConversation,
@@ -29,7 +40,10 @@ type InstagramTemplateMutationInput = {
   imageUrl: string;
   buttonLabel: string;
   buttonUrl: string;
+  buttonLabel2?: string;
+  buttonUrl2?: string;
   isCustom: boolean;
+  status?: string;
   footer?: string;
   headerType?: string;
   headerText?: string;
@@ -60,14 +74,7 @@ export async function getInstagramAccounts(): Promise<InstagramAccount[]> {
     const data = response.data?.data ?? response.data;
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data = error.response?.data;
-      throw new Error(
-        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to fetch Instagram accounts'}`,
-      );
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to fetch Instagram accounts');
   }
 }
 
@@ -82,14 +89,7 @@ export async function getInstagramConversations(
     const data = response.data?.data ?? response.data;
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data = error.response?.data;
-      throw new Error(
-        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to fetch conversations'}`,
-      );
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to fetch conversations');
   }
 }
 
@@ -105,14 +105,7 @@ export async function getInstagramMessagesByUsername(
     const data = response.data?.data ?? response.data;
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data = error.response?.data;
-      throw new Error(
-        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to fetch messages'}`,
-      );
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to fetch messages');
   }
 }
 
@@ -128,14 +121,7 @@ export async function getInstagramMessagesByPeerId(
     const data = response.data?.data ?? response.data;
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data = error.response?.data;
-      throw new Error(
-        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to fetch messages'}`,
-      );
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to fetch messages');
   }
 }
 
@@ -145,14 +131,7 @@ export async function connectInstagramAccount(accessToken: string): Promise<Inst
     const response = await axiosUrl.post('/connect', { accessToken, userId });
     return response.data?.data ?? response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data = error.response?.data;
-      throw new Error(
-        `[${status}] ${data?.message || data?.error || JSON.stringify(data) || 'Failed to connect Instagram account'}`,
-      );
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to connect Instagram account');
   }
 }
 
@@ -162,10 +141,7 @@ export async function disconnectInstagramAccount(id: string): Promise<{ message:
     const response = await axiosUrl.post(`/accounts/${id}/disconnect`, { userId });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to disconnect Instagram account');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to disconnect Instagram account');
   }
 }
 
@@ -175,10 +151,7 @@ export async function refreshInstagramToken(id: string): Promise<{ message: stri
     const response = await axiosUrl.post(`/accounts/${id}/refresh-token`, { userId });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to refresh Instagram token');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to refresh Instagram token');
   }
 }
 
@@ -192,10 +165,7 @@ export async function sendInstagramMessage(
     const response = await axiosUrl.post('/send', { accountId, to, message, userId });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to send Instagram message');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to send Instagram message');
   }
 }
 
@@ -207,10 +177,7 @@ export async function syncInstagramTemplates(id: string): Promise<ApiResponse> {
     });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to sync Instagram templates');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to sync Instagram templates');
   }
 }
 
@@ -222,10 +189,7 @@ export async function getInstagramTemplates(id: string): Promise<InstagramTempla
     });
     return response.data?.data ?? response.data ?? [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch Instagram templates');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to fetch Instagram templates');
   }
 }
 export async function syncInstagramMessages(
@@ -236,10 +200,7 @@ export async function syncInstagramMessages(
     const response = await axiosUrl.post('/receive', { accountId, userId });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to sync Instagram messages');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to sync Instagram messages');
   }
 }
 
@@ -255,10 +216,7 @@ export async function createCustomInstagramTemplate(
     });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to create custom template');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to create custom template');
   }
 }
 
@@ -275,10 +233,7 @@ export async function updateInstagramTemplate(
     });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to update template');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to update template');
   }
 }
 
@@ -294,10 +249,7 @@ export async function updateInstagramAutomation(
     });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to update automation settings');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to update automation settings');
   }
 }
 
@@ -312,9 +264,6 @@ export async function deleteInstagramTemplate(
     });
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to delete template');
-    }
-    throw error;
+    handleAxiosError(error, 'Failed to delete template');
   }
 }

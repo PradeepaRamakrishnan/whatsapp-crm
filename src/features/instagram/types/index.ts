@@ -61,6 +61,8 @@ export interface InstagramTemplate {
   imageUrl?: string;
   buttonLabel?: string;
   buttonUrl?: string;
+  buttonLabel2?: string;
+  buttonUrl2?: string;
   headerType?:
     | 'None'
     | 'Text'

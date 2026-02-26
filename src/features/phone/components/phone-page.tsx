@@ -1,13 +1,26 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
+/** biome-ignore-all lint/performance/noImgElement: <> */
 'use client';
 
 import dayjs from 'dayjs';
-import { Loader2, Pencil, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { Loader2, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -41,15 +54,24 @@ export default function PhoneNumberPage() {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [isComplianceLoading, setIsComplianceLoading] = useState(false);
 
+  // Delete state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [numberToDelete, setNumberToDelete] = useState<string | null>(null);
+
+  // Doc Viewer state
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [activeDocs, setActiveDocs] = useState<{ url: string; title: string }[]>([]);
+  const [docViewerTitle, setDocViewerTitle] = useState('');
+
   const loadCompliance = useCallback(async () => {
     if (!user?.id) return;
     setIsComplianceLoading(true);
     try {
       const response = await phoneNumberService.getMyCompliance(user.id);
       setComplianceData(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load compliance data', error);
-      toast.error('Failed to load compliance data');
+      toast.error(error.message || 'Failed to load compliance data');
     } finally {
       setIsComplianceLoading(false);
     }
@@ -61,9 +83,9 @@ export default function PhoneNumberPage() {
     try {
       const response = await phoneNumberService.getMyNumbers(user.id);
       setMyNumbers(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load my numbers', error);
-      toast.error('Failed to load purchased numbers');
+      toast.error(error.message || 'Failed to load purchased numbers');
     } finally {
       setIsLoading(false);
     }
@@ -85,37 +107,24 @@ export default function PhoneNumberPage() {
     setIsBuySheetOpen(false);
   };
 
-  const handleDelete = async (numId: string) => {
-    if (!user?.id) return;
-    if (
-      !confirm(
-        'Are you sure you want to delete this phone number? This might unrent it from Plivo.',
-      )
-    )
-      return;
-
-    try {
-      await phoneNumberService.deleteNumber(numId, user.id);
-      toast.success('Phone number deleted successfully');
-      loadMyNumbers();
-    } catch (error) {
-      console.error('Delete failed', error);
-      toast.error('Failed to delete phone number');
-    }
+  const openDeleteConfirm = (numId: string) => {
+    setNumberToDelete(numId);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleEditAlias = async (numId: string, currentAlias?: string) => {
-    if (!user?.id) return;
-    const newAlias = prompt('Enter new alias for this number:', currentAlias || '');
-    if (newAlias === null) return;
+  const confirmDelete = async () => {
+    if (!user?.id || !numberToDelete) return;
 
     try {
-      await phoneNumberService.updateNumber(numId, user.id, { alias: newAlias });
-      toast.success('Alias updated successfully');
+      await phoneNumberService.deleteNumber(numberToDelete, user.id);
+      toast.success('Phone number deleted successfully');
       loadMyNumbers();
-    } catch (error) {
-      console.error('Update failed', error);
-      toast.error('Failed to update alias');
+    } catch (error: any) {
+      console.error('Delete failed', error);
+      toast.error(error.message || 'Failed to delete phone number');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setNumberToDelete(null);
     }
   };
 
@@ -254,17 +263,8 @@ export default function PhoneNumberPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-8 w-8 p-0 text-slate-400 hover:text-primary"
-                                  onClick={() => handleEditAlias(num.id, num.alias)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  <span className="sr-only">Edit</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
                                   className="h-8 w-8 p-0 text-slate-400 hover:text-destructive"
-                                  onClick={() => handleDelete(num.id)}
+                                  onClick={() => openDeleteConfirm(num.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">Delete</span>
@@ -360,24 +360,37 @@ export default function PhoneNumberPage() {
                             <TableCell>
                               <div className="flex flex-col gap-1">
                                 {item.certificateRegistrationUrl && (
-                                  <a
-                                    href={item.certificateRegistrationUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveDocs([
+                                        {
+                                          url: item.certificateRegistrationUrl,
+                                          title: 'Certificate of Registration',
+                                        },
+                                      ]);
+                                      setDocViewerTitle(item.alias || 'Compliance Document');
+                                      setIsDocViewerOpen(true);
+                                    }}
                                     className="text-xs text-primary hover:underline flex items-center gap-1"
                                   >
                                     <ShieldCheck className="h-3 w-3" /> Certificate
-                                  </a>
+                                  </button>
                                 )}
                                 {item.gstCertificateUrl && (
-                                  <a
-                                    href={item.gstCertificateUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveDocs([
+                                        { url: item.gstCertificateUrl, title: 'GST Certificate' },
+                                      ]);
+                                      setDocViewerTitle(item.alias || 'Compliance Document');
+                                      setIsDocViewerOpen(true);
+                                    }}
                                     className="text-xs text-primary hover:underline flex items-center gap-1"
                                   >
                                     <ShieldCheck className="h-3 w-3" /> GST Certificate
-                                  </a>
+                                  </button>
                                 )}
                                 {!item.certificateRegistrationUrl && !item.gstCertificateUrl && '-'}
                               </div>
@@ -535,6 +548,57 @@ export default function PhoneNumberPage() {
         onOpenChange={setIsComplianceSheetOpen}
         onSuccess={loadCompliance}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the phone number and may
+              unrent it from Plivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+            >
+              Delete Number
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={isDocViewerOpen} onOpenChange={setIsDocViewerOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 border-b">
+            <DialogTitle>{docViewerTitle}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 w-full">
+            <div className="flex flex-col gap-8 p-6 items-center">
+              {activeDocs.map((doc, idx) => (
+                <div key={`${doc.url}-${idx}`} className="w-full space-y-3">
+                  <div className="flex items-center justify-between px-2">
+                    <h4 className="text-sm font-semibold text-slate-700">{doc.title}</h4>
+                  </div>
+                  <div className="relative w-full border rounded-xl overflow-hidden bg-slate-50 shadow-sm">
+                    <img
+                      src={doc.url}
+                      alt={doc.title}
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://placehold.co/800x1200?text=Failed+to+load+image';
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

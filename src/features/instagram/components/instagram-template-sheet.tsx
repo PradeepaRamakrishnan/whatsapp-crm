@@ -65,6 +65,8 @@ export function InstagramTemplateSheet({
     headerType: 'NONE',
     headerText: '',
     footer: '',
+    buttonLabel2: '',
+    buttonUrl2: '',
     isCustom: true,
   });
 
@@ -84,6 +86,8 @@ export function InstagramTemplateSheet({
         headerType: (template.headerType || 'NONE').toUpperCase(),
         headerText: template.headerText || '',
         footer: template.footer || '',
+        buttonLabel2: template.buttonLabel2 || '',
+        buttonUrl2: template.buttonUrl2 || '',
         isCustom: template.isCustom ?? true,
       });
     } else {
@@ -96,6 +100,8 @@ export function InstagramTemplateSheet({
         imageUrl: '',
         buttonLabel: '',
         buttonUrl: '',
+        buttonLabel2: '',
+        buttonUrl2: '',
         headerType: 'NONE',
         headerText: '',
         footer: '',
@@ -149,6 +155,7 @@ export function InstagramTemplateSheet({
       const payload = {
         ...formData,
         isCustom: submitType === 'draft',
+        status: submitType === 'draft' ? 'inprogress' : 'pending',
       };
 
       if (template) {
@@ -174,6 +181,7 @@ export function InstagramTemplateSheet({
   };
 
   const isEdit = !!template;
+  const isAuthentication = formData.category === 'authentication';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -272,14 +280,14 @@ export function InstagramTemplateSheet({
                       className={cn(
                         'flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left group',
                         formData.category === cat.id
-                          ? 'border-[#0f172a] bg-[#0f172a] text-white'
+                          ? 'border-[#0f172a]  text-black'
                           : 'border-slate-100 bg-white hover:border-slate-200 text-slate-900',
                       )}
                     >
-                      <span className="font-bold text-sm block">{cat.label}</span>
+                      <span className="font-bold text-black text-sm block">{cat.label}</span>
                       <span
                         className={cn(
-                          'text-[10px] mt-1',
+                          'text-[10px] mt-1 text-black',
                           formData.category === cat.id ? 'text-slate-300' : 'text-slate-500',
                         )}
                       >
@@ -291,55 +299,59 @@ export function InstagramTemplateSheet({
               </section>
 
               {/* Header Section */}
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2 flex items-center gap-2">
-                  Header <span className="font-normal lowercase">(optional)</span>
-                </h3>
-                <div className="space-y-4">
-                  <Label className="text-[13px]">Header Type</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { id: 'NONE', label: 'None', icon: Minus },
-                      { id: 'TEXT', label: 'Text', icon: Type },
-                      { id: 'IMAGE', label: 'Image', icon: LucideImage },
-                      { id: 'VIDEO', label: 'Video', icon: Video },
-                      { id: 'DOCUMENT', label: 'Document', icon: FileText },
-                    ].map((type) => (
-                      <Button
-                        key={type.id}
-                        type="button"
-                        variant={formData.headerType === type.id ? 'default' : 'outline'}
-                        className={cn(
-                          'h-10 px-4 gap-2 border-slate-200',
-                          formData.headerType === type.id && 'bg-[#0f172a] text-white',
-                        )}
-                        onClick={() => handleInputChange('headerType', type.id)}
-                      >
-                        <type.icon className="h-4 w-4" />
-                        {type.label}
-                      </Button>
-                    ))}
+              {!isAuthentication && (
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2 flex items-center gap-2">
+                    Header <span className="font-normal lowercase">(optional)</span>
+                  </h3>
+                  <div className="space-y-4">
+                    <Label className="text-[13px]">Header Type</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 'NONE', label: 'None', icon: Minus },
+                        { id: 'TEXT', label: 'Text', icon: Type },
+                        { id: 'IMAGE', label: 'Image', icon: LucideImage },
+                        { id: 'VIDEO', label: 'Video', icon: Video },
+                        { id: 'DOCUMENT', label: 'Document', icon: FileText },
+                      ].map((type) => (
+                        <Button
+                          key={type.id}
+                          type="button"
+                          variant={formData.headerType === type.id ? 'default' : 'outline'}
+                          className={cn(
+                            'h-10 px-4 gap-2 border-slate-200',
+                            formData.headerType === type.id && ' text-black',
+                          )}
+                          onClick={() => handleInputChange('headerType', type.id)}
+                        >
+                          <type.icon className="h-4 w-4" />
+                          {type.label}
+                        </Button>
+                      ))}
+                    </div>
+
+                    {formData.headerType === 'TEXT' && (
+                      <Input
+                        placeholder="Enter header text"
+                        value={formData.headerText}
+                        onChange={(e) =>
+                          handleInputChange('headerText', e.target.value.slice(0, 60))
+                        }
+                      />
+                    )}
+
+                    {(formData.headerType === 'IMAGE' ||
+                      formData.headerType === 'VIDEO' ||
+                      formData.headerType === 'DOCUMENT') && (
+                      <Input
+                        placeholder={`Enter ${formData.headerType.toLowerCase()} URL`}
+                        value={formData.imageUrl}
+                        onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                      />
+                    )}
                   </div>
-
-                  {formData.headerType === 'TEXT' && (
-                    <Input
-                      placeholder="Enter header text"
-                      value={formData.headerText}
-                      onChange={(e) => handleInputChange('headerText', e.target.value.slice(0, 60))}
-                    />
-                  )}
-
-                  {(formData.headerType === 'IMAGE' ||
-                    formData.headerType === 'VIDEO' ||
-                    formData.headerType === 'DOCUMENT') && (
-                    <Input
-                      placeholder={`Enter ${formData.headerType.toLowerCase()} URL`}
-                      value={formData.imageUrl}
-                      onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                    />
-                  )}
-                </div>
-              </section>
+                </section>
+              )}
 
               {/* Body Section */}
               <section className="space-y-4">
@@ -400,45 +412,109 @@ export function InstagramTemplateSheet({
               </section>
 
               {/* Footer Section */}
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2">
-                  Footer <span className="font-normal lowercase">(optional)</span>
-                </h3>
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Footer text..."
-                    value={formData.footer}
-                    onChange={(e) => handleInputChange('footer', e.target.value.slice(0, 60))}
-                  />
-                  <div className="text-right text-[11px] text-muted-foreground">
-                    {formData.footer.length} / 60
+              {!isAuthentication && (
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2">
+                    Footer <span className="font-normal lowercase">(optional)</span>
+                  </h3>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Footer text..."
+                      value={formData.footer}
+                      onChange={(e) => handleInputChange('footer', e.target.value.slice(0, 60))}
+                    />
+                    <div className="text-right text-[11px] text-muted-foreground">
+                      {formData.footer.length} / 60
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              )}
 
               {/* Buttons Section */}
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground border-b pb-2">
-                  Button <span className="font-normal lowercase">(optional)</span>
+                  Buttons <span className="font-normal lowercase">(optional)</span>
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buttonLabel">Button Label</Label>
-                    <Input
-                      id="buttonLabel"
-                      placeholder="Visit Website"
-                      value={formData.buttonLabel}
-                      onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
-                    />
+                <div className="space-y-6">
+                  {/* Button 1 */}
+                  <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
+                        1
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700">Primary Button</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="buttonLabel"
+                          className="text-[11px] text-slate-500 uppercase"
+                        >
+                          Button Label
+                        </Label>
+                        <Input
+                          id="buttonLabel"
+                          placeholder="Visit Website"
+                          className="bg-white"
+                          value={formData.buttonLabel}
+                          onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="buttonUrl" className="text-[11px] text-slate-500 uppercase">
+                          Button URL
+                        </Label>
+                        <Input
+                          id="buttonUrl"
+                          placeholder="https://..."
+                          className="bg-white"
+                          value={formData.buttonUrl}
+                          onChange={(e) => handleInputChange('buttonUrl', e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="buttonUrl">Button URL</Label>
-                    <Input
-                      id="buttonUrl"
-                      placeholder="https://..."
-                      value={formData.buttonUrl}
-                      onChange={(e) => handleInputChange('buttonUrl', e.target.value)}
-                    />
+
+                  {/* Button 2 */}
+                  <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
+                        2
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700">Secondary Button</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="buttonLabel2"
+                          className="text-[11px] text-slate-500 uppercase"
+                        >
+                          Button Label
+                        </Label>
+                        <Input
+                          id="buttonLabel2"
+                          placeholder="Contact Us"
+                          className="bg-white"
+                          value={formData.buttonLabel2}
+                          onChange={(e) => handleInputChange('buttonLabel2', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="buttonUrl2"
+                          className="text-[11px] text-slate-500 uppercase"
+                        >
+                          Button URL
+                        </Label>
+                        <Input
+                          id="buttonUrl2"
+                          placeholder="https://..."
+                          className="bg-white"
+                          value={formData.buttonUrl2}
+                          onChange={(e) => handleInputChange('buttonUrl2', e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -532,26 +608,36 @@ export function InstagramTemplateSheet({
                         )}
                       >
                         {/* Header Image/Video Placeholder */}
-                        {(formData.headerType === 'IMAGE' || formData.headerType === 'VIDEO') &&
-                          formData.imageUrl && (
-                            <div className="w-full aspect-square bg-zinc-200 relative">
-                              <Image
-                                src={formData.imageUrl}
-                                alt="Template"
-                                fill
-                                unoptimized
-                                className="object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                              {formData.headerType === 'VIDEO' && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                  <Video className="h-8 w-8 text-white opacity-80" />
-                                </div>
-                              )}
+                        {formData.headerType === 'IMAGE' && formData.imageUrl && (
+                          <div className="w-full aspect-square bg-zinc-200 relative">
+                            <Image
+                              src={formData.imageUrl}
+                              alt="Template"
+                              fill
+                              unoptimized
+                              className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {formData.headerType === 'VIDEO' && formData.imageUrl && (
+                          <div className="w-full aspect-square bg-zinc-200 relative">
+                            <video
+                              src={formData.imageUrl}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                              <Video className="h-8 w-8 text-white opacity-80" />
                             </div>
-                          )}
+                          </div>
+                        )}
 
                         {/* Header Document Placeholder */}
                         {formData.headerType === 'DOCUMENT' && (
@@ -582,12 +668,23 @@ export function InstagramTemplateSheet({
                             <p className="text-[11px] opacity-50 mt-1">{formData.footer}</p>
                           )}
 
-                          {/* Button */}
-                          {formData.buttonLabel && (
-                            <div className="pt-2 border-t border-zinc-500/20 text-center">
-                              <span className="font-bold text-sm text-blue-500">
-                                {formData.buttonLabel}
-                              </span>
+                          {/* Buttons */}
+                          {(formData.buttonLabel || formData.buttonLabel2) && (
+                            <div className="pt-2 border-t border-zinc-500/20 divide-y divide-zinc-500/10">
+                              {formData.buttonLabel && (
+                                <div className="py-2 text-center">
+                                  <span className="font-bold text-sm text-blue-500">
+                                    {formData.buttonLabel}
+                                  </span>
+                                </div>
+                              )}
+                              {formData.buttonLabel2 && (
+                                <div className="py-2 text-center">
+                                  <span className="font-bold text-sm text-blue-500">
+                                    {formData.buttonLabel2}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -632,21 +729,12 @@ export function InstagramTemplateSheet({
           </Button>
           <div className="flex gap-2">
             <Button
-              variant="ghost"
-              className="px-6 h-11 text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
-              onClick={() => handleSubmit('draft')}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Save as Draft
-            </Button>
-            <Button
               className="bg-orange-500 text-white hover:bg-orange-600 h-11 px-8 rounded-lg shadow-sm shadow-orange-200 font-bold"
               onClick={() => handleSubmit('verify')}
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Send for Verification
+              Save Template
             </Button>
           </div>
         </div>
