@@ -58,13 +58,7 @@ const clearStoredTokens = () => {
 const isUserPayload = (value: unknown): value is User => {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<User>;
-  return !!(
-    candidate.id &&
-    candidate.email &&
-    candidate.firstName &&
-    candidate.lastName &&
-    candidate.role
-  );
+  return !!(candidate.id && candidate.email && candidate.firstName && candidate.role);
 };
 
 const extractLoginPayload = (payload: LoginApiResponse): User => {
@@ -110,10 +104,17 @@ const extractLoginPayload = (payload: LoginApiResponse): User => {
   saveToken(ACCESS_TOKEN_KEY, accessToken);
   saveToken(REFRESH_TOKEN_KEY, refreshToken);
 
+  const organization =
+    ('organization' in payload && payload.organization) ||
+    (nestedData && typeof nestedData === 'object' && 'organization' in nestedData
+      ? nestedData.organization
+      : undefined);
+
   return {
     ...maybeUser,
     accessToken,
     refreshToken,
+    organization,
   };
 };
 

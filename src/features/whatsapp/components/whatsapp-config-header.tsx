@@ -14,7 +14,7 @@ export function WhatsAppConfigHeader() {
 
   return (
     <div className="mb-6 border-b">
-      <h1 className="text-3xl font-bold tracking-tight">WhatsApp Configuration</h1>
+      <h1 className="text-2xl font-bold tracking-tight">WhatsApp Configuration</h1>
       <p className="mt-1 text-muted-foreground">
         Manage your WhatsApp Business accounts, phone numbers, and message templates
       </p>

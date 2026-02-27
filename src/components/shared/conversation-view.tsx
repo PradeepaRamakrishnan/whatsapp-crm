@@ -2,16 +2,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import {
-  CheckCircle2,
-  IndianRupee,
-  Mail,
-  MessageSquare,
-  Phone,
-  RotateCcw,
-  Send,
-  X,
-} from 'lucide-react';
+import { CheckCircle2, Mail, MessageSquare, Phone, RotateCcw, Send, X } from 'lucide-react';
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -108,9 +99,6 @@ export function ConversationView({
   contact,
   messages: propMessages,
   onSendMessage,
-  onCall,
-  onEmail,
-  onComplete,
   onInterested,
   onNotInterested,
   onFollowUp,
@@ -194,7 +182,7 @@ export function ConversationView({
   return (
     <div className="flex h-full flex-col bg-background min-h-0">
       {/* Compact Header */}
-      <div className="border-b bg-card px-4 py-3">
+      {/* <div className="border-b bg-card px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -228,7 +216,7 @@ export function ConversationView({
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Compact Channel Filters */}
       {!filterChannel && (

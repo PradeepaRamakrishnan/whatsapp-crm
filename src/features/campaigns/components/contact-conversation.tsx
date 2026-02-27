@@ -1,12 +1,15 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
-
-import { CheckCircle2, Clock, Mail, MessageSquare, Phone } from 'lucide-react';
-import { useState } from 'react';
+import { Clock, Mail, MessageSquare, Phone, RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { ConversationView } from '@/components/shared/conversation-view';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import type { Lead } from '@/features/leads/types';
+import { getAllAccounts, getMessages, sendMessage } from '@/features/whatsapp/services';
 
 interface ContactConversationProps {
   contact: Lead;
@@ -14,12 +17,93 @@ interface ContactConversationProps {
 
 type Channel = 'email' | 'sms' | 'whatsapp';
 
-// biome-ignore lint/correctness/noUnusedFunctionParameters: Required for component API
 export function ContactConversation({ contact }: ContactConversationProps) {
   const [selectedChannel, setSelectedChannel] = useState<Channel>('email');
   const [emailMessage, setEmailMessage] = useState('');
   const [smsMessage, setSmsMessage] = useState('');
-  const [whatsappMessage, setWhatsappMessage] = useState('');
+
+  // WhatsApp Live Chat States
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [liveMessages, setLiveMessages] = useState<any[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+
+  const contactPhone = contact.fileContent?.mobileNumber;
+
+  const loadAccounts = useCallback(async () => {
+    try {
+      const res = await getAllAccounts();
+      const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setAccounts(raw);
+    } catch (err) {
+      console.error('Failed to load WhatsApp accounts:', err);
+    }
+  }, []);
+
+  const loadLiveMessages = useCallback(() => {
+    if (!contactPhone) return;
+
+    const account = accounts.find((a) => a.status === 'connected') || accounts[0];
+    if (!account) return;
+
+    setIsLoadingMessages(true);
+    getMessages(account.id, contactPhone)
+      .then((res) => {
+        const mapped = (res || []).map((m: any) => ({
+          id: m.id,
+          sender: m.direction === 'INBOUND' ? 'customer' : 'agent',
+          senderName: m.direction === 'INBOUND' ? contactPhone : 'You',
+          channel: 'whatsapp',
+          content: m.content,
+          timestamp: m.createdAt,
+        }));
+        setLiveMessages(mapped);
+      })
+      .catch((err) => {
+        console.error('Failed to load WhatsApp messages:', err);
+      })
+      .finally(() => setIsLoadingMessages(false));
+  }, [accounts, contactPhone]);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
+
+  useEffect(() => {
+    if (selectedChannel === 'whatsapp' && accounts.length > 0) {
+      loadLiveMessages();
+    }
+  }, [selectedChannel, accounts.length, loadLiveMessages]);
+
+  const handleSendWhatsapp = async (content: string) => {
+    if (!contactPhone) {
+      toast.error('Contact phone number missing');
+      return;
+    }
+
+    const account = accounts.find((a) => a.status === 'connected') || accounts[0];
+    if (!account) {
+      toast.error('No connected WhatsApp account found');
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      await sendMessage({
+        accountId: account.id,
+        to: contactPhone,
+        type: 'text',
+        content,
+      });
+      toast.success('WhatsApp message sent');
+      loadLiveMessages();
+    } catch (err) {
+      console.error('Failed to send live WhatsApp message:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // const settlementAmount = contact.fileContent?.settlementAmount || 0;
 
@@ -207,70 +291,47 @@ export function ContactConversation({ contact }: ContactConversationProps) {
 
       {/* WhatsApp Channel */}
       {selectedChannel === 'whatsapp' && (
-        <Card className="flex flex-col">
-          <CardHeader className="pb-3">
+        <Card className="flex flex-col h-[500px]">
+          <CardHeader className="pb-3 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="rounded-full bg-green-100 dark:bg-green-950 p-2">
                   <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <CardTitle className="text-base">WhatsApp</CardTitle>
+                <CardTitle className="text-base">Real WhatsApp Chat</CardTitle>
               </div>
-              <Badge
+              <Button
                 variant="outline"
-                className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 text-xs"
+                size="sm"
+                onClick={loadLiveMessages}
+                disabled={isLoadingMessages}
+                className="h-8 gap-2"
               >
-                Scheduled
-              </Badge>
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoadingMessages ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
-            {/* WhatsApp Thread */}
-            <div className="flex-1 space-y-3 overflow-y-auto mb-4" style={{ maxHeight: '400px' }}>
-              {/* Sent WhatsApp */}
-              <div className="flex flex-col items-end">
-                <div className="bg-green-100 dark:bg-green-950 rounded-lg p-3 max-w-[85%]">
-                  <p className="text-xs text-green-800 dark:text-green-200">
-                    Hello! 👋 We have a special settlement plan designed for you.
-                  </p>
-                  <div className="flex items-center gap-1 mt-1 justify-end">
-                    <span className="text-[10px] text-green-700 dark:text-green-300">10:30 AM</span>
-                    <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
-                  </div>
+          <CardContent className="flex-1 p-0 overflow-hidden relative">
+            <ConversationView
+              contact={{
+                id: contactPhone || '',
+                name: contact.customerName || contactPhone || 'Customer',
+                phone: contactPhone || '',
+                bankName: 'WhatsApp',
+                outstandingAmount: 0,
+              }}
+              messages={liveMessages}
+              onSendMessage={handleSendWhatsapp}
+              filterChannel="whatsapp"
+            />
+            {isSending && (
+              <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] flex items-center justify-center z-50">
+                <div className="bg-background/80 p-3 rounded-full shadow-lg border">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
                 </div>
-                <span className="text-xs text-muted-foreground mt-1">3 days ago</span>
               </div>
-
-              {/* Scheduled WhatsApp */}
-              <div className="flex flex-col items-end">
-                <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 max-w-[85%] border border-dashed border-green-300 dark:border-green-800">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Clock className="h-3 w-3 text-amber-600" />
-                    <p className="text-xs font-medium text-amber-600">Scheduled</p>
-                  </div>
-                  {/* <p className="text-xs text-muted-foreground">
-                    Your settlement amount is ₹{settlementAmount.toLocaleString('en-IN')}. Would you
-                    like to proceed?
-                  </p> */}
-                </div>
-                <span className="text-xs text-muted-foreground mt-1">Sending in 2 days</span>
-              </div>
-            </div>
-
-            {/* WhatsApp Input */}
-            <div className="pt-3 border-t mt-auto">
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Type WhatsApp message..."
-                  className="h-9 text-sm"
-                  value={whatsappMessage}
-                  onChange={(e) => setWhatsappMessage(e.target.value)}
-                />
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 shrink-0">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       )}
