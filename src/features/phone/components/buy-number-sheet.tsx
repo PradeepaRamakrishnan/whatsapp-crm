@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 
+import * as Flags from 'country-flag-icons/react/3x2';
 import { CheckCircle2, Globe, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
@@ -73,7 +74,21 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                     <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
                       Target Number
                     </p>
-                    <h3 className="text-2xl font-bold text-[#1e293b]">{numberData.number}</h3>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center size-8 rounded-sm overflow-hidden border border-primary/20 shrink-0">
+                        {(() => {
+                          const FlagComponent = (Flags as any)[
+                            (numberData.country_iso || 'IN').toUpperCase()
+                          ];
+                          return FlagComponent ? (
+                            <FlagComponent className="w-full h-full" />
+                          ) : (
+                            <Flags.IN className="w-full h-full opacity-20" />
+                          );
+                        })()}
+                      </span>
+                      <h3 className="text-2xl font-bold text-[#1e293b]">{numberData.number}</h3>
+                    </div>
                   </div>
                   <div className="px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">
                     Available
@@ -109,7 +124,7 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-[#64748b]">Monthly Rental</span>
                     <span className="font-bold text-[#1e293b]">
-                      ${numberData.monthly_rental_rate || '0.00'}
+                      ₹{numberData.monthly_rental_rate_inr || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
@@ -135,8 +150,8 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
                 <div className="bg-amber-50 px-5 py-3 border-t border-amber-100 italic">
                   <p className="text-[10px] text-amber-800 leading-relaxed font-medium flex gap-2">
                     <Globe className="w-3 h-3 flex-shrink-0" />
-                    Purchasing this number will immediately deduct the monthly fee from your Plivo
-                    account balance.
+                    Purchasing this number will immediately deduct the monthly fee from your account
+                    balance.
                   </p>
                 </div>
               </div>
@@ -144,8 +159,8 @@ export function BuyNumberSheet({ open, onOpenChange, numberData, onSuccess }: Bu
               {/* Compliance Note */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  By clicking "Confirm Purchase", you agree to Plivo's terms of service and
-                  acknowledge that some regions require regulatory documentation for ownership.
+                  By clicking "Confirm Purchase", you agree to terms of service and acknowledge that
+                  some regions require regulatory documentation for ownership.
                 </p>
               </div>
             </div>

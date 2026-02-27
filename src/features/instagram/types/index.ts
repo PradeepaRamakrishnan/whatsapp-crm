@@ -27,6 +27,7 @@ export interface InstagramMessage {
   type: string;
   status: string;
   externalMessageId: string | null;
+  metadata?: any;
   createdAt: string;
 }
 
@@ -54,6 +55,7 @@ export interface InstagramTemplate {
   id: string;
   name: string;
   category: string;
+  components?: any;
   language?: string;
   locale?: string;
   body?: string;
@@ -61,6 +63,8 @@ export interface InstagramTemplate {
   imageUrl?: string;
   buttonLabel?: string;
   buttonUrl?: string;
+  buttonLabel2?: string;
+  buttonUrl2?: string;
   headerType?:
     | 'None'
     | 'Text'

@@ -1,13 +1,28 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
+/** biome-ignore-all lint/performance/noImgElement: <> */
 'use client';
 
+import * as Flags from 'country-flag-icons/react/3x2';
 import dayjs from 'dayjs';
-import { Loader2, Pencil, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { Edit, Loader2, Phone, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -41,15 +56,28 @@ export default function PhoneNumberPage() {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [isComplianceLoading, setIsComplianceLoading] = useState(false);
 
+  // Delete state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [numberToDelete, setNumberToDelete] = useState<string | null>(null);
+
+  const [complianceToDelete, setComplianceToDelete] = useState<any | null>(null);
+  const [isDeleteComplianceDialogOpen, setIsDeleteComplianceDialogOpen] = useState(false);
+  const [complianceToEdit, setComplianceToEdit] = useState<any | null>(null);
+
+  // Doc Viewer state
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [activeDocs, setActiveDocs] = useState<{ url: string; title: string }[]>([]);
+  const [docViewerTitle, setDocViewerTitle] = useState('');
+
   const loadCompliance = useCallback(async () => {
     if (!user?.id) return;
     setIsComplianceLoading(true);
     try {
       const response = await phoneNumberService.getMyCompliance(user.id);
       setComplianceData(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load compliance data', error);
-      toast.error('Failed to load compliance data');
+      toast.error(error.message || 'Failed to load compliance data');
     } finally {
       setIsComplianceLoading(false);
     }
@@ -61,9 +89,9 @@ export default function PhoneNumberPage() {
     try {
       const response = await phoneNumberService.getMyNumbers(user.id);
       setMyNumbers(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load my numbers', error);
-      toast.error('Failed to load purchased numbers');
+      toast.error(error.message || 'Failed to load purchased numbers');
     } finally {
       setIsLoading(false);
     }
@@ -85,37 +113,43 @@ export default function PhoneNumberPage() {
     setIsBuySheetOpen(false);
   };
 
-  const handleDelete = async (numId: string) => {
-    if (!user?.id) return;
-    if (
-      !confirm(
-        'Are you sure you want to delete this phone number? This might unrent it from Plivo.',
-      )
-    )
-      return;
+  const openDeleteConfirm = (numId: string) => {
+    setNumberToDelete(numId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!user?.id || !numberToDelete) return;
 
     try {
-      await phoneNumberService.deleteNumber(numId, user.id);
+      await phoneNumberService.deleteNumber(numberToDelete, user.id);
       toast.success('Phone number deleted successfully');
       loadMyNumbers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete failed', error);
-      toast.error('Failed to delete phone number');
+      toast.error(error.message || 'Failed to delete phone number');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setNumberToDelete(null);
     }
   };
 
-  const handleEditAlias = async (numId: string, currentAlias?: string) => {
-    if (!user?.id) return;
-    const newAlias = prompt('Enter new alias for this number:', currentAlias || '');
-    if (newAlias === null) return;
+  const handleDeleteCompliance = (compliance: any) => {
+    setComplianceToDelete(compliance);
+    setIsDeleteComplianceDialogOpen(true);
+  };
 
+  const confirmDeleteCompliance = async () => {
+    if (!complianceToDelete || !user?.id) return;
     try {
-      await phoneNumberService.updateNumber(numId, user.id, { alias: newAlias });
-      toast.success('Alias updated successfully');
-      loadMyNumbers();
-    } catch (error) {
-      console.error('Update failed', error);
-      toast.error('Failed to update alias');
+      await phoneNumberService.deleteCompliance(complianceToDelete.id, user.id);
+      toast.success('Compliance record deleted successfully');
+      loadCompliance();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete compliance record');
+    } finally {
+      setIsDeleteComplianceDialogOpen(false);
+      setComplianceToDelete(null);
     }
   };
 
@@ -137,20 +171,51 @@ export default function PhoneNumberPage() {
       .includes(query);
   });
   console.info('filteredRentalSummary', filteredRentalSummary);
-  const getCountryFlag = (country?: string) => {
-    const c = (country || 'india').toLowerCase();
-    if (c.includes('india')) return '🇮🇳';
-    if (c.includes('usa') || c.includes('united states')) return '🇺🇸';
-    if (c.includes('uk') || c.includes('united kingdom')) return '🇬🇧';
-    return '🌐';
+  const getCountryISO = (country?: string, phoneNumber?: string) => {
+    const normalize = (s?: string) => (s || '').toLowerCase().trim();
+    const c = normalize(country);
+
+    if (c.includes('india') || c === 'in') return 'IN';
+    if (c.includes('usa') || c.includes('united states') || c === 'us') return 'US';
+    if (c.includes('uk') || c.includes('united kingdom') || c === 'gb') return 'GB';
+    if (c.includes('uae') || c.includes('emirates') || c === 'ae') return 'AE';
+    if (c.includes('australia') || c === 'au') return 'AU';
+    if (c.includes('canada') || c === 'ca') return 'CA';
+    if (c.includes('singapore') || c === 'sg') return 'SG';
+
+    if (phoneNumber) {
+      try {
+        const parsed = parsePhoneNumberFromString(
+          phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`,
+        );
+        if (parsed?.country) return parsed.country;
+      } catch (err) {
+        console.warn('Failed to parse phone number for country ISO', err);
+      }
+    }
+
+    return null;
+  };
+
+  const getCountryFlag = (country?: string, phoneNumber?: string) => {
+    const isoCode = getCountryISO(country, phoneNumber);
+
+    if (isoCode) {
+      const FlagComponent = (Flags as any)[isoCode.toUpperCase()];
+      if (FlagComponent) {
+        return <FlagComponent className="w-full h-full rounded-full" />;
+      }
+    }
+
+    return <Flags.IN className="w-full h-full opacity-20 rounded-full" />; // Fallback or global icon
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold">Phone Number</h1>
-          <p className="text-muted-foreground text-lg">Manage your business phone numbers.</p>
+          <h1 className="text-2xl font-bold">Phone Number</h1>
+          <p className="text-muted-foreground ">Manage your business phone numbers.</p>
         </div>
         {activeTab === 'purchased' ? (
           <Button onClick={() => setIsSearchSheetOpen(true)} className="gap-2">
@@ -234,8 +299,8 @@ export default function PhoneNumberPage() {
                           <TableRow key={num.id} className="hover:bg-slate-50/30 transition-colors">
                             <TableCell className="font-semibold text-slate-700">
                               <div className="flex items-center gap-2">
-                                <span className="flex items-center justify-center size-5 rounded-full bg-slate-100 text-xs overflow-hidden border border-slate-200">
-                                  {getCountryFlag(num.country)}
+                                <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                  {getCountryFlag(num.country, num.phoneNumber)}
                                 </span>
                                 {num.phoneNumber}
                               </div>
@@ -254,17 +319,8 @@ export default function PhoneNumberPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-8 w-8 p-0 text-slate-400 hover:text-primary"
-                                  onClick={() => handleEditAlias(num.id, num.alias)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  <span className="sr-only">Edit</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
                                   className="h-8 w-8 p-0 text-slate-400 hover:text-destructive"
-                                  onClick={() => handleDelete(num.id)}
+                                  onClick={() => openDeleteConfirm(num.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">Delete</span>
@@ -309,12 +365,13 @@ export default function PhoneNumberPage() {
                       <TableHead className="font-bold">Number Type</TableHead>
                       <TableHead className="font-bold">Documents</TableHead>
                       <TableHead className="font-bold">Status</TableHead>
+                      <TableHead className="font-bold text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isComplianceLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-48 text-center">
+                        <TableCell colSpan={6} className="h-48 text-center">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-300" />
                         </TableCell>
                       </TableRow>
@@ -332,7 +389,7 @@ export default function PhoneNumberPage() {
                       }).length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={6}
                           className="h-48 text-center text-slate-500 text-base"
                         >
                           No data found.
@@ -355,29 +412,46 @@ export default function PhoneNumberPage() {
                         .map((item) => (
                           <TableRow key={item.id || `${item.alias}-${item.country}`}>
                             <TableCell className="font-medium">{item.alias}</TableCell>
-                            <TableCell>{item.country}</TableCell>
+                            <TableCell>
+                              <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                {getCountryFlag(item.country)}
+                              </span>
+                            </TableCell>
                             <TableCell className="capitalize">{item.numberType}</TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1">
                                 {item.certificateRegistrationUrl && (
-                                  <a
-                                    href={item.certificateRegistrationUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveDocs([
+                                        {
+                                          url: item.certificateRegistrationUrl,
+                                          title: 'Certificate of Registration',
+                                        },
+                                      ]);
+                                      setDocViewerTitle(item.alias || 'Compliance Document');
+                                      setIsDocViewerOpen(true);
+                                    }}
                                     className="text-xs text-primary hover:underline flex items-center gap-1"
                                   >
                                     <ShieldCheck className="h-3 w-3" /> Certificate
-                                  </a>
+                                  </button>
                                 )}
                                 {item.gstCertificateUrl && (
-                                  <a
-                                    href={item.gstCertificateUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveDocs([
+                                        { url: item.gstCertificateUrl, title: 'GST Certificate' },
+                                      ]);
+                                      setDocViewerTitle(item.alias || 'Compliance Document');
+                                      setIsDocViewerOpen(true);
+                                    }}
                                     className="text-xs text-primary hover:underline flex items-center gap-1"
                                   >
                                     <ShieldCheck className="h-3 w-3" /> GST Certificate
-                                  </a>
+                                  </button>
                                 )}
                                 {!item.certificateRegistrationUrl && !item.gstCertificateUrl && '-'}
                               </div>
@@ -394,6 +468,31 @@ export default function PhoneNumberPage() {
                               >
                                 {item.status}
                               </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors"
+                                  onClick={() => {
+                                    setComplianceToEdit(item);
+                                    setIsComplianceSheetOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                  onClick={() => handleDeleteCompliance(item)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -490,8 +589,8 @@ export default function PhoneNumberPage() {
                           </TableCell>
                           <TableCell className="font-semibold text-slate-700">
                             <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center size-5 rounded-full bg-slate-100 text-xs overflow-hidden border border-slate-200">
-                                {getCountryFlag(num.country)}
+                              <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                {getCountryFlag(num.country, num.phoneNumber)}
                               </span>
                               {num.phoneNumber}
                             </div>
@@ -532,9 +631,87 @@ export default function PhoneNumberPage() {
 
       <AddComplianceSheet
         open={isComplianceSheetOpen}
-        onOpenChange={setIsComplianceSheetOpen}
+        onOpenChange={(open) => {
+          setIsComplianceSheetOpen(open);
+          if (!open) setComplianceToEdit(null);
+        }}
         onSuccess={loadCompliance}
+        initialData={complianceToEdit}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the phone number and may
+              unrent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+            >
+              Delete Number
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isDeleteComplianceDialogOpen}
+        onOpenChange={setIsDeleteComplianceDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Compliance?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the compliance record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteCompliance}
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+            >
+              Delete Compliance
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={isDocViewerOpen} onOpenChange={setIsDocViewerOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 border-b">
+            <DialogTitle>{docViewerTitle}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 w-full">
+            <div className="flex flex-col gap-8 p-6 items-center">
+              {activeDocs.map((doc, idx) => (
+                <div key={`${doc.url}-${idx}`} className="w-full space-y-3">
+                  <div className="flex items-center justify-between px-2">
+                    <h4 className="text-sm font-semibold text-slate-700">{doc.title}</h4>
+                  </div>
+                  <div className="relative w-full border rounded-xl overflow-hidden bg-slate-50 shadow-sm">
+                    <img
+                      src={doc.url}
+                      alt={doc.title}
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://placehold.co/800x1200?text=Failed+to+load+image';
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

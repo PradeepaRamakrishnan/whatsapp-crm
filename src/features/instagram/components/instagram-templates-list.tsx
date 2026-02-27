@@ -3,7 +3,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { FileText, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
 import {
@@ -35,11 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import {
-  deleteInstagramTemplate,
-  getInstagramTemplates,
-  syncInstagramTemplates,
-} from '../services';
+import { deleteInstagramTemplate, getInstagramTemplates } from '../services';
 import type { InstagramAccount, InstagramTemplate } from '../types';
 import { InstagramTemplateSheet } from './instagram-template-sheet';
 
@@ -58,8 +54,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [statusFilter, setStatusFilter] = React.useState('approved');
   const [selectedAccountId, setSelectedAccountId] = React.useState<string>(
     accounts.find((a) => a.status === 'active')?.id || accounts[0]?.id || '',
   );
@@ -67,34 +62,12 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
   const [templateToDelete, setTemplateToDelete] = React.useState<string | null>(null);
 
-  const {
-    data: templates = [],
-    isLoading,
-    isRefetching,
-  } = useQuery<InstagramTemplate[]>({
+  const { data: templates = [], isLoading } = useQuery<InstagramTemplate[]>({
     queryKey: ['instagram-templates', selectedAccountId],
     queryFn: () => getInstagramTemplates(selectedAccountId),
     enabled: !!selectedAccountId,
     retry: 1,
   });
-
-  const handleSync = async () => {
-    if (!selectedAccountId) {
-      toast.error('Please select an account to sync templates');
-      return;
-    }
-
-    setIsSyncing(true);
-    try {
-      await syncInstagramTemplates(selectedAccountId);
-      toast.success('Templates synced successfully');
-      queryClient.invalidateQueries({ queryKey: ['instagram-templates', selectedAccountId] });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sync templates');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleDelete = async (templateId: string) => {
     try {
@@ -137,7 +110,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-6 py-4">
+    <div className="flex flex-1 flex-col gap-6 py-2">
       {/* Action Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-1 rounded-xl">
         <div className="flex flex-1 items-center gap-3 max-w-2xl">
@@ -180,16 +153,6 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 px-4 gap-2"
-            onClick={handleSync}
-            disabled={isSyncing || isRefetching}
-          >
-            <RefreshCw className={cn('h-4 w-4', (isSyncing || isRefetching) && 'animate-spin')} />
-            Sync Templates
-          </Button>
           <Button
             size="sm"
             className="h-10 px-4 bg-orange-500 hover:bg-orange-600 text-white gap-2 border-none shadow-sm shadow-orange-200"
@@ -270,7 +233,9 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
                         )}
                       </div>
                       <span className="text-[11px] text-muted-foreground truncate max-w-[180px] mt-0.5">
-                        {template.description || template.body}
+                        {template.body ||
+                          template.description ||
+                          template.components?.find((c: any) => c.type === 'BODY')?.text}
                       </span>
                     </div>
                   </TableCell>
@@ -334,7 +299,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the template from our
               servers.
