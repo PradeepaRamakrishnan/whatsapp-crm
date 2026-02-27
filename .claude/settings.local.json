@@ -1,5 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(npm info:*)", "Bash(npx biome check:*)"]
+    "allow": [
+      "Bash(npm info:*)",
+      "Bash(npx biome check:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cd /d/whatsapp-crm && pnpm lint:fix 2>&1)"
+    ]
   }
 }

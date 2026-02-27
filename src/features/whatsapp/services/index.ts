@@ -49,6 +49,21 @@ type ConnectWabaPayload = {
   phoneNumberId?: string;
 };
 
+export type ConnectSystemNumberPayload = {
+  accountId: string;
+  phoneNumber: string;
+  otpForwardingNumber: string;
+  verifiedName: string;
+  displayName?: string;
+  category: string;
+  description?: string;
+};
+
+export type VerifySystemNumberPayload = {
+  phoneNumberId: string;
+  code: string;
+};
+
 type WhatsappTemplatePayload = {
   externalTemplateId?: string;
   name: string;
@@ -70,6 +85,22 @@ type SubmitTemplatePayload = {
 // POST /business-whatsapp/connect
 export const connectWaba = async (payload: ConnectWabaPayload) => {
   return request(`${API_URL}/connect`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+// POST /business-whatsapp/connect-system-number
+export const connectViaSystemNumber = async (payload: ConnectSystemNumberPayload) => {
+  return request(`${API_URL}/connect-system-number`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+// POST /business-whatsapp/verify-system-number
+export const verifySystemNumber = async (payload: VerifySystemNumberPayload) => {
+  return request(`${API_URL}/verify-system-number`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
