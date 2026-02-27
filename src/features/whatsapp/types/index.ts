@@ -27,6 +27,7 @@ export interface ManagedPhone {
   phoneNumber: string;
   phoneNumberId: string;
   verifiedName?: string;
+  displayName?: string;
   qualityRating?: string;
   status?: string;
   isDefault: boolean;

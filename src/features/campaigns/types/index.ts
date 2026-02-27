@@ -264,6 +264,17 @@ export interface ChannelOrderItem {
   enabled: boolean;
 }
 
+export type ManualAction = 'call' | 'manual_whatsapp' | 'manual_email' | 'visit';
+
+export interface CampaignSequenceStep {
+  id: string;
+  channel: 'email' | 'sms' | 'whatsapp' | 'manual';
+  templateId: string;
+  delayValue: number;
+  delayUnit: 'minutes' | 'hours' | 'days';
+  manualAction?: ManualAction;
+}
+
 export interface Configuration {
   id: string;
   emailTemplate?: Template;
@@ -276,6 +287,7 @@ export interface Configuration {
   schedulerEnabled?: boolean;
   jobId?: string | null;
   channelOrder?: ChannelOrderItem[];
+  sequence?: CampaignSequenceStep[];
   active: boolean;
   createdAt: string;
   updatedAt: string;

@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Hash,
   Link2,
   Loader2,
   Plus,
@@ -38,6 +39,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -52,9 +62,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/context';
+import { phoneNumberService } from '@/features/phone/services/phone.service';
 import { cn } from '@/lib/utils';
 import {
   addPhoneNumber,
+  connectViaSystemNumber,
   connectWaba,
   fetchAvailableFromMeta,
   getAccountById,
@@ -68,11 +82,50 @@ import {
   setDefaultPhone,
   syncAccount,
   verifyOtp,
+  verifySystemNumber,
 } from '../services';
 import type { ManagedPhone, PhoneNumber } from '../types';
 
 // ─── Local types ─────────────────────────────────────────────────────────────
-type ConnectMethod = 'existing_app' | 'own_number';
+type ConnectMethod = 'existing_app' | 'own_number' | 'system_number';
+
+interface SystemNumberForm {
+  accountId: string;
+  phoneNumber: string;
+  otpForwardingNumber: string;
+  verifiedName: string;
+  category: string;
+  description: string;
+}
+
+const EMPTY_SYSTEM_FORM: SystemNumberForm = {
+  accountId: '',
+  phoneNumber: '',
+  otpForwardingNumber: '',
+  verifiedName: '',
+  category: '',
+  description: '',
+};
+
+const WABA_CATEGORIES = [
+  { value: 'AUTOMOTIVE', label: 'Automotive' },
+  { value: 'BEAUTY', label: 'Beauty, Spa & Salon' },
+  { value: 'CLOTHING', label: 'Clothing & Apparel' },
+  { value: 'EDUCATION', label: 'Education' },
+  { value: 'ENTERTAINMENT', label: 'Entertainment' },
+  { value: 'EVENT_PLANNING', label: 'Event Planning & Service' },
+  { value: 'FINANCE', label: 'Finance & Banking' },
+  { value: 'FOOD', label: 'Food & Grocery' },
+  { value: 'GOVERNMENT', label: 'Government & Non-profit' },
+  { value: 'HOTEL', label: 'Hotel & Lodging' },
+  { value: 'HEALTH', label: 'Medical & Health' },
+  { value: 'NONPROFIT', label: 'Non-profit' },
+  { value: 'PROFESSIONAL', label: 'Professional Services' },
+  { value: 'SHOPPING', label: 'Shopping & Retail' },
+  { value: 'TRAVEL', label: 'Travel & Transportation' },
+  { value: 'RESTAURANT', label: 'Restaurant' },
+  { value: 'OTHER', label: 'Other' },
+];
 
 interface FacebookAuthResponse {
   accessToken?: string;
@@ -294,6 +347,9 @@ function normalizeManagedPhone(input: unknown): ManagedPhone | null {
     verifiedName:
       String(input.verifiedName || input.verified_name || input.displayName || '').trim() ||
       undefined,
+    displayName:
+      String(input.verifiedName || input.verified_name || input.displayName || '').trim() ||
+      undefined,
     qualityRating: String(input.qualityRating || input.quality || '').trim() || undefined,
     status:
       String(
@@ -473,7 +529,11 @@ function PhoneManagementSheet({
     if (addOtpCode.length < 6) return;
     setAddStep('verifying');
     try {
-      await verifyOtp({ accountId, phoneNumberId: pendingPhoneId, code: addOtpCode });
+      await verifyOtp({
+        accountId,
+        phoneNumberId: pendingPhoneId,
+        code: addOtpCode,
+      });
       toast.success('Phone number verified successfully');
       setAddStep('done');
       await loadPhones();
@@ -909,23 +969,50 @@ function IndividualChatDialog({
 // STEP 3 — FB popup closes → WA_EMBEDDED_SIGNUP postMessage fires →
 //   Backend call to connectWaba() → success toast → dialog closes.
 
-type DialogFlowStep = 'choose' | 'popup_open' | 'connecting' | 'error';
+type DialogFlowStep =
+  | 'choose'
+  | 'system_form'
+  | 'system_otp'
+  | 'popup_open'
+  | 'connecting'
+  | 'error';
 
 function ConnectWabaDialog({
   open,
   onOpenChange,
   onSuccess,
+  userId,
+  wabaAccounts,
+  connectedPhones,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  userId?: string;
+  wabaAccounts: { id: string; wabaName: string }[];
+  connectedPhones: { id: string; phoneNumber: string }[];
 }) {
-  const embeddedSignupRef = useRef<{ wabaId: string; phoneNumberId: string } | null>(null);
+  const embeddedSignupRef = useRef<{
+    wabaId: string;
+    phoneNumberId: string;
+  } | null>(null);
 
   const [selectedMethod, setSelectedMethod] = useState<ConnectMethod | null>(null);
   const [flowStep, setFlowStep] = useState<DialogFlowStep>('choose');
   const [error, setError] = useState('');
 
+  // System number form state
+  const [systemForm, setSystemForm] = useState<SystemNumberForm>(EMPTY_SYSTEM_FORM);
+  const [systemNumbers, setSystemNumbers] = useState<
+    { id: string; phoneNumber: string; source: 'system' | 'whatsapp' }[]
+  >([]);
+  const [systemNumbersLoading, setSystemNumbersLoading] = useState(false);
+  const [systemSubmitting, setSystemSubmitting] = useState(false);
+  const [systemPendingPhoneNumberId, setSystemPendingPhoneNumberId] = useState('');
+  const [systemOtpCode, setSystemOtpCode] = useState('');
+  const [systemOtpVerifying, setSystemOtpVerifying] = useState(false);
+
+  // Only extract phoneNumberId from the postMessage — wabaId comes from env.
   const extractSignupData = useCallback((message: Record<string, unknown>) => {
     const direct = parseRecord(message.data);
     const sessionInfo = parseRecord(
@@ -936,14 +1023,12 @@ function ConnectWabaDialog({
 
     let wabaId = '';
     let phoneNumberId = '';
-
     for (const source of candidateSources) {
       if (!wabaId) {
         wabaId = readString(source, [
           'waba_id',
           'wabaId',
           'business_account_id',
-          'businessAccountId',
           'whatsapp_business_account_id',
         ]);
       }
@@ -985,13 +1070,19 @@ function ConnectWabaDialog({
 
     const handleFbMessage = (event: MessageEvent) => {
       if (!allowedOrigins.has(event.origin)) return;
+      // Log ALL messages from Facebook origins so we can inspect the structure
+      console.info('[WA Signup] Message from', event.origin, 'raw:', event.data);
       try {
         const d = parseRecord(event.data);
-        if (d.type === 'WA_EMBEDDED_SIGNUP') {
+        console.info('[WA Signup] Parsed message:', JSON.stringify(d, null, 2));
+        const msgType = typeof d.type === 'string' ? d.type.toUpperCase() : '';
+        if (msgType === 'WA_EMBEDDED_SIGNUP') {
           const signup = extractSignupData(d);
-          if (d.event === 'FINISH') {
+          const msgEvent = typeof d.event === 'string' ? d.event.toUpperCase() : '';
+          console.info('[WA Signup] event:', d.event, 'extracted signup:', signup);
+          if (msgEvent === 'FINISH') {
             embeddedSignupRef.current = signup;
-          } else if (d.event === 'CANCEL') {
+          } else if (msgEvent === 'CANCEL') {
             embeddedSignupRef.current = null;
           }
         }
@@ -1006,6 +1097,10 @@ function ConnectWabaDialog({
     setFlowStep('choose');
     setError('');
     embeddedSignupRef.current = null;
+    setSystemForm(EMPTY_SYSTEM_FORM);
+    setSystemNumbers([]);
+    setSystemPendingPhoneNumberId('');
+    setSystemOtpCode('');
   }, []);
 
   const handleClose = (isOpen: boolean) => {
@@ -1023,9 +1118,123 @@ function ConnectWabaDialog({
     return embeddedSignupRef.current;
   }, []);
 
+  // Fetch system phone numbers when system_number is chosen, then merge with
+  // already-connected WhatsApp account phone numbers.
+  useEffect(() => {
+    if (flowStep !== 'system_form' || !userId) return;
+    setSystemNumbersLoading(true);
+    phoneNumberService
+      .getMyNumbers(userId)
+      .then((res) => {
+        // biome-ignore lint/style/useNamingConvention: API may return snake_case
+        const list = (res?.data || []) as {
+          id: string;
+          phoneNumber?: string;
+
+          number?: string;
+        }[];
+        const purchased = list
+          .map((n) => ({
+            id: n.id,
+            phoneNumber: n.phoneNumber || n.number || '',
+            source: 'system' as const,
+          }))
+          .filter((n) => n.phoneNumber);
+
+        const waConnected = connectedPhones
+          .filter((p) => p.phoneNumber)
+          .map((p) => ({
+            id: p.id,
+            phoneNumber: p.phoneNumber,
+            source: 'whatsapp' as const,
+          }));
+
+        // Deduplicate by phoneNumber — prefer system entry if both exist
+        const seen = new Set<string>();
+        const merged = [...purchased, ...waConnected].filter((n) => {
+          if (seen.has(n.phoneNumber)) return false;
+          seen.add(n.phoneNumber);
+          return true;
+        });
+
+        setSystemNumbers(merged);
+      })
+      .catch(() => toast.error('Failed to load your phone numbers'))
+      .finally(() => setSystemNumbersLoading(false));
+  }, [flowStep, userId, connectedPhones]);
+
+  const handleSystemSubmit = useCallback(async () => {
+    const { accountId, phoneNumber, otpForwardingNumber, verifiedName, category } = systemForm;
+
+    if (!accountId || !phoneNumber || !otpForwardingNumber || !verifiedName || !category) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    setSystemSubmitting(true);
+    setError('');
+
+    try {
+      const res = await connectViaSystemNumber({
+        accountId,
+        phoneNumber,
+        otpForwardingNumber,
+        verifiedName,
+        displayName: verifiedName,
+        category,
+        description: systemForm.description,
+      });
+
+      // ✅ Already verified — OTP step skip, directly success
+      if (res?.alreadyVerified === true) {
+        toast.success('WhatsApp number connected successfully!');
+        onOpenChange(false);
+        reset();
+        onSuccess();
+        return;
+      }
+
+      // Not verified — go to OTP step
+      const pendingId = res?.phoneNumberId || res?.data?.phoneNumberId || '';
+      setSystemPendingPhoneNumberId(pendingId);
+      setFlowStep('system_otp');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to register number. Please try again.');
+    } finally {
+      setSystemSubmitting(false);
+    }
+  }, [systemForm, onOpenChange, reset, onSuccess]);
+
+  const handleSystemOtpVerify = useCallback(async () => {
+    if (systemOtpCode.length < 6) return;
+    setSystemOtpVerifying(true);
+    setError('');
+    try {
+      await verifySystemNumber({
+        phoneNumberId: systemPendingPhoneNumberId,
+        code: systemOtpCode,
+      });
+      toast.success('WhatsApp number connected successfully!');
+      onOpenChange(false);
+      reset();
+      onSuccess();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'OTP verification failed. Please try again.');
+    } finally {
+      setSystemOtpVerifying(false);
+    }
+  }, [systemOtpCode, systemPendingPhoneNumberId, onOpenChange, reset, onSuccess]);
+
   // Called when user clicks "Next" — opens the FB popup for BOTH options
   const handleNext = useCallback(() => {
     if (!selectedMethod) return;
+
+    // System number: go to profile form instead of Facebook popup
+    if (selectedMethod === 'system_number') {
+      setFlowStep('system_form');
+      setError('');
+      return;
+    }
 
     if (!window.FB) {
       setError('Facebook SDK has not loaded yet. Please refresh and try again.');
@@ -1036,6 +1245,8 @@ function ConnectWabaDialog({
     setFlowStep('popup_open');
     setError('');
 
+    const redirectUri = process.env.NEXT_PUBLIC_META_REDIRECT_URI || `${window.location.origin}/`;
+
     window.FB.login(
       (response: FacebookLoginResponse) => {
         if (!response.authResponse) {
@@ -1045,60 +1256,64 @@ function ConnectWabaDialog({
           return;
         }
 
-        const accessToken = response.authResponse.accessToken?.trim() || '';
+        // ✅ FIXED
+        const accessToken =
+          response.authResponse.code?.trim() || response.authResponse.accessToken?.trim() || '';
+
         if (!accessToken) {
           setError(
-            'Meta did not return an access token. Please retry login and grant permissions.',
+            'Meta did not return an authorization code. Please retry login and grant permissions.',
           );
           setFlowStep('error');
           return;
         }
 
-        // Popup completed — now connect on backend
-        setFlowStep('connecting');
-        waitForEmbeddedSignup()
-          .then((signup) => {
-            const wabaId =
-              signup?.wabaId?.trim() || (process.env.NEXT_PUBLIC_META_WABA_ID || '').trim();
-            if (!wabaId) {
-              setError(
-                'Could not capture WABA ID from Meta signup. Please complete all popup steps and try again.',
-              );
-              setFlowStep('error');
-              return;
-            }
+        // Facebook OAuth done — popup is still open for WhatsApp Business steps.
+        // Keep "popup_open" UI while user completes WABA/phone selection.
+        // New config (whatsapp_business_app_onboarding) delivers waba_id in postMessage.
+        // Env var NEXT_PUBLIC_META_WABA_ID is the fallback if postMessage doesn't include it.
+        waitForEmbeddedSignup(30000).then((signup) => {
+          const phoneNumberId = signup?.phoneNumberId?.trim() || '';
+          const wabaId =
+            signup?.wabaId?.trim() || (process.env.NEXT_PUBLIC_META_WABA_ID || '').trim();
 
-            return connectWaba({
-              accessToken,
-              wabaId,
-              ...(signup?.phoneNumberId ? { phoneNumberId: signup.phoneNumberId } : {}),
-            })
-              .then(() => {
-                embeddedSignupRef.current = null;
-                toast.success('WhatsApp number connected successfully!');
-                onOpenChange(false);
-                reset();
-                onSuccess();
-              })
-              .catch((e: unknown) => {
-                setError(e instanceof Error ? e.message : 'Connection failed. Please try again.');
-                setFlowStep('error');
-              });
-          })
-          .catch((e: unknown) => {
-            setError(e instanceof Error ? e.message : 'Connection failed. Please try again.');
+          if (!wabaId) {
+            setError('Could not retrieve WABA ID.');
             setFlowStep('error');
-          });
+            return;
+          }
+
+          setFlowStep('connecting');
+
+          return connectWaba({
+            accessToken, // the code from Meta
+            wabaId,
+            redirectUri,
+            ...(phoneNumberId ? { phoneNumberId } : {}),
+          })
+            .then(() => {
+              toast.success('WhatsApp Business account connected successfully!');
+              onOpenChange(false);
+              reset();
+              onSuccess();
+            })
+            .catch((e: unknown) => {
+              setError(e instanceof Error ? e.message : 'Connection failed. Please try again.');
+              setFlowStep('error');
+            });
+        });
       },
       {
         config_id: process.env.NEXT_PUBLIC_META_CONFIG_ID || '',
-        response_type: 'token',
-        override_default_response_type: false,
+        response_type: 'code',
+        redirect_uri: redirectUri,
+        override_default_response_type: true,
         extras: {
           setup: {},
-          // Tell Meta which flow to use based on selected method
-          featureType: selectedMethod === 'existing_app' ? 'coexistence' : '',
+          featureType:
+            selectedMethod === 'existing_app' ? 'coexistence' : 'whatsapp_business_app_onboarding',
           sessionInfoVersion: '3',
+          version: 'v3',
         },
       },
     );
@@ -1185,6 +1400,40 @@ function ConnectWabaDialog({
                 </div>
               </button>
 
+              {/* Option C: Connect system phone number */}
+              <button
+                type="button"
+                onClick={() => setSelectedMethod('system_number')}
+                className={cn(
+                  'w-full rounded-xl border-2 p-5 text-left transition-all',
+                  selectedMethod === 'system_number'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-muted-foreground/40',
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className={cn(
+                      'rounded-lg p-2.5 mt-0.5 transition-colors',
+                      selectedMethod === 'system_number'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-foreground',
+                    )}
+                  >
+                    <Hash className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm leading-tight">
+                      Connect your System Number
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                      Use a phone number already in your account to set up your WhatsApp Business
+                      profile.
+                    </p>
+                  </div>
+                </div>
+              </button>
+
               {/* Error message */}
               {flowStep === 'error' && error && (
                 <div className="flex items-start gap-2.5 text-sm text-rose-600 rounded-lg border border-rose-200 bg-rose-50 p-3">
@@ -1198,6 +1447,264 @@ function ConnectWabaDialog({
             <div className="px-6 py-4 border-t flex justify-end">
               <Button onClick={handleNext} disabled={!selectedMethod} className="min-w-20">
                 Next
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ── Step: Create WhatsApp Business Profile form ── */}
+        {flowStep === 'system_form' && (
+          <>
+            <div className="px-6 pt-5 pb-1 border-b">
+              <p className="font-semibold text-sm">Create a new WhatsApp Business Profile</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Choose a number to create the WhatsApp Business Profile.
+              </p>
+            </div>
+            <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* Select WABA account */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-account" className="text-sm font-medium">
+                  WhatsApp Business Account <span className="text-rose-500">*</span>
+                </label>
+                <Select
+                  name="sys-account"
+                  value={systemForm.accountId}
+                  onValueChange={(v) => setSystemForm((f) => ({ ...f, accountId: v }))}
+                >
+                  <SelectTrigger id="sys-account">
+                    <SelectValue placeholder="Select an account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wabaAccounts.length === 0 ? (
+                      <SelectItem value="_none" disabled>
+                        No accounts found — connect a WABA first
+                      </SelectItem>
+                    ) : (
+                      wabaAccounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.wabaName || a.id}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Select system phone number */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-phone" className="text-sm font-medium">
+                  Select a Phone Number <span className="text-rose-500">*</span>
+                </label>
+                {systemNumbersLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading your numbers…
+                  </div>
+                ) : (
+                  <Select
+                    value={systemForm.phoneNumber}
+                    onValueChange={(v) => setSystemForm((f) => ({ ...f, phoneNumber: v }))}
+                    name="sys-phone"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a phone number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {systemNumbers.length === 0 ? (
+                        <SelectItem value="_none" disabled>
+                          No numbers found — purchase one or connect a WhatsApp account first
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {systemNumbers.some((n) => n.source === 'system') && (
+                            <SelectGroup>
+                              <SelectLabel>Purchased Numbers</SelectLabel>
+                              {systemNumbers
+                                .filter((n) => n.source === 'system')
+                                .map((n) => (
+                                  <SelectItem key={n.id} value={n.phoneNumber}>
+                                    {n.phoneNumber}
+                                  </SelectItem>
+                                ))}
+                            </SelectGroup>
+                          )}
+                          {systemNumbers.some((n) => n.source === 'whatsapp') && (
+                            <SelectGroup>
+                              <SelectLabel>Connected WhatsApp Numbers</SelectLabel>
+                              {systemNumbers
+                                .filter((n) => n.source === 'whatsapp')
+                                .map((n) => (
+                                  <SelectItem key={n.id} value={n.phoneNumber}>
+                                    {n.phoneNumber}
+                                  </SelectItem>
+                                ))}
+                            </SelectGroup>
+                          )}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* OTP forwarding number */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-otp-fwd" className="text-sm font-medium">
+                  Number for Receiving Forwarded OTP Call from Meta{' '}
+                  <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex rounded-md border overflow-hidden focus-within:ring-2 focus-within:ring-ring">
+                  <span className="flex items-center gap-1.5 px-3 bg-muted border-r text-sm text-muted-foreground shrink-0">
+                    🇮🇳 +91
+                  </span>
+                  <Input
+                    id="sys-otp-fwd"
+                    className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    placeholder="10-digit number"
+                    value={systemForm.otpForwardingNumber}
+                    onChange={(e) =>
+                      setSystemForm((f) => ({
+                        ...f,
+                        otpForwardingNumber: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                {systemForm.otpForwardingNumber &&
+                  !/^\d{10}$/.test(systemForm.otpForwardingNumber) && (
+                    <p className="text-xs text-rose-500">enter a valid 10-digit number</p>
+                  )}
+              </div>
+
+              {/* Verified / Display Name */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-display-name" className="text-sm font-medium">
+                  Display Name <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  id="sys-display-name"
+                  placeholder="Enter display name"
+                  value={systemForm.verifiedName}
+                  onChange={(e) =>
+                    setSystemForm((f) => ({
+                      ...f,
+                      verifiedName: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Category */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-category" className="text-sm font-medium">
+                  Category
+                </label>
+                <Select
+                  name="sys-category"
+                  value={systemForm.category}
+                  onValueChange={(v) => setSystemForm((f) => ({ ...f, category: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WABA_CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <label htmlFor="sys-description" className="text-sm font-medium">
+                  Description
+                </label>
+                <Textarea
+                  id="sys-description"
+                  placeholder="Enter description"
+                  rows={3}
+                  value={systemForm.description}
+                  onChange={(e) =>
+                    setSystemForm((f) => ({
+                      ...f,
+                      description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2.5 text-sm text-rose-600 rounded-lg border border-rose-200 bg-rose-50 p-3">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-between">
+              <Button variant="outline" onClick={() => setFlowStep('choose')}>
+                Back
+              </Button>
+              <Button
+                onClick={handleSystemSubmit}
+                disabled={
+                  systemSubmitting ||
+                  !systemForm.accountId ||
+                  !systemForm.phoneNumber ||
+                  !systemForm.verifiedName ||
+                  !systemForm.category ||
+                  !/^\d{10}$/.test(systemForm.otpForwardingNumber)
+                }
+                className="min-w-20"
+              >
+                {systemSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Next'}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ── Step: OTP verification for system number ── */}
+        {flowStep === 'system_otp' && (
+          <>
+            <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
+              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-primary/10">
+                <Smartphone className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-base">Enter verification code</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                  Meta will call or SMS your forwarding number with a 6-digit code. Enter it below.
+                </p>
+              </div>
+              <InputOTP maxLength={6} value={systemOtpCode} onChange={setSystemOtpCode}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+              {error && (
+                <div className="flex items-start gap-2.5 text-sm text-rose-600 rounded-lg border border-rose-200 bg-rose-50 p-3 w-full">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-between">
+              <Button variant="outline" onClick={() => setFlowStep('system_form')}>
+                Back
+              </Button>
+              <Button
+                onClick={handleSystemOtpVerify}
+                disabled={systemOtpVerifying || systemOtpCode.length < 6}
+                className="min-w-20"
+              >
+                {systemOtpVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify'}
               </Button>
             </div>
           </>
@@ -1223,14 +1730,14 @@ function ConnectWabaDialog({
               </span>
             </div>
             <div>
-              <p className="font-semibold text-base">Meta login window is open</p>
+              <p className="font-semibold text-base">Complete setup in the Meta popup</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                Complete the steps in the Meta popup — log in, select your business and WhatsApp
-                account, then confirm.
+                In the Meta window: log in → select your Business → select your WhatsApp Business
+                Account → confirm your phone number.
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
-              Don't close this window while completing setup.
+              This page will update automatically when you finish.
             </p>
           </div>
         )}
@@ -1256,6 +1763,7 @@ function ConnectWabaDialog({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function WhatsappConnect() {
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState<WhatsappListRow[]>([]);
   const [search, setSearch] = useState('');
   const [loadingAccounts, setLoadingAccounts] = useState(true);
@@ -1322,7 +1830,7 @@ export default function WhatsappConnect() {
         appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
         autoLogAppEvents: true,
         xfbml: true,
-        version: 'v21.0',
+        version: 'v22.0',
       });
     };
     if (!document.getElementById('facebook-jssdk')) {
@@ -1345,6 +1853,16 @@ export default function WhatsappConnect() {
       return phone.includes(query) || name.includes(query) || status.includes(query);
     });
   }, [accounts, search]);
+
+  // Unique WABA accounts (one entry per account id) for the system-number form selector
+  const uniqueWabaAccounts = useMemo(() => {
+    const seen = new Set<string>();
+    return accounts.filter((a) => {
+      if (!a.id || seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    });
+  }, [accounts]);
 
   return (
     <div className="space-y-6 p-6">
@@ -1467,6 +1985,11 @@ export default function WhatsappConnect() {
         open={connectOpen}
         onOpenChange={setConnectOpen}
         onSuccess={() => loadAccounts().catch(() => undefined)}
+        userId={user?.id}
+        wabaAccounts={uniqueWabaAccounts}
+        connectedPhones={accounts
+          .filter((a) => a.phoneNumber)
+          .map((a) => ({ id: a.id, phoneNumber: a.phoneNumber }))}
       />
     </div>
   );
