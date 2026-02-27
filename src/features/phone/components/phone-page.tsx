@@ -203,11 +203,11 @@ export default function PhoneNumberPage() {
     if (isoCode) {
       const FlagComponent = (Flags as any)[isoCode.toUpperCase()];
       if (FlagComponent) {
-        return <FlagComponent className="w-full h-full" />;
+        return <FlagComponent className="w-full h-full rounded-full" />;
       }
     }
 
-    return <Flags.IN className="w-full h-full opacity-20" />; // Fallback or global icon
+    return <Flags.IN className="w-full h-full opacity-20 rounded-full" />; // Fallback or global icon
   };
 
   return (
@@ -299,7 +299,7 @@ export default function PhoneNumberPage() {
                           <TableRow key={num.id} className="hover:bg-slate-50/30 transition-colors">
                             <TableCell className="font-semibold text-slate-700">
                               <div className="flex items-center gap-2">
-                                <span className="flex items-center justify-center size-5 rounded-sm overflow-hidden border border-slate-200 shrink-0">
+                                <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
                                   {getCountryFlag(num.country, num.phoneNumber)}
                                 </span>
                                 {num.phoneNumber}
@@ -412,7 +412,11 @@ export default function PhoneNumberPage() {
                         .map((item) => (
                           <TableRow key={item.id || `${item.alias}-${item.country}`}>
                             <TableCell className="font-medium">{item.alias}</TableCell>
-                            <TableCell>{item.country}</TableCell>
+                            <TableCell>
+                              <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                {getCountryFlag(item.country)}
+                              </span>
+                            </TableCell>
                             <TableCell className="capitalize">{item.numberType}</TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1">
@@ -585,7 +589,7 @@ export default function PhoneNumberPage() {
                           </TableCell>
                           <TableCell className="font-semibold text-slate-700">
                             <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center size-5 rounded-sm overflow-hidden border border-slate-200 shrink-0">
+                              <span className="flex items-center justify-center size-5 rounded-full overflow-hidden border border-slate-200 shrink-0">
                                 {getCountryFlag(num.country, num.phoneNumber)}
                               </span>
                               {num.phoneNumber}
