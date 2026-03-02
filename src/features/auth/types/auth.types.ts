@@ -2,10 +2,15 @@ export interface User {
   id: string;
   email: string;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
   role: string;
-  accessToken: string;
-  refreshToken: string;
+  accessToken?: string;
+  refreshToken?: string;
+  organization?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 }
 
 export interface LoginCredentials {

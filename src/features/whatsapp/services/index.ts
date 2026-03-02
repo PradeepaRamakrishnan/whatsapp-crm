@@ -168,6 +168,13 @@ export const getAccountById = async (accountId: string) => {
   return request(`${API_URL}/accounts/${accountId}`);
 };
 
+// POST /business-whatsapp/accounts/:id/sync
+export const syncAccount = async (accountId: string) => {
+  return request(`${API_URL}/accounts/${accountId}/sync`, {
+    method: 'POST',
+  });
+};
+
 // POST /business-whatsapp/accounts/:id/disconnect
 export const disconnectAccount = async (accountId: string) => {
   return request(`${API_URL}/accounts/${accountId}/disconnect`, {
@@ -330,8 +337,10 @@ export const getConversations = async (params: {
 };
 
 // GET /business-whatsapp/conversations/:id/messages?page&limit
-export const getMessages = async (conversationId: string, page = 1, limit = 50) =>
-  request(`${API_URL}/conversations/${conversationId}/messages?page=${page}&limit=${limit}`);
+export const getMessages = async (accountId: string, phoneNumber?: string) => {
+  const query = phoneNumber ? `?phoneNumber=${encodeURIComponent(phoneNumber)}` : '';
+  return request(`${API_URL}/accounts/${accountId}/messages${query}`);
+};
 
 // POST /business-whatsapp/conversations/:id/messages/text
 export const sendTextMessage = async (

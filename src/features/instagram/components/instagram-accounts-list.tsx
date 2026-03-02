@@ -23,8 +23,6 @@ export function InstagramAccountsList() {
   const {
     data: accounts = [],
     isLoading,
-    isError,
-    error,
     isRefetching,
   } = useQuery<InstagramAccount[]>({
     queryKey: ['instagram-accounts'],
@@ -52,13 +50,6 @@ export function InstagramAccountsList() {
           </div>
         </div>
       </div>
-
-      {/* Error banner */}
-      {isError && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Could not load accounts: {(error as Error)?.message ?? 'Unknown error'}
-        </div>
-      )}
 
       <Tabs id="instagram-accounts-tabs" defaultValue="accounts" className="w-full">
         <TabsList className="mb-4">

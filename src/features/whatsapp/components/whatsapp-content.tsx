@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 import {
   AlertCircle,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { ConversationView } from '@/components/shared/conversation-view';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +29,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {
@@ -65,11 +73,14 @@ import {
   fetchAvailableFromMeta,
   getAccountById,
   getAllAccounts,
+  getMessages,
   listPhoneNumbers,
   removePhoneNumber,
   resendOtp,
+  sendMessage,
   sendOtp,
   setDefaultPhone,
+  syncAccount,
   verifyOtp,
   verifySystemNumber,
 } from '../services';
@@ -806,6 +817,135 @@ function PhoneManagementSheet({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+// ─── IndividualChatDialog ───────────────────────────────────────────────────
+function IndividualChatDialog({
+  account,
+  phoneNumber,
+  onClose,
+}: {
+  account: WhatsappListRow | null;
+  phoneNumber: string | null;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+
+  const loadMessages = useCallback(
+    async (sync = false) => {
+      if (account && phoneNumber) {
+        setLoading(true);
+        try {
+          if (sync) {
+            await syncAccount(account.id);
+          }
+          const res: any = await getMessages(account.id, phoneNumber);
+          const mapped = (res || []).map((m: any) => ({
+            id: m.id,
+            sender: m.direction === 'INBOUND' ? 'customer' : 'agent',
+            senderName: m.direction === 'INBOUND' ? phoneNumber : 'You',
+            channel: 'whatsapp',
+            content: m.content || m.body || m.text || m.metadata?.text?.body || '[Media/Other]',
+            timestamp: m.createdAt,
+          }));
+          setMessages(mapped);
+        } catch (err) {
+          console.error('Failed to load messages:', err);
+          toast.error('Failed to load chat history');
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setMessages([]);
+      }
+    },
+    [account, phoneNumber],
+  );
+
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
+
+  const handleSendMessage = async (content: string, channel: string) => {
+    if (!account || !phoneNumber || channel !== 'whatsapp') return;
+
+    try {
+      setIsSending(true);
+      await sendMessage({
+        accountId: account.id,
+        to: phoneNumber,
+        type: 'text',
+        content,
+      });
+      toast.success('Message sent');
+      loadMessages(); // Refresh history
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle className="flex items-center justify-between text-lg">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Real Chat - {phoneNumber}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadMessages(true)}
+              disabled={loading}
+              className="h-8 gap-2"
+            >
+              <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+              Refresh
+            </Button>
+          </DialogTitle>
+          <DialogDescription>
+            Chatting with {phoneNumber} via {account?.wabaName}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-hidden relative">
+          {loading && messages.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-hidden">
+                <ConversationView
+                  contact={{
+                    id: phoneNumber || '',
+                    name: phoneNumber || '',
+                    phone: phoneNumber || '',
+                    bankName: account?.wabaName || '',
+                    outstandingAmount: 0,
+                  }}
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  filterChannel="whatsapp"
+                />
+              </div>
+              {isSending && (
+                <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] flex items-center justify-center z-50">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1629,6 +1769,10 @@ export default function WhatsappConnect() {
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [connectOpen, setConnectOpen] = useState(false);
   const [managingAccount, setManagingAccount] = useState<WhatsappListRow | null>(null);
+  const [viewingChatNumber, setViewingChatNumber] = useState<{
+    account: WhatsappListRow;
+    phoneNumber: string;
+  } | null>(null);
 
   const loadAccounts = useCallback(async () => {
     setLoadingAccounts(true);
@@ -1683,7 +1827,7 @@ export default function WhatsappConnect() {
     if (typeof window === 'undefined') return;
     window.fbAsyncInit = () => {
       window.FB.init({
-        appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '811523108620018', // must match INSTAGRAM_ID in backend .env
         autoLogAppEvents: true,
         xfbml: true,
         version: 'v22.0',
@@ -1777,7 +1921,21 @@ export default function WhatsappConnect() {
             ) : (
               filteredAccounts.map((account) => (
                 <TableRow key={`${account.id}-${account.phoneNumber}`}>
-                  <TableCell className="font-medium">{account.phoneNumber || '-'}</TableCell>
+                  <TableCell className="font-medium">
+                    {account.phoneNumber ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewingChatNumber({ account, phoneNumber: account.phoneNumber })
+                        }
+                        className="text-primary hover:underline font-semibold"
+                      >
+                        {account.phoneNumber}
+                      </button>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {account.wabaName || '-'}
                   </TableCell>
@@ -1816,6 +1974,12 @@ export default function WhatsappConnect() {
       </div>
 
       <PhoneManagementSheet account={managingAccount} onClose={() => setManagingAccount(null)} />
+
+      <IndividualChatDialog
+        account={viewingChatNumber?.account || null}
+        phoneNumber={viewingChatNumber?.phoneNumber || null}
+        onClose={() => setViewingChatNumber(null)}
+      />
 
       <ConnectWabaDialog
         open={connectOpen}
