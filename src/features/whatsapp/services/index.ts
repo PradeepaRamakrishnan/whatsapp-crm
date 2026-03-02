@@ -1,4 +1,19 @@
-const API_URL = process.env.NEXT_PUBLIC_WHATSAPP_API_URL;
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const deriveFallbackWhatsappApiUrl = () => {
+  const usersApiUrl = process.env.NEXT_PUBLIC_USERS_API_URL || '';
+  if (!usersApiUrl) return '';
+
+  const usersBase = trimTrailingSlash(usersApiUrl);
+  if (!usersBase) return '';
+
+  const origin = usersBase.endsWith('/users') ? usersBase.slice(0, -'/users'.length) : usersBase;
+  return `${origin}/business-whatsapp`;
+};
+
+const API_URL =
+  trimTrailingSlash(process.env.NEXT_PUBLIC_WHATSAPP_API_URL || '') ||
+  deriveFallbackWhatsappApiUrl();
 const ACCESS_TOKEN_KEY = 'crm_access_token';
 const LEGACY_ACCESS_TOKEN_KEYS = ['access_token', 'accessToken'] as const;
 
@@ -22,6 +37,11 @@ const request = async (url: string, init: RequestInit = {}) => {
   if (!token) {
     throw new Error('App auth token missing. Please logout and login again.');
   }
+  if (!API_URL) {
+    throw new Error(
+      'WhatsApp API URL is not configured. Set NEXT_PUBLIC_WHATSAPP_API_URL or NEXT_PUBLIC_USERS_API_URL.',
+    );
+  }
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -31,11 +51,30 @@ const request = async (url: string, init: RequestInit = {}) => {
     'x-auth-token': token,
   };
 
-  const res = await fetch(url, {
-    ...init,
-    headers,
-    credentials: 'include',
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers,
+      credentials: 'include',
+    });
+  } catch (error) {
+    const fallbackApiUrl = deriveFallbackWhatsappApiUrl();
+    const shouldRetryWithFallback =
+      error instanceof TypeError && !!fallbackApiUrl && fallbackApiUrl !== API_URL;
+
+    if (!shouldRetryWithFallback) throw error;
+
+    const fallbackUrl = url.startsWith(`${API_URL}/`)
+      ? `${fallbackApiUrl}${url.slice(API_URL.length)}`
+      : url;
+
+    res = await fetch(fallbackUrl, {
+      ...init,
+      headers,
+      credentials: 'include',
+    });
+  }
 
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Request failed');

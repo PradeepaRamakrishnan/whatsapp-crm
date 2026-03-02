@@ -101,11 +101,7 @@ export function InstagramAccountsList() {
                 />
                 Refresh
               </Button>
-              <Button
-                size="sm"
-                className="h-10 px-4 bg-orange-500 hover:bg-orange-600 text-white gap-2 border-none shadow-sm shadow-orange-200"
-                onClick={() => setConnectOpen(true)}
-              >
+              <Button size="sm" onClick={() => setConnectOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Connect Instagram Account
               </Button>

@@ -3,9 +3,9 @@ import {
   Briefcase,
   FileText,
   Instagram,
+  LayoutDashboard,
   MessageCircle,
   PhoneCall,
-  LayoutDashboard,
   Settings,
   UserCheck,
 } from 'lucide-react';
@@ -17,111 +17,85 @@ export const dashboardData = {
     avatar: '/avatars/shadcn.jpg',
   },
 
-  navMain: [
+  navGroups: [
     {
-      title: 'Dashboard',
-      url: '/overview',
-      icon: LayoutDashboard,
-    },
-  ],
-  workflows: [
-    {
-      name: 'Files',
-      url: '/files/list',
-      icon: FileText,
       items: [
         {
-          title: 'File Management',
+          title: 'Dashboard',
+          url: '/overview',
+          icon: LayoutDashboard,
+        },
+      ],
+    },
+    {
+      label: 'Management',
+      items: [
+        {
+          title: 'Files',
           url: '/files/list',
+          icon: FileText,
+          items: [
+            { title: 'File Management', url: '/files/list' },
+            { title: 'Pending Review', url: '/files/pending' },
+          ],
         },
         {
-          title: 'Pending Review',
-          url: '/files/pending',
-        },
-      ],
-    },
-    {
-      name: 'Campaigns',
-      url: '/campaigns/list',
-      icon: Briefcase,
-      items: [
-        {
-          title: 'Configuration',
-          url: '/campaigns/configuration',
-        },
-        // {
-        //   title: 'Logs',
-        //   url: '/campaigns/logs',
-        // },
-        {
-          title: 'All Campaigns',
+          title: 'Campaigns',
           url: '/campaigns/list',
+          icon: Briefcase,
+          items: [
+            { title: 'Configuration', url: '/campaigns/configuration' },
+            { title: 'All Campaigns', url: '/campaigns/list' },
+          ],
         },
-        // {
-        //   title: 'Archived',
-        //   url: '/campaigns/archived',
-        // },
+        {
+          title: 'Leads',
+          url: '#',
+          icon: UserCheck,
+          items: [
+            { title: 'All Leads', url: '/leads/list' },
+            { title: 'Manual Followup', url: '/leads/manual-followup' },
+          ],
+        },
       ],
     },
     {
-      name: 'Leads',
-      url: '#',
-      icon: UserCheck,
+      label: 'Channels',
       items: [
         {
-          title: 'All Leads',
-          url: '/leads/list',
+          title: 'Instagram',
+          url: '/instagram/accounts',
+          icon: Instagram,
         },
         {
-          title: 'Manual Followup',
-          url: '/leads/manual-followup',
+          title: 'Phone Number',
+          url: '/phone',
+          icon: PhoneCall,
         },
-        // {
-        //   title: 'Qualified',
-        //   url: '/leads/qualified',
-        // },
-        // {
-        //   title: 'Ready for Disbursal',
-        //   url: '/leads/ready-for-disbursal',
-        // },
+        {
+          title: 'WhatsApp',
+          url: '/whatsapp/list',
+          icon: MessageCircle,
+        },
       ],
     },
     {
-      name: 'Instagram',
-      url: '/instagram/accounts',
-      icon: Instagram,
-    },
-    {
-      name: 'PhoneNumber',
-      url: '/phone',
-      icon: PhoneCall,
-    },
-    {
-      name: 'Settings',
-      url: '/settings/financial-institutions',
-      icon: Settings,
+      label: 'System',
       items: [
         {
-          title: 'Financial Institutions',
+          title: 'Settings',
           url: '/settings/financial-institutions',
-        },
-        {
-          title: 'Campaign Templates',
-          url: '/settings/campaign-templates',
-        },
-        {
-          title: 'NBFC',
-          url: '/settings/nbfc',
+          icon: Settings,
+          items: [
+            { title: 'Financial Institutions', url: '/settings/financial-institutions' },
+            { title: 'Campaign Templates', url: '/settings/campaign-templates' },
+            { title: 'NBFC', url: '/settings/nbfc' },
+          ],
         },
       ],
-    },
-
-    {
-      name: 'WhatsApp',
-      url: '/whatsapp/list',
-      icon: MessageCircle,
     },
   ],
+
   navSecondary: [
     {
       title: 'Settings',

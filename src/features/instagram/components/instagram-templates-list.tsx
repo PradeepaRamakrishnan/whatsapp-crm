@@ -155,7 +155,6 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            className="h-10 px-4 bg-orange-500 hover:bg-orange-600 text-white gap-2 border-none shadow-sm shadow-orange-200"
             onClick={() => {
               setSelectedTemplate(null);
               setCreateOpen(true);

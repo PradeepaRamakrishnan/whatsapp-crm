@@ -49,8 +49,8 @@ function NotInterestedContent() {
           <div className="flex justify-center">
             <div className="relative w-40 h-16">
               <Image
-                src="/assets/images/samatvalogo.png"
-                alt="Samatva CRM Logo"
+                src="/assets/images/smartchainers.jpeg"
+                alt="Smartchainers Logo"
                 fill
                 className="object-contain"
                 priority

@@ -12,8 +12,8 @@ export function SidebarLogo() {
         // Collapsed: show small icon in box
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
           <Image
-            src="/assets/images/samatvalogo.png"
-            alt="Samatva CRM"
+            src="/assets/images/smartchainers.jpeg"
+            alt="Smartchainers"
             width={32}
             height={32}
             className="h-8 w-8 object-contain"
@@ -22,8 +22,8 @@ export function SidebarLogo() {
       ) : (
         // Expanded: show full horizontal logo
         <Image
-          src="/assets/images/samatvalogo.png"
-          alt="Samatva CRM"
+          src="/assets/images/smartchainers.jpeg"
+          alt="Smartchainers"
           width={144}
           height={48}
           className="max-w-36 h-auto object-contain"

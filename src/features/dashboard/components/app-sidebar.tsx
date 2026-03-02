@@ -11,9 +11,7 @@ import {
 import { useAuth } from '@/context';
 import { dashboardData } from '../lib/dashboard-data';
 import { NavMain } from './nav-main';
-// import { NavSecondary } from './nav-secondary';
 import { NavUser } from './nav-user';
-import { NavWorkflows } from './nav-workflows';
 import { SidebarLogo } from './sidebar-logo';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -24,9 +22,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarLogo />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={dashboardData.navMain} />
-        <NavWorkflows workflows={dashboardData.workflows} />
-        {/* <NavSecondary items={dashboardData.navSecondary} className="mt-auto" /> */}
+        <NavMain groups={dashboardData.navGroups} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser

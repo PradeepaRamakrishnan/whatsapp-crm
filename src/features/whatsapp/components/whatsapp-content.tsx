@@ -352,7 +352,7 @@ function statusBadgeClass(status: string) {
   switch (status?.toLowerCase()) {
     case 'connected':
     case 'active':
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      return 'bg-primary/10 text-primary border border-primary/20';
     case 'error':
       return 'bg-rose-50 text-rose-700 border border-rose-200';
     case 'pending_otp':
@@ -684,7 +684,7 @@ function PhoneManagementSheet({
               )}
 
               {addStep === 'done' && (
-                <div className="flex flex-col items-center gap-3 py-8 text-emerald-600">
+                <div className="flex flex-col items-center gap-3 py-8 text-primary">
                   <CheckCircle2 className="h-8 w-8" />
                   <p className="text-sm font-medium">Phone number added successfully!</p>
                 </div>
@@ -1105,7 +1105,7 @@ function ConnectWabaDialog({
     setFlowStep('popup_open');
     setError('');
 
-    const redirectUri = process.env.NEXT_PUBLIC_META_REDIRECT_URI || `${window.location.origin}/`;
+    // const redirectUri = process.env.NEXT_PUBLIC_META_REDIRECT_URI || `${window.location.origin}/`;
 
     window.FB.login(
       (response: FacebookLoginResponse) => {
@@ -1148,7 +1148,7 @@ function ConnectWabaDialog({
           return connectWaba({
             accessToken, // the code from Meta
             wabaId,
-            redirectUri,
+
             ...(phoneNumberId ? { phoneNumberId } : {}),
           })
             .then(() => {
@@ -1166,7 +1166,7 @@ function ConnectWabaDialog({
       {
         config_id: process.env.NEXT_PUBLIC_META_CONFIG_ID || '',
         response_type: 'code',
-        redirect_uri: redirectUri,
+
         override_default_response_type: true,
         extras: {
           setup: {},
@@ -1788,7 +1788,7 @@ export default function WhatsappConnect() {
                   </TableCell>
                   <TableCell className="text-sm">
                     {account.isVerified ? (
-                      <span className="flex items-center gap-1 text-emerald-600">
+                      <span className="flex items-center gap-1 text-primary">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Verified
                       </span>
                     ) : (

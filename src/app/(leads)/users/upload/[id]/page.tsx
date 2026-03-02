@@ -8,8 +8,8 @@ function UploadPageHeader() {
     <header className="relative">
       <div className="flex justify-center mb-3">
         <Image
-          src="/assets/images/samatvalogo.png"
-          alt="Samatva CRM"
+          src="/assets/images/smartchainers.jpeg"
+          alt="Smartchainers"
           width={200}
           height={70}
           className="h-20 w-auto object-contain"

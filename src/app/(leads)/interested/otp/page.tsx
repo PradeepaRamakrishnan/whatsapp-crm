@@ -28,7 +28,7 @@ const OtpVerificationPage = () => {
             <p className="text-lg text-zinc-300">
               Restoring Dignity, Rebuilding Trust, Reimagining Life
             </p>
-            <div className="inline-block rounded-full bg-linear-to-r from-orange-500 to-orange-600 px-6 py-3 shadow-lg shadow-orange-500/50">
+            <div className="inline-block rounded-full bg-linear-to-r from-primary to-primary/90 px-6 py-3 shadow-lg shadow-primary/40">
               <p className="text-xl font-bold text-white">@ Zero Cost</p>
             </div>
           </div>

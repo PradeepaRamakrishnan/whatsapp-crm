@@ -55,8 +55,8 @@ export const OtpVerificationForm = () => {
       <div className="flex items-center justify-center mb-8">
         <div className="relative w-48 sm:w-56">
           <Image
-            src="/assets/images/samatvalogo.png"
-            alt="Samatva Awareness Logo"
+            src="/assets/images/smartchainers.jpeg"
+            alt="Smartchainers Logo"
             width={224}
             height={62}
             className="object-contain"
