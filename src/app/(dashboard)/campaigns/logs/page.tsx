@@ -41,8 +41,11 @@ const mockLogs: CampaignLog[] = [
 
 export default function CampaignLogsPage() {
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold mb-6">Campaign Logs</h1>
+    <div className="flex flex-1 flex-col gap-6 p-4 min-w-0">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Campaign Logs</h1>
+        <p className="mt-1 text-muted-foreground">View detailed logs of all campaign executions</p>
+      </div>
       <CampaignLogsTable logs={mockLogs} />
     </div>
   );

@@ -28,11 +28,11 @@ const OverviewPage = async () => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="flex flex-1 flex-col gap-6 p-6 min-w-0">
+      <div className="flex flex-1 flex-col gap-6 p-4 min-w-0">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Overview</h1>
-          <p className="text-sm text-muted-foreground md:text-base">
+          <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+          <p className="mt-1 text-muted-foreground">
             Your campaign performance and analytics at a glance
           </p>
         </div>
