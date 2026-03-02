@@ -1827,7 +1827,7 @@ export default function WhatsappConnect() {
     if (typeof window === 'undefined') return;
     window.fbAsyncInit = () => {
       window.FB.init({
-        appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '811523108620018', // must match INSTAGRAM_ID in backend .env
         autoLogAppEvents: true,
         xfbml: true,
         version: 'v22.0',
