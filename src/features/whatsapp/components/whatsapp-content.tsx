@@ -1075,13 +1075,13 @@ function IndividualChatDialog({
   return (
     <Sheet open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full p-0 sm:max-w-3xl flex flex-col overflow-hidden p-2">
-        <SheetHeader className="border-b bg-card/80 backdrop-blur-md px-4 py-4 pr-16 sticky top-0 z-10 shadow-sm">
+        <SheetHeader className="backdrop-blur-md px-4 py-4 pr-16 sticky top-0 z-10 ">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shadow-sm">
               {phoneNumber?.slice(-2)}
             </div>
             <div>
-              <SheetTitle className="text-lg font-bold leading-none">{phoneNumber}</SheetTitle>
+              <SheetTitle className="text-1Xl font-bold leading-none">{phoneNumber}</SheetTitle>
               <SheetDescription className="text-xs mt-1 font-medium flex items-center gap-1.5 opacity-80">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 Active via {account?.phoneNumber || 'WhatsApp'}
