@@ -97,6 +97,7 @@ interface FormState {
   language: string;
   headerType: HeaderType;
   headerText: string;
+  headerMediaUrl: string;
   body: string;
   footer: string;
   buttons: ButtonConfig[];
@@ -116,6 +117,7 @@ const INITIAL_FORM: FormState = {
   language: 'en',
   headerType: 'NONE',
   headerText: '',
+  headerMediaUrl: '',
   body: '',
   footer: '',
   buttons: [],
@@ -147,6 +149,13 @@ const HEADER_TYPES = [
   { value: 'VIDEO' as const, label: 'Video' },
   { value: 'DOCUMENT' as const, label: 'Document' },
 ];
+
+const DEFAULT_MEDIA_SAMPLES: Record<'IMAGE' | 'VIDEO' | 'DOCUMENT', string> = {
+  IMAGE:
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
+  VIDEO: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4',
+  DOCUMENT: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -326,6 +335,15 @@ function normalizeTemplateName(raw: string): string {
     .toLowerCase()
     .replace(/\s+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
+}
+
+function getVariableSamples(text: string): string[] {
+  const matches = text.match(/\{\{[0-9]+\}\}/g);
+  if (!matches) return [];
+  const ids = Array.from(new Set(matches.map((m) => Number(m.replace(/[^0-9]/g, ''))))).sort(
+    (a, b) => a - b,
+  );
+  return ids.map((id) => `sample_${id}`);
 }
 
 function renderPreviewBody(text: string, dark: boolean) {
@@ -833,10 +851,25 @@ export function WhatsAppTemplatesContent() {
     if (form.headerType !== 'NONE') {
       const header: Record<string, unknown> = { type: 'HEADER', format: form.headerType };
       if (form.headerType === 'TEXT') header.text = form.headerText;
+      if (
+        form.headerType === 'IMAGE' ||
+        form.headerType === 'VIDEO' ||
+        form.headerType === 'DOCUMENT'
+      ) {
+        const sample = form.headerMediaUrl.trim() || DEFAULT_MEDIA_SAMPLES[form.headerType];
+        header.example = { header_handle: [sample] };
+      }
       components.push(header);
     }
 
-    if (form.body) components.push({ type: 'BODY', text: form.body });
+    if (form.body) {
+      const body: Record<string, unknown> = { type: 'BODY', text: form.body };
+      const bodySamples = getVariableSamples(form.body);
+      if (bodySamples.length > 0) {
+        body.example = { body_text: [bodySamples] };
+      }
+      components.push(body);
+    }
     if (form.footer) components.push({ type: 'FOOTER', text: form.footer });
 
     if (form.buttons.length > 0) {
@@ -889,6 +922,15 @@ export function WhatsAppTemplatesContent() {
     }
     if (form.headerType === 'TEXT' && !form.headerText.trim()) {
       toast.error('Header text is required when header type is Text');
+      return;
+    }
+    if (
+      (form.headerType === 'IMAGE' ||
+        form.headerType === 'VIDEO' ||
+        form.headerType === 'DOCUMENT') &&
+      !form.headerMediaUrl.trim()
+    ) {
+      toast.error('Sample media URL is required for media headers');
       return;
     }
     submitMutation.mutate({
@@ -1217,7 +1259,19 @@ export function WhatsAppTemplatesContent() {
                           <button
                             type="button"
                             key={opt.value}
-                            onClick={() => setForm((prev) => ({ ...prev, headerType: opt.value }))}
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                headerType: opt.value,
+                                headerText: opt.value === 'TEXT' ? prev.headerText : '',
+                                headerMediaUrl:
+                                  opt.value === 'IMAGE' ||
+                                  opt.value === 'VIDEO' ||
+                                  opt.value === 'DOCUMENT'
+                                    ? prev.headerMediaUrl
+                                    : '',
+                              }))
+                            }
                             className={cn(
                               'rounded-lg border px-3 py-1.5 text-sm font-medium transition-all',
                               form.headerType === opt.value
@@ -1270,9 +1324,17 @@ export function WhatsAppTemplatesContent() {
                               : 'Document header'}
                         </p>
                         <p className="text-xs text-slate-400">
-                          A sample media URL will be attached. Actual media is uploaded when
-                          sending.
+                          Provide a public sample URL. This is required by Meta for media header
+                          template approval.
                         </p>
+                        <Input
+                          value={form.headerMediaUrl}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, headerMediaUrl: e.target.value }))
+                          }
+                          placeholder={`Enter public ${form.headerType.toLowerCase()} sample URL`}
+                          className="h-10 w-full max-w-md"
+                        />
                       </div>
                     ) : null}
                   </section>
