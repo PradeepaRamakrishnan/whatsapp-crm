@@ -22,7 +22,7 @@ interface ConnectAccountSheetProps {
 
 const FB_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ?? '';
 const PERMISSIONS = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging';
-const CALLBACK_PATH = '/auth/callback';
+const CALLBACK_PATH = '/instagram/auth/callback';
 
 function openOAuthPopup(): Window | null {
   const redirectUri = encodeURIComponent(`${window.location.origin}${CALLBACK_PATH}`);
