@@ -1,5 +1,6 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
+import dayjs from 'dayjs';
 import {
   AlertCircle,
   CheckCircle2,
@@ -29,13 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {
@@ -74,6 +69,7 @@ import {
   getAccountById,
   getAllAccounts,
   getMessages,
+  getUniqueConversations,
   listPhoneNumbers,
   removePhoneNumber,
   resendOtp,
@@ -377,9 +373,11 @@ function statusBadgeClass(status: string) {
 function PhoneManagementSheet({
   account,
   onClose,
+  onUpdated,
 }: {
   account: WhatsappListRow | null;
   onClose: () => void;
+  onUpdated?: () => void;
 }) {
   const [phones, setPhones] = useState<ManagedPhone[]>([]);
   const [loading, setLoading] = useState(false);
@@ -448,6 +446,7 @@ function PhoneManagementSheet({
       await setDefaultPhone(accountId, phone.phoneNumberId);
       toast.success(`${phone.phoneNumber} set as default sender`);
       await loadPhones();
+      onUpdated?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to set default');
     } finally {
@@ -463,6 +462,7 @@ function PhoneManagementSheet({
       toast.success(`${phoneToRemove.phoneNumber} removed`);
       setPhoneToRemove(null);
       await loadPhones();
+      onUpdated?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to remove phone');
     } finally {
@@ -504,6 +504,7 @@ function PhoneManagementSheet({
         toast.success('Phone number added successfully');
         setAddStep('done');
         await loadPhones();
+        onUpdated?.();
         setTimeout(resetAddFlow, 1500);
       }
     } catch (e) {
@@ -537,6 +538,7 @@ function PhoneManagementSheet({
       toast.success('Phone number verified successfully');
       setAddStep('done');
       await loadPhones();
+      onUpdated?.();
       setTimeout(resetAddFlow, 1500);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Invalid OTP. Please try again.');
@@ -820,6 +822,193 @@ function PhoneManagementSheet({
   );
 }
 
+// ─── ConversationsTable ──────────────────────────────────────────────────────
+function ConversationsTable({
+  phoneNumber,
+  onBack,
+  onSelectContact,
+}: {
+  phoneNumber: string;
+  onBack: () => void;
+  onSelectContact: (contactNumber: string) => void;
+}) {
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const loadConversations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getUniqueConversations(phoneNumber);
+      setConversations(res || []);
+    } catch (err) {
+      console.error('Failed to load conversations:', err);
+      toast.error('Failed to load contact list');
+    } finally {
+      setLoading(false);
+    }
+  }, [phoneNumber]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  const filtered = conversations.filter((c) =>
+    c.contactNumber.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-1xl font-bold text-foreground">Conversations</h2>
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+              <Smartphone className="h-3.5 w-3.5" /> {phoneNumber}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search contacts..."
+              className="pl-10 h-10 rounded-xl bg-card border-muted-foreground/20 focus:ring-primary/20"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={loadConversations}
+            disabled={loading}
+            className="h-10 w-10 rounded-xl shadow-sm border-muted-foreground/20"
+          >
+            <RefreshCw className={cn('h-4 w-4 text-muted-foreground', loading && 'animate-spin')} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="h-10 w-20  hover:bg-primary/10 hover:text-primary transition-all shadow-sm"
+          >
+            Back
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border bg-card/60 backdrop-blur-md overflow-hidden border-muted-foreground/10">
+        <Table>
+          <TableHeader className="bg-muted/30">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="py-4 px-6 font-bold text-foreground w-[240px]">
+                Contact
+              </TableHead>
+              <TableHead className="py-4 px-4 font-bold text-foreground">Last Message</TableHead>
+              <TableHead className="py-4 px-4 font-bold text-foreground w-[150px]">Time</TableHead>
+              <TableHead className="py-4 px-4 font-bold text-foreground w-[120px]">
+                Status
+              </TableHead>
+              <TableHead className="py-4 px-6 font-bold text-foreground w-[120px] text-right">
+                Action
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading && conversations.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Loading your messages...
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <Search className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold">No discussions yet</p>
+                      <p className="text-sm">Contacts you message will appear here.</p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((c) => (
+                <TableRow
+                  key={c.contactNumber}
+                  className="group hover:bg-primary/5 transition-all cursor-pointer border-b last:border-0"
+                  onClick={() => onSelectContact(c.contactNumber)}
+                >
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shadow-inner group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        {c.contactNumber.slice(-2)}
+                      </div>
+                      <span className="font-bold text-[15px] group-hover:text-primary transition-colors">
+                        {c.contactNumber}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-4">
+                    <p className="text-sm text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors max-w-[320px]">
+                      {c.lastMessage}
+                    </p>
+                  </TableCell>
+                  <TableCell className="py-4 px-4">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {dayjs(c.lastMessageAt).format('MMM D, h:mm A')}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-4 px-4">
+                    {String(c.direction).toUpperCase() === 'OUTBOUND' ? (
+                      <Badge
+                        variant="default"
+                        className={cn(
+                          'text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider',
+                          c.status?.toLowerCase() === 'read'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                        )}
+                      >
+                        {c.status || 'Sent'}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="soft"
+                        className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                      >
+                        Inbound
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 rounded-full px-4 text-xs font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                    >
+                      Open
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
 // ─── IndividualChatDialog ───────────────────────────────────────────────────
 function IndividualChatDialog({
   account,
@@ -845,8 +1034,8 @@ function IndividualChatDialog({
           const res: any = await getMessages(account.id, phoneNumber);
           const mapped = (res || []).map((m: any) => ({
             id: m.id,
-            sender: m.direction === 'INBOUND' ? 'customer' : 'agent',
-            senderName: m.direction === 'INBOUND' ? phoneNumber : 'You',
+            sender: String(m.direction).toUpperCase() === 'INBOUND' ? 'customer' : 'agent',
+            senderName: String(m.direction).toUpperCase() === 'INBOUND' ? phoneNumber : 'You',
             channel: 'whatsapp',
             content: m.content || m.body || m.text || m.metadata?.text?.body || '[Media/Other]',
             timestamp: m.createdAt,
@@ -891,37 +1080,44 @@ function IndividualChatDialog({
   };
 
   return (
-    <Dialog open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle className="flex items-center justify-between text-lg">
-            <div className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5" />
-              Real Chat - {phoneNumber}
+    <Sheet open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="w-full p-0 sm:max-w-3xl flex flex-col overflow-hidden">
+        <SheetHeader className="border-b bg-card/80 backdrop-blur-md px-4 py-4 pr-16 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shadow-sm">
+              {phoneNumber?.slice(-2)}
+            </div>
+            <div>
+              <SheetTitle className="text-lg font-bold leading-none">{phoneNumber}</SheetTitle>
+              <SheetDescription className="text-xs mt-1 font-medium flex items-center gap-1.5 opacity-80">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Active via {account?.wabaName || 'WhatsApp'}
+              </SheetDescription>
             </div>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => loadMessages(true)}
-              disabled={loading}
-              className="h-8 gap-2"
+              variant="ghost"
+              size="icon"
+              className="h-10 w-20  hover:bg-primary/10 hover:text-primary transition-all shadow-sm"
             >
-              <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-              Refresh
+              Back
             </Button>
-          </DialogTitle>
-          <DialogDescription>
-            Chatting with {phoneNumber} via {account?.wabaName}
-          </DialogDescription>
-        </DialogHeader>
+          </div>
+        </SheetHeader>
 
-        <div className="flex-1 overflow-hidden relative">
+        <div className="relative flex-1 overflow-hidden bg-slate-50 dark:bg-zinc-950/40">
+          <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-card/10 to-transparent z-10 pointer-events-none" />
           {loading && messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex h-full flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
+              <div className="relative h-12 w-12">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
+                <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+              </div>
+              <p className="text-sm font-semibold text-muted-foreground tracking-tight">
+                Syncing your history...
+              </p>
             </div>
           ) : (
-            <div className="h-full flex flex-col">
+            <div className="flex h-full flex-col">
               <div className="flex-1 overflow-hidden">
                 <ConversationView
                   contact={{
@@ -937,15 +1133,15 @@ function IndividualChatDialog({
                 />
               </div>
               {isSending && (
-                <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] flex items-center justify-center z-50">
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/20 backdrop-blur-[1px]">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
               )}
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -1126,7 +1322,6 @@ function ConnectWabaDialog({
     phoneNumberService
       .getMyNumbers(userId)
       .then((res) => {
-        // biome-ignore lint/style/useNamingConvention: API may return snake_case
         const list = (res?.data || []) as {
           id: string;
           phoneNumber?: string;
@@ -1769,6 +1964,8 @@ export default function WhatsappConnect() {
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [connectOpen, setConnectOpen] = useState(false);
   const [managingAccount, setManagingAccount] = useState<WhatsappListRow | null>(null);
+  const [viewMode, setViewMode] = useState<'NUMBERS' | 'CONVERSATIONS'>('NUMBERS');
+  const [selectedWabaNumber, setSelectedWabaNumber] = useState<string | null>(null);
   const [viewingChatNumber, setViewingChatNumber] = useState<{
     account: WhatsappListRow;
     phoneNumber: string;
@@ -1865,115 +2062,150 @@ export default function WhatsappConnect() {
   }, [accounts]);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* ── Accounts table ── */}
-      <div className="rounded-xl border bg-card">
-        <div className="flex items-center justify-between gap-4 p-4 border-b">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by number, WABA or status..."
-              className="ps-9"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => loadAccounts().catch(() => undefined)}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" /> Refresh
-            </Button>
-            <Button size="sm" onClick={() => setConnectOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> Connect WhatsApp Number
-            </Button>
+    <div className="flex-1 space-y-6 pt-1">
+      {viewMode === 'NUMBERS' ? (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500 space-y-6 p-6">
+          {/* ── Accounts table ── */}
+          <div className="rounded-xl border bg-card/50 shadow-sm backdrop-blur-sm shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between gap-4 p-4 border-b bg-card">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search by number, WABA or status..."
+                  className="ps-9"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => loadAccounts().catch(() => undefined)}
+                  className="gap-2"
+                >
+                  <RefreshCw className={cn('h-4 w-4', loadingAccounts && 'animate-spin')} /> Refresh
+                </Button>
+                <Button size="sm" onClick={() => setConnectOpen(true)} className="gap-2">
+                  <Plus className="h-4 w-4" /> Connect WhatsApp Number
+                </Button>
+              </div>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="font-bold text-foreground">Phone Number</TableHead>
+                  <TableHead className="font-bold text-foreground">WA Business Account</TableHead>
+                  <TableHead className="font-bold text-foreground">Status</TableHead>
+                  <TableHead className="font-bold text-foreground">Name Status</TableHead>
+                  <TableHead className="font-bold text-foreground">Quality Rating</TableHead>
+                  <TableHead className="w-28 text-right font-bold text-foreground">
+                    Action
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loadingAccounts ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                      Loading connected numbers...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredAccounts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      No connected WhatsApp numbers yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAccounts.map((account) => (
+                    <TableRow
+                      key={`${account.id}-${account.phoneNumber}`}
+                      className="hover:bg-accent/5 transition-colors"
+                    >
+                      <TableCell className="font-medium">
+                        {account.phoneNumber ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedWabaNumber(account.phoneNumber);
+                              setViewMode('CONVERSATIONS');
+                            }}
+                            className="text-primary hover:underline font-semibold"
+                          >
+                            {account.phoneNumber}
+                          </button>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {account.wabaName || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={cn('text-xs capitalize', statusBadgeClass(account.status))}
+                        >
+                          {account.status || 'unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {account.isVerified ? (
+                          <span className="flex items-center gap-1 text-primary">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Verified
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-amber-600">
+                            <Clock className="h-3.5 w-3.5" /> Pending
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{account.quality}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setManagingAccount(account)}
+                          className="h-7 gap-1.5 px-2 text-xs"
+                        >
+                          Manage Phones
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </div>
+      ) : (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-500 p-6">
+          <ConversationsTable
+            phoneNumber={selectedWabaNumber!}
+            onBack={() => {
+              setViewMode('NUMBERS');
+              setSelectedWabaNumber(null);
+            }}
+            onSelectContact={(contactNumber) => {
+              const account = accounts.find((a) => a.phoneNumber === selectedWabaNumber);
+              if (account) {
+                setViewingChatNumber({
+                  account,
+                  phoneNumber: contactNumber,
+                });
+              }
+            }}
+          />
+        </div>
+      )}
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Phone Number</TableHead>
-              <TableHead>WA Business Account</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Name Status</TableHead>
-              <TableHead>Quality Rating</TableHead>
-              <TableHead className="w-28" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loadingAccounts ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                  Loading connected numbers...
-                </TableCell>
-              </TableRow>
-            ) : filteredAccounts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                  No connected WhatsApp numbers yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredAccounts.map((account) => (
-                <TableRow key={`${account.id}-${account.phoneNumber}`}>
-                  <TableCell className="font-medium">
-                    {account.phoneNumber ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setViewingChatNumber({ account, phoneNumber: account.phoneNumber })
-                        }
-                        className="text-primary hover:underline font-semibold"
-                      >
-                        {account.phoneNumber}
-                      </button>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {account.wabaName || '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={cn('text-xs capitalize', statusBadgeClass(account.status))}>
-                      {account.status || 'unknown'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {account.isVerified ? (
-                      <span className="flex items-center gap-1 text-primary">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Verified
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-amber-600">
-                        <Clock className="h-3.5 w-3.5" /> Pending
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">{account.quality}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setManagingAccount(account)}
-                      className="h-7 gap-1.5 px-2 text-xs"
-                    >
-                      Manage Phones
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <PhoneManagementSheet account={managingAccount} onClose={() => setManagingAccount(null)} />
+      <PhoneManagementSheet
+        account={managingAccount}
+        onClose={() => setManagingAccount(null)}
+        onUpdated={loadAccounts}
+      />
 
       <IndividualChatDialog
         account={viewingChatNumber?.account || null}

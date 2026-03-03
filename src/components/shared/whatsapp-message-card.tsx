@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 'use client';
 
 import dayjs from 'dayjs';

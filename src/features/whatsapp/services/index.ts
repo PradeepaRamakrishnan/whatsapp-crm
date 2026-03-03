@@ -342,6 +342,23 @@ export const getMessages = async (accountId: string, phoneNumber?: string) => {
   return request(`${API_URL}/accounts/${accountId}/messages${query}`);
 };
 
+// GET /business-whatsapp/accounts/conversations/:phoneNumber
+export const getUniqueConversations = async (phoneNumber: string) => {
+  return request(`${API_URL}/accounts/conversations/${encodeURIComponent(phoneNumber)}`);
+};
+
+// GET /business-whatsapp/accounts/messages-by-number
+export const getMessagesByNumber = async (params: {
+  wabaPhoneNumber: string;
+  contactNumber?: string;
+  direction?: string;
+}) => {
+  const q = new URLSearchParams({ wabaPhoneNumber: params.wabaPhoneNumber });
+  if (params.contactNumber) q.set('contactNumber', params.contactNumber);
+  if (params.direction) q.set('direction', params.direction);
+  return request(`${API_URL}/accounts/messages-by-number?${q}`);
+};
+
 // POST /business-whatsapp/conversations/:id/messages/text
 export const sendTextMessage = async (
   conversationId: string,

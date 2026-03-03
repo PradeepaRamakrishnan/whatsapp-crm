@@ -12,7 +12,7 @@ export function WhatsAppConfigHeader() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const activeTab = pathname === '/whatsapp/templates' ? 'templates' : 'numbers';
+  const activeTab = pathname.includes('/whatsapp/templates') ? 'templates' : 'numbers';
 
   return (
     <div className="mb-6">

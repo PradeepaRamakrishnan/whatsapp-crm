@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { WhatsAppMessageCard } from './whatsapp-message-card';
 
 export type MessageChannel = 'whatsapp' | 'email' | 'sms' | 'call';
 
@@ -261,95 +262,103 @@ export function ConversationView({
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
         <div className="flex flex-col gap-3">
-          {filteredMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-2 ${
-                message.sender === 'agent' ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
-              <Avatar className="h-7 w-7 shrink-0">
-                <AvatarFallback
-                  className={
-                    message.sender === 'agent'
-                      ? 'bg-primary text-primary-foreground text-xs'
-                      : 'bg-muted text-xs'
-                  }
-                >
-                  {getInitials(message.senderName)}
-                </AvatarFallback>
-              </Avatar>
+          {filteredMessages.map((message) =>
+            message.channel === 'whatsapp' ? (
+              <div key={message.id}>
+                <WhatsAppMessageCard message={message} />
+              </div>
+            ) : (
               <div
-                className={`flex flex-col gap-1 max-w-[75%] ${
-                  message.sender === 'agent' ? 'items-end' : 'items-start'
+                key={message.id}
+                className={`flex gap-2 ${
+                  message.sender === 'agent' ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-xs text-muted-foreground">
-                    {message.sender === 'agent' ? 'You' : message.senderName || 'Customer'}
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className={`text-[10px] px-1.5 py-0 ${getChannelColor(message.channel)}`}
+                <Avatar className="h-7 w-7 shrink-0">
+                  <AvatarFallback
+                    className={
+                      message.sender === 'agent'
+                        ? 'bg-primary text-primary-foreground text-xs'
+                        : 'bg-muted text-xs'
+                    }
                   >
-                    {getChannelIcon(message.channel)}
-                    <span className="ml-0.5 capitalize">{message.channel}</span>
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground">
-                    {dayjs(message.timestamp).format('h:mm A')}
-                  </span>
-                </div>
+                    {getInitials(message.senderName)}
+                  </AvatarFallback>
+                </Avatar>
                 <div
-                  className={`rounded-lg px-3 py-2 ${
-                    message.sender === 'agent'
-                      ? 'bg-muted text-foreground'
-                      : 'bg-primary text-primary-foreground'
+                  className={`flex flex-col gap-1 max-w-[78%] ${
+                    message.sender === 'agent' ? 'items-end' : 'items-start'
                   }`}
                 >
-                  {message.channel === 'email' && message.content.includes('<') ? (
-                    <div
-                      className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-full overflow-x-auto"
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: <Used for rendering email HTML content>
-                      dangerouslySetInnerHTML={{ __html: message.content }}
-                    />
-                  ) : (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className="text-xs text-muted-foreground">
+                      {message.sender === 'agent' ? 'You' : message.senderName || 'Customer'}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className={`text-[10px] px-1.5 py-0 ${getChannelColor(message.channel)}`}
+                    >
+                      {getChannelIcon(message.channel)}
+                      <span className="ml-0.5 capitalize">{message.channel}</span>
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      {dayjs(message.timestamp).format('h:mm A')}
+                    </span>
+                  </div>
+                  <div
+                    className={`rounded-lg px-3 py-2 ${
+                      message.sender === 'agent'
+                        ? 'bg-muted text-foreground'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
+                  >
+                    {message.channel === 'email' && message.content.includes('<') ? (
+                      <div
+                        className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-full overflow-x-auto"
+                        // biome-ignore lint/security/noDangerouslySetInnerHtml: <Used for rendering email HTML content>
+                        dangerouslySetInnerHTML={{ __html: message.content }}
+                      />
+                    ) : (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {message.content}
+                      </p>
+                    )}
+                  </div>
+                  {message.showActions && message.sender === 'customer' && (
+                    <div className="mt-1.5 flex gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 bg-emerald-600 px-2 text-xs hover:bg-emerald-700"
+                        onClick={onInterested}
+                      >
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span className="ml-1">Interested</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 bg-orange-600 px-2 text-xs hover:bg-orange-700"
+                        onClick={onNotInterested}
+                      >
+                        <X className="h-3 w-3" />
+                        <span className="ml-1">Not Interested</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 bg-purple-600 px-2 text-xs hover:bg-purple-700"
+                        onClick={onFollowUp}
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        <span className="ml-1">Follow-up</span>
+                      </Button>
+                    </div>
                   )}
                 </div>
-                {message.showActions && message.sender === 'customer' && (
-                  <div className="mt-1.5 flex gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="h-7 bg-emerald-600 px-2 text-xs hover:bg-emerald-700"
-                      onClick={onInterested}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      <span className="ml-1">Interested</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="h-7 bg-orange-600 px-2 text-xs hover:bg-orange-700"
-                      onClick={onNotInterested}
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="ml-1">Not Interested</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="h-7 bg-purple-600 px-2 text-xs hover:bg-purple-700"
-                      onClick={onFollowUp}
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      <span className="ml-1">Follow-up</span>
-                    </Button>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </ScrollArea>
 
