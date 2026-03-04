@@ -3,27 +3,33 @@
 import { useForm } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
 import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  BarChart3,
   Calendar,
   Check,
+  ChevronRight,
   Clock,
   FileSpreadsheet,
-  FileText,
+  Info,
+  Lightbulb,
   Loader2,
   Mail,
   MessageSquare,
-  Phone,
+  Minus,
+  Plus,
   Send,
-  TrendingUp,
+  Target,
   UserCog,
+  Users,
+  Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -31,923 +37,1262 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getAllEmailTemplates, getAllWhatsAppTemplates } from '@/features/settings/services';
+import {
+  createConfiguration,
+  getAllEmailTemplates,
+  getAllSmsTemplates,
+  getAllWhatsAppTemplates,
+} from '@/features/settings/services';
+import { createCampaign } from '../services';
 import type { CampaignSequenceStep, ManualAction } from '../types';
 import { RecordSelectionTable } from './record-selection-table';
 
 type CampaignPriority = 'low' | 'medium' | 'high' | 'urgent';
 
-const steps = [
-  { id: 1, name: 'Basic Details' },
-  { id: 2, name: 'Records' },
-  { id: 3, name: 'Templates' },
-  { id: 4, name: 'Timing' },
-  { id: 5, name: 'Review' },
+const STEPS = [
+  { id: 1 as const, name: 'Basic Details', desc: 'Name & priority', icon: Zap },
+  { id: 2 as const, name: 'Records', desc: 'Select borrower file', icon: FileSpreadsheet },
+  { id: 3 as const, name: 'Templates', desc: 'Message sequence', icon: MessageSquare },
+  { id: 4 as const, name: 'Timing', desc: 'Schedule or send now', icon: Clock },
+  { id: 5 as const, name: 'Review & Launch', desc: 'Confirm and create', icon: Check },
 ];
 
-// Mock file data
-const mockFiles = [
-  { id: '1', name: 'ICICI_Borrowers_Jan_2024.csv', records: 2500, uploadDate: '2024-01-15' },
-  { id: '2', name: 'HDFC_Borrowers_Dec_2023.xlsx', records: 1800, uploadDate: '2024-01-10' },
-  { id: '3', name: 'SBI_Borrowers_Jan_2024.csv', records: 3200, uploadDate: '2024-01-12' },
+const PRIORITY_OPTIONS = [
+  {
+    value: 'low' as CampaignPriority,
+    label: 'Low',
+    icon: ArrowDown,
+    bg: 'bg-emerald-500',
+    ring: 'ring-emerald-400/40',
+    desc: 'Routine follow-up, no urgency',
+  },
+  {
+    value: 'medium' as CampaignPriority,
+    label: 'Medium',
+    icon: Minus,
+    bg: 'bg-amber-500',
+    ring: 'ring-amber-400/40',
+    desc: 'Standard campaign execution',
+  },
+  {
+    value: 'high' as CampaignPriority,
+    label: 'High',
+    icon: ArrowUp,
+    bg: 'bg-orange-500',
+    ring: 'ring-orange-400/40',
+    desc: 'Needs prompt attention',
+  },
+  {
+    value: 'urgent' as CampaignPriority,
+    label: 'Urgent',
+    icon: AlertTriangle,
+    bg: 'bg-red-500',
+    ring: 'ring-red-400/40',
+    desc: 'Immediate action required',
+  },
 ];
+
+const MOCK_FILES = [
+  {
+    id: '1',
+    name: 'ICICI_Borrowers_Jan_2024',
+    ext: 'csv',
+    records: 2500,
+    date: 'Jan 15, 2024',
+    bank: 'ICICI',
+  },
+  {
+    id: '2',
+    name: 'HDFC_Borrowers_Dec_2023',
+    ext: 'xlsx',
+    records: 1800,
+    date: 'Jan 10, 2024',
+    bank: 'HDFC',
+  },
+  {
+    id: '3',
+    name: 'SBI_Borrowers_Jan_2024',
+    ext: 'csv',
+    records: 3200,
+    date: 'Jan 12, 2024',
+    bank: 'SBI',
+  },
+];
+
+const CH = {
+  whatsapp: {
+    icon: Send,
+    label: 'WhatsApp',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    pill: 'bg-emerald-100 text-emerald-700',
+    desc: 'High open-rate, rich media support',
+  },
+  sms: {
+    icon: MessageSquare,
+    label: 'SMS',
+    color: 'text-sky-600',
+    bg: 'bg-sky-50 dark:bg-sky-950/40',
+    border: 'border-sky-200 dark:border-sky-800',
+    pill: 'bg-sky-100 text-sky-700',
+    desc: 'Universal reach, no app needed',
+  },
+  email: {
+    icon: Mail,
+    label: 'Email',
+    color: 'text-violet-600',
+    bg: 'bg-violet-50 dark:bg-violet-950/40',
+    border: 'border-violet-200 dark:border-violet-800',
+    pill: 'bg-violet-100 text-violet-700',
+    desc: 'Detailed content, document sharing',
+  },
+  manual: {
+    icon: UserCog,
+    label: 'Manual',
+    color: 'text-rose-600',
+    bg: 'bg-rose-50 dark:bg-rose-950/40',
+    border: 'border-rose-200 dark:border-rose-800',
+    pill: 'bg-rose-100 text-rose-700',
+    desc: 'Human-led personalised outreach',
+  },
+} as const;
+
+const MANUAL_LABELS: Record<ManualAction, string> = {
+  call: 'Phone Call',
+  manual_whatsapp: 'Manual WhatsApp',
+  manual_email: 'Manual Email',
+  visit: 'In-Person Visit',
+};
+
+const toDelayMs = (v: number, u: 'minutes' | 'hours' | 'days') =>
+  u === 'hours' ? v * 3600000 : u === 'days' ? v * 86400000 : v * 60000;
+const toCron = (date: string, time: string) => {
+  const [, m, d] = date.split('-');
+  const [h, min] = time.split(':');
+  return `0 ${+min} ${+h} ${+d} ${+m} *`;
+};
+const nowCron = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 1);
+  return `0 ${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`;
+};
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+      {children}
+    </p>
+  );
+}
+
+// ── Right panel info tip ────────────────────────────────────────────────────
+function Tip({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-3 rounded-xl border border-border/50 bg-muted/20 p-4">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <Icon className="h-3.5 w-3.5 text-primary" />
+      </div>
+      <div>
+        <p className="mb-1 text-[12px] font-semibold text-foreground">{title}</p>
+        <div className="text-[11.5px] leading-relaxed text-muted-foreground">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Live summary row ────────────────────────────────────────────────────────
+function SummaryRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between rounded-lg px-3 py-2 ${highlight ? 'bg-primary/5' : 'bg-muted/20'}`}
+    >
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span
+        className={`text-[12px] font-semibold ${highlight ? 'text-primary' : 'text-foreground'}`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
 
 export function CreateCampaignForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [selectedFile, setSelectedFile] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
   const [sequence, setSequence] = useState<CampaignSequenceStep[]>([
     {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).slice(2),
       channel: 'whatsapp',
       templateId: '',
       delayValue: 0,
       delayUnit: 'minutes',
     },
   ]);
+  const [selectedSeqStepId, setSelectedSeqStepId] = useState(() => sequence[0]?.id ?? '');
 
-  const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
-  const [scheduledDate, setScheduledDate] = useState<string>('');
-  const [scheduledTime, setScheduledTime] = useState<string>('');
-
-  const addSequenceStep = () => {
-    const lastStep = sequence[sequence.length - 1];
-    const newStep: CampaignSequenceStep = {
-      id: Math.random().toString(36).substr(2, 9),
-      channel: lastStep?.channel || 'whatsapp',
-      templateId: '',
-      delayValue: 0,
-      delayUnit: 'minutes',
-    };
-    setSequence([...sequence, newStep]);
+  const addSeqStep = () => {
+    const newId = Math.random().toString(36).slice(2);
+    setSequence((p) => [
+      ...p,
+      {
+        id: newId,
+        channel: p.at(-1)?.channel ?? 'whatsapp',
+        templateId: '',
+        delayValue: 0,
+        delayUnit: 'minutes',
+      },
+    ]);
+    setSelectedSeqStepId(newId);
   };
-
-  const removeSequenceStep = (id: string) => {
-    if (sequence.length <= 1) return;
-    setSequence(sequence.filter((s) => s.id !== id));
+  const removeSeqStep = (id: string) => {
+    setSequence((p) => {
+      if (p.length <= 1) return p;
+      const newSeq = p.filter((s) => s.id !== id);
+      const idx = p.findIndex((s) => s.id === id);
+      setSelectedSeqStepId(newSeq[Math.min(idx, newSeq.length - 1)]?.id ?? '');
+      return newSeq;
+    });
   };
-
-  const updateSequenceStep = (id: string, updates: Partial<CampaignSequenceStep>) => {
-    setSequence(sequence.map((s) => (s.id === id ? { ...s, ...updates } : s)));
-  };
+  const updateSeqStep = (id: string, u: Partial<CampaignSequenceStep>) =>
+    setSequence((p) => p.map((s) => (s.id === id ? { ...s, ...u } : s)));
 
   const form = useForm({
-    defaultValues: {
-      name: '',
-      priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-      description: '',
-    },
-    onSubmit: async () => {
-      router.push('/campaigns/list');
+    defaultValues: { name: '', priority: 'medium' as CampaignPriority, description: '' },
+    onSubmit: async ({ value }) => {
+      setSubmitError(null);
+      setIsSubmitting(true);
+      try {
+        const steps = sequence
+          .filter((s) => s.channel !== 'manual' && s.templateId)
+          .map((s, i) => ({
+            channel: s.channel as any,
+            templateId: s.templateId,
+            delayMs: i === 0 ? 0 : toDelayMs(s.delayValue, s.delayUnit),
+          }));
+        const config = await createConfiguration({
+          steps,
+          cronPattern:
+            scheduleMode === 'schedule' && scheduledDate && scheduledTime
+              ? toCron(scheduledDate, scheduledTime)
+              : nowCron(),
+        });
+        await createCampaign({
+          name: value.name,
+          description: value.description,
+          fileId: selectedFile,
+          configurationId: config.id,
+        });
+        router.push('/campaigns/list');
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : 'Failed to create campaign');
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
-  const { data: emailTemplatesData, isLoading: emailLoading } = useQuery({
+  const { data: ed, isLoading: el } = useQuery({
     queryKey: ['email-templates'],
     queryFn: getAllEmailTemplates,
   });
-  const { data: waTemplatesData, isLoading: waLoading } = useQuery({
+  const { data: wd, isLoading: wl } = useQuery({
     queryKey: ['whatsapp-templates'],
     queryFn: getAllWhatsAppTemplates,
   });
+  const { data: sd, isLoading: sl } = useQuery({
+    queryKey: ['sms-templates'],
+    queryFn: getAllSmsTemplates,
+  });
 
-  const emailTemplates = emailTemplatesData?.data ?? [];
-  const smsTemplates: { id: string; name: string }[] = [];
-  const whatsappTemplates = waTemplatesData?.data ?? [];
-  const templatesLoading = emailLoading || waLoading;
+  const emailTpls = ed?.data ?? [];
+  const waTpls = wd?.data ?? [];
+  const smsTpls = sd?.data ?? [];
+  const tplLoading = el || wl || sl;
+  const getTpls = (ch: string) => (ch === 'whatsapp' ? waTpls : ch === 'sms' ? smsTpls : emailTpls);
+  const getTplName = (s: CampaignSequenceStep) =>
+    getTpls(s.channel).find((t) => t.id === s.templateId)?.name ?? s.templateId ?? '—';
 
-  const selectedFileData = mockFiles.find((f) => f.id === selectedFile);
-
-  const allRequiredTemplatesSelected = sequence.every(
-    (s) => s.channel === 'manual' || s.templateId,
-  );
-
-  const atLeastOneChannelEnabled = sequence.length > 0;
-
-  const getTemplateName = (s: CampaignSequenceStep) => {
-    if (s.channel === 'whatsapp') {
-      return whatsappTemplates.find((t) => t.id === s.templateId)?.name ?? s.templateId;
-    }
-    if (s.channel === 'email') {
-      return emailTemplates.find((t) => t.id === s.templateId)?.name ?? s.templateId;
-    }
-    if (s.channel === 'sms') {
-      return s.templateId || '-';
-    }
-    return '-';
-  };
-
-  const manualActionLabel: Record<ManualAction, string> = {
-    call: 'Phone Call',
-    manual_whatsapp: 'Manual WhatsApp',
-    manual_email: 'Manual Email',
-    visit: 'In-Person Visit',
-  };
-
-  const channelIcon = (channel: CampaignSequenceStep['channel']) =>
-    channel === 'whatsapp'
-      ? Send
-      : channel === 'sms'
-        ? MessageSquare
-        : channel === 'manual'
-          ? UserCog
-          : Mail;
-
-  const channelColor = (channel: CampaignSequenceStep['channel']) =>
-    channel === 'whatsapp'
-      ? 'text-emerald-600'
-      : channel === 'sms'
-        ? 'text-green-600'
-        : channel === 'manual'
-          ? 'text-purple-600'
-          : 'text-blue-600';
+  const selectedFileData = MOCK_FILES.find((f) => f.id === selectedFile);
+  const canNext3 =
+    sequence.every((s) => s.channel === 'manual' || s.templateId) && sequence.length > 0;
+  const currentPriority = PRIORITY_OPTIONS.find((p) => p.value === form.getFieldValue('priority'))!;
+  const selectedSeqStep = sequence.find((s) => s.id === selectedSeqStepId) ?? sequence[0];
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4 md:gap-5 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create New Campaign</h1>
-          <p className="text-sm text-muted-foreground">
-            Configure templates, records, and schedule for your campaign
-          </p>
-        </div>
-      </div>
-
-      {/* Stepper */}
-      <nav aria-label="Progress" className="overflow-x-auto rounded-lg border bg-card p-3">
-        <ol className="flex min-w-[760px] items-center">
-          {steps.map((s, idx) => (
-            <li
-              key={s.id}
-              className={`flex items-center ${idx !== steps.length - 1 ? 'flex-1' : ''}`}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-all ${
-                    step > s.id
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : step === s.id
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-muted-foreground/25 bg-muted/30 text-muted-foreground'
-                  }`}
-                >
-                  {step > s.id ? <Check className="h-3 w-3" /> : s.id}
-                </div>
-                <span
-                  className={`hidden text-xs font-medium sm:block ${
-                    step >= s.id ? 'text-foreground' : 'text-muted-foreground'
-                  }`}
-                >
-                  {s.name}
-                </span>
-              </div>
-              {idx !== steps.length - 1 && (
-                <div
-                  className={`mx-2 h-0.5 flex-1 transition-colors ${
-                    step > s.id ? 'bg-primary' : 'bg-muted-foreground/25'
-                  }`}
-                />
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
-
-      {/* Form Card */}
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b px-5 py-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">
-              {step === 1 && 'Basic Details'}
-              {step === 2 && 'Record Selection'}
-              {step === 3 && 'Template Selection'}
-              {step === 4 && 'Channel Timing'}
-              {step === 5 && 'Review & Confirm'}
-            </CardTitle>
-            <span className="text-xs text-muted-foreground">Step {step} of 5</span>
+    <div className="flex h-full w-full overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
+      {/* ── LEFT SIDEBAR (step nav) ── */}
+      <aside className="flex w-52 shrink-0 flex-col border-r border-border/50 bg-muted/10">
+        <div className="flex items-center gap-2.5 border-b border-border/40 px-4 py-3.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Zap className="h-3.5 w-3.5" />
           </div>
-        </CardHeader>
-        <CardContent className="p-5">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (step === 1) {
-                setStep(2);
-              } else if (step === 2) {
-                setStep(3);
-              } else if (step === 3) {
-                setStep(4);
-              } else if (step === 4) {
-                if (scheduleMode === 'schedule' && (!scheduledDate || !scheduledTime)) {
-                  return;
-                }
-                setStep(5);
-              } else {
-                form.handleSubmit();
-              }
-            }}
-            className="space-y-5"
+          <div>
+            <p className="text-[12.5px] font-bold leading-tight">New Campaign</p>
+            <p className="text-[10px] text-muted-foreground/60">5 steps to launch</p>
+          </div>
+        </div>
+
+        <nav className="flex-1 py-2">
+          {STEPS.map((s) => {
+            const done = step > s.id;
+            const cur = step === s.id;
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => done && setStep(s.id)}
+                className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-all ${cur ? 'bg-primary/8' : done ? 'cursor-pointer hover:bg-muted/40' : 'cursor-default'}`}
+              >
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9.5px] font-bold transition-all ${done ? 'bg-primary text-primary-foreground' : cur ? 'bg-primary/15 text-primary ring-1 ring-primary/30' : 'bg-muted/60 text-muted-foreground/40'}`}
+                >
+                  {done ? <Check className="h-3 w-3" /> : <Icon className="h-3 w-3" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-[12px] font-semibold leading-tight ${cur ? 'text-primary' : done ? 'text-foreground' : 'text-muted-foreground/50'}`}
+                  >
+                    {s.name}
+                  </p>
+                  <p
+                    className={`text-[10px] ${cur ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}
+                  >
+                    {s.desc}
+                  </p>
+                </div>
+                {cur && <ChevronRight className="h-3 w-3 shrink-0 text-primary" />}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-border/40 px-4 py-3">
+          <div className="mb-1 flex justify-between">
+            <span className="text-[10px] text-muted-foreground/60">Progress</span>
+            <span className="text-[10px] font-bold text-primary">
+              {Math.round(((step - 1) / 4) * 100)}%
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${((step - 1) / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+      </aside>
+
+      {/* ── MAIN AREA ── */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top bar */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border/40 px-5 py-2.5">
+          <div>
+            <h2 className="text-[14px] font-bold">{STEPS[step - 1].name}</h2>
+            <p className="text-[11px] text-muted-foreground">{STEPS[step - 1].desc}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/campaigns/list')}
+            className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <div className="mx-auto w-full max-w-5xl space-y-5">
-              {/* Step 1: Basic Details */}
+            Cancel
+          </button>
+        </div>
+
+        {/* Split: form left + info right */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (step < 4) setStep((s) => (s + 1) as any);
+            else if (step === 4) {
+              if (scheduleMode === 'schedule' && (!scheduledDate || !scheduledTime)) return;
+              setStep(5);
+            } else form.handleSubmit();
+          }}
+          className="flex flex-1 overflow-hidden"
+        >
+          {/* ── LEFT: Inputs ── */}
+          <div className="flex flex-1 flex-col overflow-hidden border-r border-border/40">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* ══ Step 1 ══ */}
               {step === 1 && (
-                <div className="grid gap-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <>
+                  <div>
+                    <FieldLabel>
+                      Campaign Name{' '}
+                      <span className="text-destructive normal-case font-normal">*</span>
+                    </FieldLabel>
                     <form.Field
                       name="name"
-                      validators={{
-                        onChange: ({ value }) => {
-                          if (!value || value.length < 1) return 'Campaign name is required';
-                          return undefined;
-                        },
-                      }}
+                      validators={{ onChange: ({ value }) => (!value ? 'Required' : undefined) }}
                     >
                       {(field) => (
                         <Field data-invalid={field.state.meta.errors.length > 0}>
-                          <FieldLabel htmlFor={field.name}>
-                            Campaign Name <span className="text-destructive">*</span>
-                          </FieldLabel>
                           <Input
-                            id={field.name}
-                            name={field.name}
-                            placeholder="Enter campaign name"
+                            placeholder="e.g. Q1 ICICI Settlement Drive"
+                            className="h-9 text-sm"
                             value={field.state.value}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
                           />
-                          <FieldError>
-                            {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                              ? field.state.meta.errors[0]
-                              : null}
-                          </FieldError>
-                        </Field>
-                      )}
-                    </form.Field>
-
-                    <form.Field name="priority">
-                      {(field) => (
-                        <Field>
-                          <FieldLabel htmlFor={field.name}>Priority</FieldLabel>
-                          <Select
-                            value={field.state.value}
-                            onValueChange={(value) => field.handleChange(value as CampaignPriority)}
-                          >
-                            <SelectTrigger id={field.name}>
-                              <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="urgent">Urgent</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {field.state.meta.isTouched && field.state.meta.errors[0] && (
+                            <FieldError>{field.state.meta.errors[0]}</FieldError>
+                          )}
                         </Field>
                       )}
                     </form.Field>
                   </div>
 
-                  <form.Field
-                    name="description"
-                    validators={{
-                      onChange: ({ value }) => {
-                        if (!value || value.length < 1) return 'Description is required';
-                        return undefined;
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <Field data-invalid={field.state.meta.errors.length > 0}>
-                        <FieldLabel htmlFor={field.name}>
-                          Description <span className="text-destructive">*</span>
-                        </FieldLabel>
-                        <textarea
-                          id={field.name}
-                          name={field.name}
-                          placeholder="Describe your campaign"
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                        />
-                        <FieldError>
-                          {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                            ? field.state.meta.errors[0]
-                            : null}
-                        </FieldError>
-                      </Field>
-                    )}
-                  </form.Field>
-                </div>
+                  <div>
+                    <FieldLabel>
+                      Description{' '}
+                      <span className="text-destructive normal-case font-normal">*</span>
+                    </FieldLabel>
+                    <form.Field
+                      name="description"
+                      validators={{ onChange: ({ value }) => (!value ? 'Required' : undefined) }}
+                    >
+                      {(field) => (
+                        <Field data-invalid={field.state.meta.errors.length > 0}>
+                          <textarea
+                            rows={4}
+                            placeholder="Describe the campaign goal and target audience..."
+                            className="flex w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onBlur={field.handleBlur}
+                          />
+                          {field.state.meta.isTouched && field.state.meta.errors[0] && (
+                            <FieldError>{field.state.meta.errors[0]}</FieldError>
+                          )}
+                        </Field>
+                      )}
+                    </form.Field>
+                  </div>
+
+                  <div>
+                    <FieldLabel>Priority</FieldLabel>
+                    <form.Field name="priority">
+                      {(field) => (
+                        <div className="flex flex-wrap gap-2">
+                          {PRIORITY_OPTIONS.map((opt) => {
+                            const Icon = opt.icon;
+                            const active = field.state.value === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => field.handleChange(opt.value)}
+                                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${active ? `border-transparent ${opt.bg} text-white` : 'border-border/60 text-muted-foreground hover:bg-muted/30 hover:text-foreground'}`}
+                              >
+                                <Icon className="h-3 w-3" />
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </form.Field>
+                  </div>
+                </>
               )}
 
-              {/* Step 2: Record Selection */}
+              {/* ══ Step 2 ══ */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <div className="space-y-2 rounded-lg border bg-muted/20 p-4">
-                    <Label>
-                      Borrower File <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <Select value={selectedFile} onValueChange={setSelectedFile}>
-                        <SelectTrigger className="w-full sm:max-w-xl">
-                          <SelectValue placeholder="Select a file..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockFiles.map((file) => (
-                            <SelectItem key={file.id} value={file.id}>
-                              <div className="flex items-center gap-2">
-                                <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span>{file.name.replace(/\.[^/.]+$/, '')}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  ({file.records.toLocaleString()} records)
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedFileData && (
-                        <span className="text-xs text-muted-foreground">
-                          Uploaded: {selectedFileData.uploadDate}
-                        </span>
-                      )}
+                <>
+                  <div>
+                    <FieldLabel>Select Borrower File</FieldLabel>
+                    <div className="space-y-2">
+                      {MOCK_FILES.map((file) => {
+                        const sel = selectedFile === file.id;
+                        return (
+                          <button
+                            key={file.id}
+                            type="button"
+                            onClick={() => setSelectedFile(file.id)}
+                            className={`flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${sel ? 'border-primary/40 bg-primary/5 ring-2 ring-primary/15' : 'border-border/60 hover:bg-muted/20'}`}
+                          >
+                            <div
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${sel ? 'bg-primary/15' : 'bg-muted/60'}`}
+                            >
+                              <FileSpreadsheet
+                                className={`h-4.5 w-4.5 ${sel ? 'text-primary' : 'text-muted-foreground/50'}`}
+                                style={{ width: 18, height: 18 }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold">{file.name}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {file.records.toLocaleString()} records · .{file.ext} · {file.date}
+                              </p>
+                            </div>
+                            <div
+                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${sel ? 'bg-primary border-primary' : 'border-border/50'}`}
+                            >
+                              {sel && <Check className="h-3 w-3 text-white" />}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {selectedFile && (
-                    <RecordSelectionTable
-                      totalRecords={selectedFileData?.records || 0}
-                      selectedRecords={selectedFileData?.records || 0}
-                    />
+                    <div className="rounded-xl border border-border/50 p-4">
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        Record Preview
+                      </p>
+                      <RecordSelectionTable
+                        totalRecords={selectedFileData?.records ?? 0}
+                        selectedRecords={selectedFileData?.records ?? 0}
+                      />
+                    </div>
                   )}
-                </div>
+                </>
               )}
 
-              {/* Step 3: Template Selection (Sequence Builder) */}
+              {/* ══ Step 3 ══ */}
               {step === 3 && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Campaign Sequence</p>
-                      <p className="text-xs text-muted-foreground">
-                        Add automated messages or manual follow-up steps
-                      </p>
+                  {/* ── Flow timeline ── */}
+                  <div>
+                    <FieldLabel>Message Sequence</FieldLabel>
+                    {tplLoading && (
+                      <div className="mb-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Loading templates…
+                      </div>
+                    )}
+                    {/* ── Connected node flow (Bolna-style) ── */}
+                    <div className="flex items-start overflow-x-auto pb-2 pt-1">
+                      {sequence.map((s, idx) => {
+                        const meta = CH[s.channel];
+                        const StepIcon = meta.icon;
+                        const isActive = selectedSeqStep?.id === s.id;
+                        const tplName =
+                          s.channel !== 'manual' && s.templateId
+                            ? getTplName(s)
+                            : s.channel === 'manual'
+                              ? MANUAL_LABELS[s.manualAction ?? 'call']
+                              : null;
+                        return (
+                          <div key={s.id} className="flex shrink-0 items-start">
+                            {/* Connector */}
+                            {idx > 0 && (
+                              <div
+                                className="flex shrink-0 flex-col items-center"
+                                style={{ marginTop: 18 }}
+                              >
+                                <div className="flex items-center">
+                                  <div className="h-px w-5 bg-border/60" />
+                                  {s.delayValue > 0 ? (
+                                    <span className="whitespace-nowrap rounded-full border border-border/40 bg-muted/40 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground/60">
+                                      +{s.delayValue}
+                                      {s.delayUnit[0]}
+                                    </span>
+                                  ) : (
+                                    <div className="h-px w-3 bg-border/60" />
+                                  )}
+                                  <div className="h-px w-5 bg-border/60" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Node */}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSeqStepId(s.id)}
+                              className="flex shrink-0 flex-col items-center gap-1.5 text-center"
+                              style={{ width: 72 }}
+                            >
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+                                  isActive
+                                    ? `${meta.border} ${meta.pill}`
+                                    : 'border-border/40 bg-muted/20 hover:border-border/70'
+                                }`}
+                              >
+                                <StepIcon
+                                  className={`h-4 w-4 ${isActive ? meta.color : 'text-muted-foreground/50'}`}
+                                />
+                              </div>
+                              <div>
+                                <span
+                                  className={`block text-[9px] font-bold uppercase tracking-wider ${isActive ? meta.color : 'text-muted-foreground/40'}`}
+                                >
+                                  Step {idx + 1}
+                                </span>
+                                <span
+                                  className={`block text-[11px] font-semibold leading-tight ${isActive ? 'text-foreground' : 'text-muted-foreground/60'}`}
+                                >
+                                  {meta.label}
+                                </span>
+                                <span
+                                  className={`block max-w-[68px] truncate text-[9.5px] ${tplName ? (isActive ? 'text-muted-foreground' : 'text-muted-foreground/45') : 'italic text-destructive/40'}`}
+                                >
+                                  {tplName ?? 'No template'}
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                      {/* Add Step */}
+                      <div className="flex shrink-0 items-start" style={{ marginTop: 0 }}>
+                        <div
+                          className="flex shrink-0 flex-col items-center"
+                          style={{ marginTop: 18 }}
+                        >
+                          <div className="h-px w-6 bg-border/40" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addSeqStep}
+                          className="flex shrink-0 flex-col items-center gap-1.5 text-center text-muted-foreground transition-all hover:text-primary"
+                          style={{ width: 60 }}
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-border/40 bg-muted/10 transition-all hover:border-primary/40 hover:bg-primary/5">
+                            <Plus className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[10px] font-medium">Add</span>
+                        </button>
+                      </div>
                     </div>
-                    <Button type="button" onClick={addSequenceStep} variant="outline" size="sm">
-                      <Send className="mr-1.5 h-3.5 w-3.5" /> Add Step
-                    </Button>
                   </div>
 
-                  {templatesLoading && (
-                    <div className="flex items-center gap-2 rounded border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Loading templates...
-                    </div>
-                  )}
-
-                  {sequence.map((stepItem, index) => (
-                    <Card
-                      key={stepItem.id}
-                      className="relative overflow-hidden border transition-all hover:border-primary/40"
-                    >
-                      <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary" />
-                      <CardContent className="p-5">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                                {index + 1}
+                  {/* ── Config panel for selected step ── */}
+                  {selectedSeqStep &&
+                    (() => {
+                      const s = selectedSeqStep;
+                      const idx = sequence.findIndex((seq) => seq.id === s.id);
+                      const meta = CH[s.channel];
+                      const ConfigIcon = meta.icon;
+                      return (
+                        <div className={`overflow-hidden rounded-xl border-2 ${meta.border}`}>
+                          <div
+                            className={`flex items-center justify-between border-b border-inherit px-4 py-3 ${meta.bg}`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`flex h-7 w-7 items-center justify-center rounded-full ${meta.pill}`}
+                              >
+                                <ConfigIcon className={`h-3.5 w-3.5 ${meta.color}`} />
                               </div>
-                              <span className="text-sm font-medium">Step {index + 1}</span>
+                              <div>
+                                <p className={`text-[12.5px] font-bold ${meta.color}`}>
+                                  Step {idx + 1} — {meta.label}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground/60">{meta.desc}</p>
+                              </div>
                             </div>
                             {sequence.length > 1 && (
-                              <Button
+                              <button
                                 type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSequenceStep(stepItem.id)}
-                                className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => removeSeqStep(s.id)}
+                                className="rounded-md px-2.5 py-1 text-[11px] text-destructive/60 transition-colors hover:bg-destructive/10 hover:text-destructive"
                               >
                                 Remove
-                              </Button>
+                              </button>
                             )}
                           </div>
 
-                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <Field>
+                          <div className="grid grid-cols-2 gap-4 bg-background/70 p-4">
+                            <div>
                               <FieldLabel>Channel</FieldLabel>
                               <Select
-                                value={stepItem.channel}
+                                value={s.channel}
                                 onValueChange={(val: CampaignSequenceStep['channel']) =>
-                                  updateSequenceStep(stepItem.id, {
+                                  updateSeqStep(s.id, {
                                     channel: val,
                                     templateId: '',
                                     manualAction: val === 'manual' ? 'call' : undefined,
                                   })
                                 }
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-9 text-sm">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="whatsapp">
-                                    <div className="flex items-center gap-2">
-                                      <Send className="h-4 w-4 text-emerald-600" /> WhatsApp
+                                    <div className="flex items-center gap-1.5">
+                                      <Send className="h-3.5 w-3.5 text-emerald-600" />
+                                      WhatsApp
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="sms">
-                                    <div className="flex items-center gap-2">
-                                      <MessageSquare className="h-4 w-4 text-green-600" /> SMS
+                                    <div className="flex items-center gap-1.5">
+                                      <MessageSquare className="h-3.5 w-3.5 text-sky-600" />
+                                      SMS
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="email">
-                                    <div className="flex items-center gap-2">
-                                      <Mail className="h-4 w-4 text-blue-600" /> Email
+                                    <div className="flex items-center gap-1.5">
+                                      <Mail className="h-3.5 w-3.5 text-violet-600" />
+                                      Email
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="manual">
-                                    <div className="flex items-center gap-2">
-                                      <UserCog className="h-4 w-4 text-purple-600" /> Manual Step
+                                    <div className="flex items-center gap-1.5">
+                                      <UserCog className="h-3.5 w-3.5 text-rose-600" />
+                                      Manual
                                     </div>
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
-                            </Field>
+                            </div>
 
-                            <Field className="lg:col-span-2">
-                              {stepItem.channel === 'manual' ? (
-                                <>
-                                  <FieldLabel>Action Type</FieldLabel>
-                                  <Select
-                                    value={stepItem.manualAction ?? 'call'}
-                                    onValueChange={(val: ManualAction) =>
-                                      updateSequenceStep(stepItem.id, { manualAction: val })
-                                    }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select action..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="call">
-                                        <div className="flex items-center gap-2">
-                                          <Phone className="h-4 w-4 text-purple-600" /> Phone Call
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="manual_whatsapp">
-                                        <div className="flex items-center gap-2">
-                                          <Send className="h-4 w-4 text-emerald-600" /> Manual
-                                          WhatsApp
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="manual_email">
-                                        <div className="flex items-center gap-2">
-                                          <Mail className="h-4 w-4 text-blue-600" /> Manual Email
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="visit">
-                                        <div className="flex items-center gap-2">
-                                          <UserCog className="h-4 w-4 text-orange-600" /> In-Person
-                                          Visit
-                                        </div>
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </>
-                              ) : (
-                                <>
-                                  <FieldLabel>Template</FieldLabel>
-                                  <Select
-                                    value={stepItem.templateId}
-                                    onValueChange={(val) =>
-                                      updateSequenceStep(stepItem.id, { templateId: val })
-                                    }
-                                    disabled={templatesLoading}
-                                  >
-                                    <SelectTrigger>
-                                      {templatesLoading ? (
-                                        <span className="flex items-center gap-2 text-muted-foreground">
-                                          <Loader2 className="h-3 w-3 animate-spin" /> Loading...
-                                        </span>
-                                      ) : (
-                                        <SelectValue placeholder="Select template..." />
-                                      )}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {(stepItem.channel === 'whatsapp'
-                                        ? whatsappTemplates
-                                        : stepItem.channel === 'sms'
-                                          ? smsTemplates
-                                          : emailTemplates
-                                      ).map((t) => (
-                                        <SelectItem key={t.id} value={t.id}>
-                                          {t.name}
-                                        </SelectItem>
-                                      ))}
-                                      {(stepItem.channel === 'whatsapp'
-                                        ? whatsappTemplates
-                                        : stepItem.channel === 'sms'
-                                          ? smsTemplates
-                                          : emailTemplates
-                                      ).length === 0 &&
-                                        !templatesLoading && (
-                                          <SelectItem value="_none" disabled>
-                                            No templates - add in Settings
-                                          </SelectItem>
-                                        )}
-                                    </SelectContent>
-                                  </Select>
-                                </>
-                              )}
-                            </Field>
-
-                            <Field>
-                              <FieldLabel>Delay After Previous</FieldLabel>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={stepItem.delayValue}
-                                  onChange={(e) =>
-                                    updateSequenceStep(stepItem.id, {
-                                      delayValue: parseInt(e.target.value) || 0,
-                                    })
-                                  }
-                                  className="w-20"
-                                  disabled={index === 0}
-                                />
+                            {s.channel === 'manual' ? (
+                              <div>
+                                <FieldLabel>Action Type</FieldLabel>
                                 <Select
-                                  value={stepItem.delayUnit}
-                                  onValueChange={(val: any) =>
-                                    updateSequenceStep(stepItem.id, { delayUnit: val })
+                                  value={s.manualAction ?? 'call'}
+                                  onValueChange={(val: ManualAction) =>
+                                    updateSeqStep(s.id, { manualAction: val })
                                   }
-                                  disabled={index === 0}
                                 >
-                                  <SelectTrigger className="w-28">
+                                  <SelectTrigger className="h-9 text-sm">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="minutes">Minutes</SelectItem>
-                                    <SelectItem value="hours">Hours</SelectItem>
-                                    <SelectItem value="days">Days</SelectItem>
+                                    <SelectItem value="call">Phone Call</SelectItem>
+                                    <SelectItem value="manual_whatsapp">Manual WhatsApp</SelectItem>
+                                    <SelectItem value="manual_email">Manual Email</SelectItem>
+                                    <SelectItem value="visit">In-Person Visit</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
-                            </Field>
-                          </div>
-
-                          {index === 0 && (
-                            <p className="text-xs text-muted-foreground italic">
-                              First step starts immediately or at the scheduled campaign time.
-                            </p>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {/* Step 4: Channel Timing Settings */}
-              {step === 4 && (
-                <div className="space-y-5">
-                  {/* Send Now or Schedule */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Campaign Schedule</p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setScheduleMode('now')}
-                        className={`flex items-center gap-2 rounded-lg border-2 p-3 transition-all ${
-                          scheduleMode === 'now'
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                            : 'border-border hover:border-blue-300'
-                        }`}
-                      >
-                        <Send className="h-4 w-4 shrink-0" />
-                        <div className="text-left">
-                          <div className="text-sm font-medium">Send Now</div>
-                          <div className="text-xs text-muted-foreground">Start immediately</div>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setScheduleMode('schedule')}
-                        className={`flex items-center gap-2 rounded-lg border-2 p-3 transition-all ${
-                          scheduleMode === 'schedule'
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                            : 'border-border hover:border-blue-300'
-                        }`}
-                      >
-                        <Clock className="h-4 w-4 shrink-0" />
-                        <div className="text-left">
-                          <div className="text-sm font-medium">Schedule</div>
-                          <div className="text-xs text-muted-foreground">Set date & time</div>
-                        </div>
-                      </button>
-                    </div>
-
-                    {scheduleMode === 'schedule' && (
-                      <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                        <Field>
-                          <FieldLabel>Date</FieldLabel>
-                          <Input
-                            type="date"
-                            value={scheduledDate}
-                            onChange={(e) => setScheduledDate(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
-                            required
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel>Time</FieldLabel>
-                          <Input
-                            type="time"
-                            value={scheduledTime}
-                            onChange={(e) => setScheduledTime(e.target.value)}
-                            required
-                          />
-                        </Field>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Timing Flow Visualizer */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Sequence Timing Flow</p>
-                    <div className="rounded-lg border p-3">
-                      <div className="flex flex-col gap-2">
-                        {sequence.map((stepItem, index) => {
-                          const Icon = channelIcon(stepItem.channel);
-                          const color = channelColor(stepItem.channel);
-                          const isManual = stepItem.channel === 'manual';
-
-                          return (
-                            <div key={stepItem.id} className="flex flex-col gap-1">
-                              {index > 0 && (
-                                <div className="flex items-center gap-3 pl-8">
-                                  <div className="relative h-8 w-0.5 bg-border">
-                                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded border bg-background px-1.5 py-0.5 text-[10px] font-medium">
-                                      +{stepItem.delayValue} {stepItem.delayUnit}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-3 py-2">
-                                <div
-                                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border bg-white shadow-sm ${color}`}
+                            ) : (
+                              <div>
+                                <FieldLabel>Template</FieldLabel>
+                                <Select
+                                  value={s.templateId}
+                                  onValueChange={(val) => updateSeqStep(s.id, { templateId: val })}
+                                  disabled={tplLoading}
                                 >
-                                  <Icon className="h-3.5 w-3.5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold capitalize">
-                                    {isManual
-                                      ? manualActionLabel[stepItem.manualAction ?? 'call']
-                                      : stepItem.channel}
-                                  </p>
-                                  <p className="truncate text-[10px] text-muted-foreground">
-                                    {isManual
-                                      ? 'Manual - requires agent action'
-                                      : `Template: ${getTemplateName(stepItem)}`}
-                                  </p>
-                                </div>
-                                {index === 0 && (
-                                  <Badge variant="secondary" className="h-5 text-[10px]">
-                                    Start
-                                  </Badge>
-                                )}
-                                {isManual && (
-                                  <Badge
-                                    variant="outline"
-                                    className="h-5 border-purple-300 text-[10px] text-purple-600"
-                                  >
-                                    Manual
-                                  </Badge>
-                                )}
+                                  <SelectTrigger className="h-9 text-sm">
+                                    {tplLoading ? (
+                                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        Loading…
+                                      </span>
+                                    ) : (
+                                      <SelectValue placeholder="Select template…" />
+                                    )}
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getTpls(s.channel).map((t) => (
+                                      <SelectItem key={t.id} value={t.id}>
+                                        {t.name}
+                                      </SelectItem>
+                                    ))}
+                                    {!tplLoading && getTpls(s.channel).length === 0 && (
+                                      <SelectItem value="_none" disabled>
+                                        No templates found
+                                      </SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                            )}
+
+                            {idx > 0 && (
+                              <div className="col-span-2">
+                                <FieldLabel>Delay After Previous Step</FieldLabel>
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={s.delayValue}
+                                    className="h-9 w-24 text-sm"
+                                    onChange={(e) =>
+                                      updateSeqStep(s.id, { delayValue: +e.target.value || 0 })
+                                    }
+                                  />
+                                  <Select
+                                    value={s.delayUnit}
+                                    onValueChange={(val: CampaignSequenceStep['delayUnit']) =>
+                                      updateSeqStep(s.id, { delayUnit: val })
+                                    }
+                                  >
+                                    <SelectTrigger className="h-9 w-32 text-sm">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="minutes">Minutes</SelectItem>
+                                      <SelectItem value="hours">Hours</SelectItem>
+                                      <SelectItem value="days">Days</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </div>
               )}
 
-              {/* Step 5: Review */}
-              {step === 5 && (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {/* Campaign Summary */}
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    <p className="mb-2 text-sm font-semibold">Campaign Summary</p>
-                    <dl className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex items-start gap-2">
-                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Campaign Name</dt>
-                          <dd className="text-sm font-medium">{form.getFieldValue('name')}</dd>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Priority</dt>
-                          <dd className="text-sm font-medium capitalize">
-                            {form.getFieldValue('priority')}
-                          </dd>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 sm:col-span-2">
-                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Description</dt>
-                          <dd className="text-sm font-medium">
-                            {form.getFieldValue('description')}
-                          </dd>
-                        </div>
-                      </div>
-                    </dl>
-                  </div>
-
-                  {/* Records Summary */}
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    <p className="mb-2 text-sm font-semibold">Records</p>
-                    <dl className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex items-start gap-2">
-                        <FileSpreadsheet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Selected File</dt>
-                          <dd className="text-sm font-medium">
-                            {selectedFileData?.name.replace(/\.[^/.]+$/, '') || 'Not selected'}
-                          </dd>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Total Records</dt>
-                          <dd className="text-sm font-medium">
-                            {selectedFileData?.records.toLocaleString() || '0'}
-                          </dd>
-                        </div>
-                      </div>
-                    </dl>
-                  </div>
-
-                  {/* Sequence Summary */}
-                  <div className="rounded-lg border bg-muted/30 p-4 lg:col-span-2">
-                    <p className="mb-2 text-sm font-semibold">Sequence</p>
-                    <div className="space-y-2">
-                      {sequence.map((stepItem, index) => {
-                        const Icon = channelIcon(stepItem.channel);
-                        const color = channelColor(stepItem.channel);
-                        const isManual = stepItem.channel === 'manual';
-                        return (
-                          <div key={stepItem.id} className="flex items-start gap-3">
-                            <div className="flex flex-col items-center">
-                              <div
-                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border bg-white shadow-sm ${color}`}
-                              >
-                                <Icon className="h-3.5 w-3.5" />
-                              </div>
-                              {index < sequence.length - 1 && (
-                                <div className="my-0.5 h-5 w-0.5 bg-border" />
-                              )}
-                            </div>
-                            <div className="flex-1 pt-0.5">
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="text-sm font-medium">
-                                  {isManual
-                                    ? manualActionLabel[stepItem.manualAction ?? 'call']
-                                    : stepItem.channel.charAt(0).toUpperCase() +
-                                      stepItem.channel.slice(1)}
-                                </span>
-                                {isManual && (
-                                  <Badge
-                                    variant="outline"
-                                    className="h-4 border-purple-300 text-[10px] text-purple-600"
-                                  >
-                                    Manual
-                                  </Badge>
-                                )}
-                                {index === 0 ? (
-                                  <Badge variant="secondary" className="h-4 text-[10px]">
-                                    Start
-                                  </Badge>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">
-                                    After {stepItem.delayValue} {stepItem.delayUnit}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-muted-foreground">
-                                {isManual
-                                  ? 'Manual - requires agent action'
-                                  : `Template: ${getTemplateName(stepItem)}`}
-                              </p>
-                            </div>
+              {/* ══ Step 4 ══ */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <div>
+                    <FieldLabel>Launch Timing</FieldLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(
+                        [
+                          {
+                            mode: 'now' as const,
+                            Icon: Send,
+                            label: 'Send Now',
+                            sub: 'Launch immediately',
+                          },
+                          {
+                            mode: 'schedule' as const,
+                            Icon: Clock,
+                            label: 'Schedule',
+                            sub: 'Pick date & time',
+                          },
+                        ] as const
+                      ).map(({ mode, Icon, label, sub }) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setScheduleMode(mode)}
+                          className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${scheduleMode === mode ? 'border-primary/40 bg-primary/5 ring-2 ring-primary/15' : 'border-border/60 hover:bg-muted/20'}`}
+                        >
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${scheduleMode === mode ? 'bg-primary/15' : 'bg-muted/50'}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 ${scheduleMode === mode ? 'text-primary' : 'text-muted-foreground/50'}`}
+                            />
                           </div>
-                        );
-                      })}
+                          <div className="flex-1">
+                            <p
+                              className={`text-[13px] font-semibold ${scheduleMode === mode ? '' : 'text-muted-foreground'}`}
+                            >
+                              {label}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/70">{sub}</p>
+                          </div>
+                          {scheduleMode === mode && (
+                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
+                              <Check className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Schedule Summary */}
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    <p className="mb-2 text-sm font-semibold">Schedule</p>
-                    <dl className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex items-start gap-2">
-                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Start Mode</dt>
-                          <dd className="text-sm font-medium">
-                            {scheduleMode === 'now' ? 'Send Now (Immediately)' : 'Scheduled'}
-                          </dd>
-                        </div>
+                  {scheduleMode === 'schedule' && (
+                    <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 bg-muted/20 p-4">
+                      <div>
+                        <FieldLabel>Date</FieldLabel>
+                        <Input
+                          type="date"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="h-9 text-sm"
+                          required
+                        />
                       </div>
-                      {scheduleMode === 'schedule' && (
-                        <>
-                          <div className="flex items-start gap-2">
-                            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                            <div>
-                              <dt className="text-xs text-muted-foreground">Scheduled Date</dt>
-                              <dd className="text-sm font-medium">
-                                {scheduledDate
-                                  ? new Date(scheduledDate).toLocaleDateString('en-IN', {
-                                      day: 'numeric',
-                                      month: 'long',
-                                      year: 'numeric',
-                                    })
-                                  : 'Not set'}
-                              </dd>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                            <div>
-                              <dt className="text-xs text-muted-foreground">Scheduled Time</dt>
-                              <dd className="text-sm font-medium">
-                                {scheduledTime
-                                  ? new Date(`2000-01-01T${scheduledTime}`).toLocaleTimeString(
-                                      'en-IN',
-                                      { hour: '2-digit', minute: '2-digit', hour12: true },
-                                    )
-                                  : 'Not set'}
-                              </dd>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </dl>
-                  </div>
+                      <div>
+                        <FieldLabel>Time</FieldLabel>
+                        <Input
+                          type="time"
+                          value={scheduledTime}
+                          onChange={(e) => setScheduledTime(e.target.value)}
+                          className="h-9 text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ══ Step 5 Review ══ */}
+              {step === 5 && (
+                <div className="space-y-3">
+                  {[
+                    { label: 'Campaign Name', value: form.getFieldValue('name') || '—' },
+                    { label: 'Description', value: form.getFieldValue('description') || '—' },
+                    { label: 'Priority', value: currentPriority?.label ?? '—' },
+                    { label: 'File', value: selectedFileData?.name ?? '—' },
+                    { label: 'Records', value: selectedFileData?.records.toLocaleString() ?? '0' },
+                    {
+                      label: 'Steps',
+                      value: `${sequence.length} step${sequence.length > 1 ? 's' : ''}`,
+                    },
+                    {
+                      label: 'Schedule',
+                      value:
+                        scheduleMode === 'now' ? 'Send Now' : `${scheduledDate} ${scheduledTime}`,
+                    },
+                  ].map(({ label, value }) => (
+                    <div
+                      key={label}
+                      className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/10 px-4 py-3"
+                    >
+                      <span className="w-28 shrink-0 text-[11px] text-muted-foreground/60">
+                        {label}
+                      </span>
+                      <span className="text-[13px] font-semibold">{value}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex items-center justify-between gap-3 border-t pt-5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/campaigns/list')}
-              >
-                Cancel
-              </Button>
-
-              <div className="flex gap-2">
-                {step > 1 && (
+            {/* Footer */}
+            <div className="shrink-0 border-t border-border/40 px-5 py-3">
+              {step === 5 && submitError && (
+                <p className="mb-2 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-[11.5px] text-destructive">
+                  {submitError}
+                </p>
+              )}
+              <div className="flex items-center justify-between">
+                {step > 1 ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4 | 5)}
+                    className="h-8 px-4 text-xs"
+                    onClick={() => setStep((s) => (s - 1) as any)}
                   >
-                    Back
+                    ← Back
                   </Button>
+                ) : (
+                  <div />
                 )}
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="min-w-32"
-                  disabled={
-                    (step === 2 && !selectedFile) ||
-                    (step === 3 && (!allRequiredTemplatesSelected || !atLeastOneChannelEnabled))
-                  }
-                >
-                  {step === 1 && 'Continue'}
-                  {step === 2 && 'Continue'}
-                  {step === 3 && 'Continue'}
-                  {step === 4 && 'Review Campaign'}
-                  {step === 5 && 'Create Campaign'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground/40 tabular-nums">
+                    {step} / 5
+                  </span>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="h-8 min-w-[120px] px-5 text-xs font-semibold"
+                    disabled={
+                      isSubmitting || (step === 2 && !selectedFile) || (step === 3 && !canNext3)
+                    }
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Creating…
+                      </span>
+                    ) : step === 5 ? (
+                      '🚀 Launch Campaign'
+                    ) : (
+                      'Continue →'
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+
+          {/* ── RIGHT: Info Panel ── */}
+          <div className="w-72 shrink-0 overflow-y-auto border-l border-border/40 bg-muted/5 p-4 space-y-3">
+            {/* Step 1 info */}
+            {step === 1 && (
+              <>
+                <div className="rounded-xl border border-border/50 bg-card p-4">
+                  <p className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    <Info className="h-3 w-3" /> Live Preview
+                  </p>
+                  <div className="space-y-2">
+                    <form.Subscribe selector={(s) => s.values.name}>
+                      {(name) => (
+                        <SummaryRow
+                          label="Name"
+                          value={
+                            name || (
+                              <span className="text-muted-foreground/40 font-normal text-xs">
+                                Not filled
+                              </span>
+                            )
+                          }
+                          highlight={!!name}
+                        />
+                      )}
+                    </form.Subscribe>
+                    <form.Subscribe selector={(s) => s.values.priority}>
+                      {(priority) => {
+                        const p = PRIORITY_OPTIONS.find((o) => o.value === priority)!;
+                        return (
+                          <SummaryRow
+                            label="Priority"
+                            value={
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10.5px] font-semibold text-white ${p.bg}`}
+                              >
+                                <p.icon className="h-2.5 w-2.5" />
+                                {p.label}
+                              </span>
+                            }
+                          />
+                        );
+                      }}
+                    </form.Subscribe>
+                  </div>
+                </div>
+
+                <Tip icon={Lightbulb} title="Naming Tips">
+                  Use a pattern like <strong>Bank_Month_Goal</strong> — e.g. "ICICI_Jan_Settlement".
+                  Makes it easy to search later.
+                </Tip>
+
+                <Tip icon={Target} title="Priority Guide">
+                  <div className="space-y-1.5 mt-1">
+                    {PRIORITY_OPTIONS.map((p) => (
+                      <div key={p.value} className="flex items-start gap-2">
+                        <span
+                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded text-white text-[9px] ${p.bg}`}
+                        >
+                          <p.icon className="h-2.5 w-2.5" />
+                        </span>
+                        <span>
+                          <strong>{p.label}:</strong> {p.desc}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Tip>
+              </>
+            )}
+
+            {/* Step 2 info */}
+            {step === 2 && (
+              <>
+                {selectedFileData ? (
+                  <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      <BarChart3 className="h-3 w-3" /> File Summary
+                    </p>
+                    <SummaryRow label="Bank" value={selectedFileData.bank} highlight />
+                    <SummaryRow
+                      label="Records"
+                      value={selectedFileData.records.toLocaleString()}
+                      highlight
+                    />
+                    <SummaryRow label="Format" value={`.${selectedFileData.ext.toUpperCase()}`} />
+                    <SummaryRow label="Uploaded" value={selectedFileData.date} />
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-4 text-center">
+                    <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                    <p className="text-[12px] text-muted-foreground/50">
+                      Select a file to see its details here
+                    </p>
+                  </div>
+                )}
+
+                <Tip icon={Info} title="File Requirements">
+                  Accepted formats: <strong>.csv</strong> and <strong>.xlsx</strong>. Each row
+                  should contain borrower name, phone, and loan details.
+                </Tip>
+
+                <Tip icon={Users} title="Record Count">
+                  Larger files may take longer to process. For campaigns above 5,000 records,
+                  consider splitting by bank or region.
+                </Tip>
+              </>
+            )}
+
+            {/* Step 3 info */}
+            {step === 3 && (
+              <>
+                <div className="rounded-xl border border-border/50 bg-card p-4 space-y-2">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    <BarChart3 className="h-3 w-3" /> Sequence Summary
+                  </p>
+                  <SummaryRow label="Total Steps" value={sequence.length} highlight />
+                  {sequence.map((s, idx) => {
+                    const meta = CH[s.channel];
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={s.id}
+                        className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${meta.bg} border ${meta.border}`}
+                      >
+                        <Icon className={`h-3 w-3 shrink-0 ${meta.color}`} />
+                        <span className={`text-[11px] font-semibold ${meta.color}`}>
+                          {meta.label}
+                        </span>
+                        {idx > 0 && (
+                          <span className="ml-auto text-[10px] text-muted-foreground">
+                            +{s.delayValue}
+                            {s.delayUnit[0]}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Tip icon={Lightbulb} title="Best Practice">
+                  Start with <strong>WhatsApp</strong> for high open rates, follow up with{' '}
+                  <strong>SMS</strong> for those who don't respond, then escalate to{' '}
+                  <strong>Manual call</strong>.
+                </Tip>
+
+                <div className="rounded-xl border border-border/50 bg-card p-4">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    Channel Info
+                  </p>
+                  {sequence.length > 0 &&
+                    (() => {
+                      const meta = CH[sequence[sequence.length - 1].channel];
+                      const Icon = meta.icon;
+                      return (
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${meta.bg} ${meta.border}`}
+                          >
+                            <Icon className={`h-4 w-4 ${meta.color}`} />
+                          </div>
+                          <div>
+                            <p className={`text-[12.5px] font-semibold ${meta.color}`}>
+                              {meta.label}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                              {meta.desc}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+              </>
+            )}
+
+            {/* Step 4 info */}
+            {step === 4 && (
+              <>
+                <div className="rounded-xl border border-border/50 bg-card p-4 space-y-2">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    <Calendar className="h-3 w-3" /> Timing Summary
+                  </p>
+                  <SummaryRow
+                    label="Mode"
+                    value={scheduleMode === 'now' ? 'Immediate' : 'Scheduled'}
+                    highlight
+                  />
+                  {scheduleMode === 'schedule' && scheduledDate && (
+                    <SummaryRow
+                      label="Date"
+                      value={new Date(scheduledDate).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    />
+                  )}
+                  {scheduleMode === 'schedule' && scheduledTime && (
+                    <SummaryRow
+                      label="Time"
+                      value={new Date(`2000-01-01T${scheduledTime}`).toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
+                    />
+                  )}
+                  <SummaryRow label="Steps" value={sequence.length} />
+                  <SummaryRow
+                    label="Recipients"
+                    value={selectedFileData?.records.toLocaleString() ?? '0'}
+                  />
+                </div>
+
+                <Tip icon={Clock} title="Scheduling Tips">
+                  Best delivery times are <strong>10am–12pm</strong> and <strong>3pm–6pm</strong> on
+                  weekdays. Avoid weekends and late evenings for higher response rates.
+                </Tip>
+
+                <Tip icon={Lightbulb} title="Send Now vs Schedule">
+                  Use <strong>Send Now</strong> for urgent follow-ups. Use <strong>Schedule</strong>{' '}
+                  for planned campaigns where timing affects response rates.
+                </Tip>
+              </>
+            )}
+
+            {/* Step 5 info */}
+            {step === 5 && (
+              <>
+                <div className="rounded-xl border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500">
+                      <Check className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <p className="text-[12.5px] font-semibold text-green-700 dark:text-green-400">
+                      Ready to Launch
+                    </p>
+                  </div>
+                  <p className="text-[11.5px] text-green-600 dark:text-green-500 leading-relaxed">
+                    Review the details on the left. Once confirmed, click{' '}
+                    <strong>Launch Campaign</strong> to begin outreach.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border/50 bg-card p-4 space-y-2">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    Campaign Stats
+                  </p>
+                  <SummaryRow
+                    label="Recipients"
+                    value={selectedFileData?.records.toLocaleString() ?? '0'}
+                    highlight
+                  />
+                  <SummaryRow label="Touchpoints" value={sequence.length} />
+                  <SummaryRow
+                    label="Channels"
+                    value={[...new Set(sequence.map((s) => CH[s.channel].label))].join(', ')}
+                  />
+                  <SummaryRow
+                    label="Timing"
+                    value={scheduleMode === 'now' ? 'Immediate' : 'Scheduled'}
+                  />
+                </div>
+
+                <Tip icon={Lightbulb} title="What Happens Next?">
+                  After launch, you can track delivery rates, open rates, and responses from the
+                  Campaign Dashboard.
+                </Tip>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
