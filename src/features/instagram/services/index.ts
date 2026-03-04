@@ -301,3 +301,40 @@ export async function deleteInstagramTemplate(
     handleAxiosError(error, 'Failed to delete template');
   }
 }
+
+export async function getInstagramCompliance(): Promise<Record<string, unknown>[]> {
+  try {
+    const { id: userId } = await getMe();
+    const response = await axiosUrl.get('/compliance', { params: { userId } });
+    return response.data?.data ?? response.data ?? [];
+  } catch (error: unknown) {
+    handleAxiosError(error, 'Failed to fetch compliance records');
+  }
+}
+
+export async function submitInstagramCompliance(
+  data: Record<string, unknown>,
+): Promise<ApiResponse> {
+  try {
+    const { id: userId } = await getMe();
+    const formData = new FormData();
+    formData.append('userId', userId);
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    }
+
+    const response = await axiosUrl.post('/compliance', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    handleAxiosError(error, 'Failed to submit compliance application');
+  }
+}

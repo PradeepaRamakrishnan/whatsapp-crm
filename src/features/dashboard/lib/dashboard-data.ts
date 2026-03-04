@@ -4,6 +4,7 @@ import {
   FileText,
   Instagram,
   LayoutDashboard,
+  Mail,
   MessageCircle,
   PhoneCall,
   Settings,
@@ -62,6 +63,15 @@ export const dashboardData = {
     {
       label: 'Channels',
       items: [
+        {
+          title: 'Email',
+          url: '/email/accounts',
+          icon: Mail,
+          items: [
+            { title: 'Accounts', url: '/email/accounts' },
+            { title: 'Inbox', url: '/email/inbox' },
+          ],
+        },
         {
           title: 'Instagram',
           url: '/instagram/accounts',

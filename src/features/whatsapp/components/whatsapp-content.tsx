@@ -1,9 +1,11 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
+/** biome-ignore-all lint/style/noNonNullAssertion: <> */
 'use client';
 import dayjs from 'dayjs';
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronLeft,
   Clock,
   Hash,
   Link2,
@@ -843,7 +845,6 @@ function ConversationsTable({
       setConversations(res || []);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      toast.error('Failed to load contact list');
     } finally {
       setLoading(false);
     }
@@ -1014,7 +1015,7 @@ function IndividualChatDialog({
 }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [_isSending, setIsSending] = useState(false);
 
   const loadMessages = useCallback(
     async (sync = false) => {
@@ -1075,8 +1076,16 @@ function IndividualChatDialog({
   return (
     <Sheet open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full p-0 sm:max-w-3xl flex flex-col overflow-hidden p-2">
-        <SheetHeader className="backdrop-blur-md px-4 py-4 pr-16 sticky top-0 z-10 ">
+        <SheetHeader className="backdrop-blur-md px-4 py-4 sticky top-0 z-10">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-9 w-9 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shadow-sm">
               {phoneNumber?.slice(-2)}
             </div>
@@ -1086,15 +1095,6 @@ function IndividualChatDialog({
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 Active via {account?.phoneNumber || 'WhatsApp'}
               </SheetDescription>
-            </div>
-            <div className="ml-auto">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-20  hover:bg-primary/10 hover:text-primary transition-all shadow-sm"
-              >
-                Back
-              </Button>
             </div>
           </div>
         </SheetHeader>
@@ -1127,11 +1127,6 @@ function IndividualChatDialog({
                   filterChannel="whatsapp"
                 />
               </div>
-              {isSending && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/20 backdrop-blur-[1px]">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              )}
             </div>
           )}
         </div>
