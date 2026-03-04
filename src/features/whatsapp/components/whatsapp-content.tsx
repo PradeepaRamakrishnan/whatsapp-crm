@@ -1,9 +1,11 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
+/** biome-ignore-all lint/style/noNonNullAssertion: <> */
 'use client';
 import dayjs from 'dayjs';
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronLeft,
   Clock,
   Hash,
   Link2,
@@ -843,7 +845,6 @@ function ConversationsTable({
       setConversations(res || []);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      toast.error('Failed to load contact list');
     } finally {
       setLoading(false);
     }
@@ -943,23 +944,16 @@ function ConversationsTable({
               </TableRow>
             ) : (
               filtered.map((c) => (
-                <TableRow
-                  key={c.contactNumber}
-                  className="group hover:bg-primary/5 transition-all cursor-pointer border-b last:border-0"
-                  onClick={() => onSelectContact(c.contactNumber)}
-                >
+                <TableRow key={c.contactNumber} onClick={() => onSelectContact(c.contactNumber)}>
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shadow-inner group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        {c.contactNumber.slice(-2)}
-                      </div>
-                      <span className="font-bold text-[15px] group-hover:text-primary transition-colors">
+                      <span className="font-bold text-primary text-[15px] group-hover:text-primary transition-colors">
                         {c.contactNumber}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="py-4 px-4">
-                    <p className="text-sm text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors max-w-[320px]">
+                    <p className="text-sm  line-clamp-1 group-hover:text-foreground transition-colors max-w-[320px]">
                       {c.lastMessage}
                     </p>
                   </TableCell>
@@ -1021,7 +1015,7 @@ function IndividualChatDialog({
 }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [_isSending, setIsSending] = useState(false);
 
   const loadMessages = useCallback(
     async (sync = false) => {
@@ -1081,26 +1075,27 @@ function IndividualChatDialog({
 
   return (
     <Sheet open={!!phoneNumber} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full p-0 sm:max-w-3xl flex flex-col overflow-hidden">
-        <SheetHeader className="border-b bg-card/80 backdrop-blur-md px-4 py-4 pr-16 sticky top-0 z-10 shadow-sm">
+      <SheetContent className="w-full p-0 sm:max-w-3xl flex flex-col overflow-hidden p-2">
+        <SheetHeader className="backdrop-blur-md px-4 py-4 sticky top-0 z-10">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-9 w-9 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shadow-sm">
               {phoneNumber?.slice(-2)}
             </div>
             <div>
-              <SheetTitle className="text-lg font-bold leading-none">{phoneNumber}</SheetTitle>
+              <SheetTitle className="text-1Xl font-bold leading-none">{phoneNumber}</SheetTitle>
               <SheetDescription className="text-xs mt-1 font-medium flex items-center gap-1.5 opacity-80">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Active via {account?.wabaName || 'WhatsApp'}
+                Active via {account?.phoneNumber || 'WhatsApp'}
               </SheetDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-20  hover:bg-primary/10 hover:text-primary transition-all shadow-sm"
-            >
-              Back
-            </Button>
           </div>
         </SheetHeader>
 
@@ -1132,11 +1127,6 @@ function IndividualChatDialog({
                   filterChannel="whatsapp"
                 />
               </div>
-              {isSending && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/20 backdrop-blur-[1px]">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              )}
             </div>
           )}
         </div>

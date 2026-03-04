@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAuth } from '@/context';
+import { cn } from '@/lib/utils';
 import { phoneNumberService } from '../services/phone.service';
 
 interface AddComplianceSheetProps {
@@ -40,6 +41,16 @@ export function AddComplianceSheet({
     country: 'India',
     numberType: 'local',
     businessName: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    endUserType: 'individual' as 'individual' | 'business',
+    operationType: 'direct_brand' as 'direct_brand' | 'reseller',
+    addressLine1: '',
+    city: '',
+    region: '',
+    postalCode: '',
     certificateFile: null as File | null,
     gstFile: null as File | null,
     agreed: false,
@@ -52,6 +63,16 @@ export function AddComplianceSheet({
         country: initialData.country || 'India',
         numberType: initialData.numberType || 'local',
         businessName: initialData.businessName || '',
+        firstName: initialData.firstName || '',
+        lastName: initialData.lastName || '',
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        endUserType: initialData.endUserType || 'individual',
+        operationType: initialData.operationType || 'direct_brand',
+        addressLine1: initialData.addressLine1 || '',
+        city: initialData.city || '',
+        region: initialData.region || '',
+        postalCode: initialData.postalCode || '',
         certificateFile: null,
         gstFile: null,
         agreed: true,
@@ -63,6 +84,16 @@ export function AddComplianceSheet({
         country: 'India',
         numberType: 'local',
         businessName: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        endUserType: 'individual',
+        operationType: 'direct_brand',
+        addressLine1: '',
+        city: '',
+        region: '',
+        postalCode: '',
         certificateFile: null,
         gstFile: null,
         agreed: false,
@@ -82,8 +113,23 @@ export function AddComplianceSheet({
       return;
     }
 
-    if (!formData.alias || !formData.country || !formData.numberType) {
+    if (
+      !formData.alias ||
+      !formData.country ||
+      !formData.numberType ||
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone
+    ) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.country === 'India' && formData.endUserType === 'individual') {
+      toast.error(
+        'Indian compliance requires "Business" as the End User Type. Please change it to continue.',
+      );
       return;
     }
 
@@ -92,6 +138,20 @@ export function AddComplianceSheet({
     submissionData.append('country', formData.country);
     submissionData.append('numberType', formData.numberType);
     submissionData.append('userId', user.id);
+    submissionData.append('firstName', formData.firstName);
+    submissionData.append('lastName', formData.lastName);
+    submissionData.append('email', formData.email);
+    submissionData.append('phone', formData.phone);
+    submissionData.append('endUserType', formData.endUserType);
+    if (formData.addressLine1) submissionData.append('addressLine1', formData.addressLine1);
+    if (formData.city) submissionData.append('city', formData.city);
+    if (formData.region) submissionData.append('region', formData.region);
+    if (formData.postalCode) submissionData.append('postalCode', formData.postalCode);
+
+    if (formData.country === 'India') {
+      submissionData.append('operationType', formData.operationType);
+    }
+
     if (formData.businessName) submissionData.append('businessName', formData.businessName);
     if (formData.certificateFile)
       submissionData.append('certificateRegistration', formData.certificateFile);
@@ -144,11 +204,23 @@ export function AddComplianceSheet({
                 <Label className="text-slate-700 font-medium">Country</Label>
                 <Select
                   value={formData.country}
-                  onValueChange={(val) => setFormData({ ...formData, country: val })}
+                  onValueChange={(val) => {
+                    const updates: any = { country: val };
+                    if (val === 'India') {
+                      updates.endUserType = 'business';
+                    }
+                    setFormData({ ...formData, ...updates });
+                  }}
                 >
                   <SelectTrigger className="border-slate-300 h-11 rounded-lg bg-slate-50/50">
                     <div className="flex items-center gap-2">
-                      <span>🇮🇳</span>
+                      <span>
+                        {formData.country === 'India'
+                          ? '🇮🇳'
+                          : formData.country === 'USA'
+                            ? '🇺🇸'
+                            : '🇬🇧'}
+                      </span>
                       <SelectValue placeholder="Select Country" />
                     </div>
                   </SelectTrigger>
@@ -159,6 +231,157 @@ export function AddComplianceSheet({
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-slate-700 font-medium">
+                    First Name *
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-slate-700 font-medium">
+                    Last Name *
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700 font-medium">
+                  Email *
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-slate-700 font-medium">
+                  Phone (International Format) *
+                </Label>
+                <Input
+                  id="phone"
+                  placeholder="+91..."
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="addressLine1" className="text-slate-700 font-medium">
+                  Address Line 1
+                </Label>
+                <Input
+                  id="addressLine1"
+                  placeholder="Street address..."
+                  value={formData.addressLine1}
+                  onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                  className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-slate-700 font-medium">
+                    City
+                  </Label>
+                  <Input
+                    id="city"
+                    placeholder="San Francisco"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="region" className="text-slate-700 font-medium">
+                    Region/State
+                  </Label>
+                  <Input
+                    id="region"
+                    placeholder="State/Region"
+                    value={formData.region}
+                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                    className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="postalCode" className="text-slate-700 font-medium">
+                  Postal Code
+                </Label>
+                <Input
+                  id="postalCode"
+                  placeholder="Zip/Postal Code"
+                  value={formData.postalCode}
+                  onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                  className="border-slate-300 focus:border-primary h-11 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-medium">End User Type</Label>
+                <Select
+                  value={formData.endUserType}
+                  onValueChange={(val) => setFormData({ ...formData, endUserType: val as any })}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      'border-slate-300 h-11 rounded-lg bg-slate-50/50',
+                      formData.country === 'India' &&
+                        formData.endUserType === 'individual' &&
+                        'border-amber-500 ring-2 ring-amber-500/20',
+                    )}
+                  >
+                    <SelectValue placeholder="Select End User Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formData.country === 'India' && formData.endUserType === 'individual' && (
+                  <p className="text-[10px] text-amber-600 font-semibold uppercase">
+                    Business type is mandatory for India
+                  </p>
+                )}
+              </div>
+
+              {formData.country === 'India' && (
+                <div className="space-y-2">
+                  <Label className="text-slate-700 font-medium">Operation Type</Label>
+                  <Select
+                    value={formData.operationType}
+                    onValueChange={(val) => setFormData({ ...formData, operationType: val as any })}
+                  >
+                    <SelectTrigger className="border-slate-300 h-11 rounded-lg bg-slate-50/50">
+                      <SelectValue placeholder="Select Operation Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="direct_brand">Direct Brand</SelectItem>
+                      <SelectItem value="reseller">Reseller</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-slate-500 italic">Required for India compliance</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-slate-700 font-medium">Number Type</Label>
@@ -208,6 +431,12 @@ export function AddComplianceSheet({
                     </span>
                   </label>
                 </div>
+                {formData.country === 'India' && (
+                  <p className="text-[11px] text-amber-600 bg-amber-50 p-2 rounded-md border border-amber-100 italic">
+                    Note: Indian local numbers can only be rented by registered businesses.
+                    Individual applications are not supported for India.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-4">
