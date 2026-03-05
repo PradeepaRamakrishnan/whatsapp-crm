@@ -19,6 +19,32 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
+export async function createCampaign(data: {
+  name: string;
+  description: string;
+  fileId: string;
+  configurationId: string;
+}): Promise<CampaignDetailsResponse> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: '',
+      data,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to create campaign');
+    }
+    throw error;
+  }
+}
+
 export async function getAllCampaigns(
   page: number,
   limit: number,

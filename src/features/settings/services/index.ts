@@ -260,6 +260,56 @@ export async function syncResendTemplates(): Promise<{ success: boolean; message
   }
 }
 
+export async function getAllSmsTemplates(): Promise<TemplatesResponse> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'GET',
+      url: `/sms-templates`,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch SMS templates');
+    }
+    throw error;
+  }
+}
+
+export interface ConfigurationStep {
+  channel: 'whatsapp' | 'sms' | 'email';
+  templateId: string;
+  delayMs: number;
+}
+
+export async function createConfiguration(body: {
+  steps: ConfigurationStep[];
+  cronPattern?: string | null;
+}): Promise<{ id: string }> {
+  try {
+    const cookieStore = await cookies();
+    const response = await axiosClient({
+      method: 'POST',
+      url: `/configurations`,
+      data: body,
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to create configuration');
+    }
+    throw error;
+  }
+}
+
 export async function getAllWhatsAppTemplates(): Promise<WhatsAppTemplatesResponse> {
   try {
     const cookieStore = await cookies();
