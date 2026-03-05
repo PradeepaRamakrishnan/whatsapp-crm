@@ -22,6 +22,7 @@ const axiosClient = axios.create({
 export async function createCampaign(data: {
   name: string;
   description: string;
+  bankName: string;
   fileId: string;
   configurationId: string;
 }): Promise<CampaignDetailsResponse> {
@@ -29,7 +30,7 @@ export async function createCampaign(data: {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: '',
+      url: 'create',
       data,
       headers: {
         Cookie: cookieStore.toString(),
@@ -64,7 +65,7 @@ export async function getAllCampaigns(
 
     const response = await axiosClient({
       method: 'GET',
-      url: `/?${queryParams.toString()}`,
+      url: `?${queryParams.toString()}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -85,7 +86,7 @@ export async function getCampaignById(id: string): Promise<CampaignDetailsRespon
 
     const response = await axiosClient({
       method: 'GET',
-      url: `/${id}`,
+      url: `${id}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -110,7 +111,7 @@ export async function getCampaignContacts(
 
     const response = await axiosClient({
       method: 'GET',
-      url: `/${id}/contacts?page=${page}&limit=${limit}`,
+      url: `${id}/contacts?page=${page}&limit=${limit}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -131,7 +132,7 @@ export async function getCampaignTimeline(id: string): Promise<CampaignTimelineR
 
     const response = await axiosClient({
       method: 'GET',
-      url: `/${id}/timeline`,
+      url: `${id}/timeline`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -151,7 +152,7 @@ export async function runCampaign(id: string): Promise<unknown> {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${id}/run`,
+      url: `${id}/run`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -171,7 +172,7 @@ export async function pauseCampaign(id: string): Promise<unknown> {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${id}/pause`,
+      url: `${id}/pause`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -191,7 +192,7 @@ export async function resumeCampaign(id: string): Promise<unknown> {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${id}/resume`,
+      url: `${id}/resume`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -211,7 +212,7 @@ export async function deleteCampaign(id: string): Promise<unknown> {
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'DELETE',
-      url: `/${id}`,
+      url: `${id}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -254,7 +255,7 @@ export async function markContactInterested(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/interested?campaignId=${campaignId}&contactId=${contactId}${channel ? `&channel=${channel}` : ''}`,
+      url: `interested?campaignId=${campaignId}&contactId=${contactId}${channel ? `&channel=${channel}` : ''}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -277,7 +278,7 @@ export async function markContactNotInterested(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/not-interested?campaignId=${campaignId}&contactId=${contactId}`,
+      url: `not-interested?campaignId=${campaignId}&contactId=${contactId}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -307,7 +308,7 @@ export async function markContactConsent(
 
     const response = await axiosClient({
       method: 'POST',
-      url: `/consent?${queryParams.toString()}`,
+      url: `consent?${queryParams.toString()}`,
       data: {
         dob,
         panNumber,
@@ -331,7 +332,7 @@ export async function unsubscribeContact(campaignId: string, contactId: string):
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/unsubscribe?campaignId=${campaignId}&contactId=${contactId}`,
+      url: `unsubscribe?campaignId=${campaignId}&contactId=${contactId}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -362,8 +363,8 @@ export async function getContactMessages(
     const response = await axiosClient({
       method: 'GET',
       url: contactId
-        ? `/${campaignId}/contacts/${contactId}/conversations${queryString}`
-        : `/${campaignId}/conversations${queryString}`,
+        ? `${campaignId}/contacts/${contactId}/conversations${queryString}`
+        : `${campaignId}/conversations${queryString}`,
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -388,7 +389,7 @@ export async function sendReplyEmail(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${campaignId}/contacts/${contactId}/reply`,
+      url: `${campaignId}/contacts/${contactId}/reply`,
       data: { subject, body, channel: 'email' },
       headers: {
         Cookie: cookieStore.toString(),
@@ -438,7 +439,7 @@ export async function sendReplyWhatsApp(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${campaignId}/contacts/${contactId}/reply`,
+      url: `${campaignId}/contacts/${contactId}/reply`,
       data: { body, channel: 'whatsapp' },
       headers: {
         Cookie: cookieStore.toString(),
@@ -486,7 +487,7 @@ export async function getCampaignPerformanceStats(): Promise<CampaignPerformance
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
-      url: '/campaign-performance',
+      url: 'campaign-performance',
       headers: {
         Cookie: cookieStore.toString(),
       },
@@ -514,7 +515,7 @@ export async function logCallInteraction(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${campaignId}/contacts/${contactId}/interactions`,
+      url: `${campaignId}/contacts/${contactId}/interactions`,
       data: {
         channel: 'call',
         ...data,
@@ -542,7 +543,7 @@ export async function logNoteInteraction(
     const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
-      url: `/${campaignId}/contacts/${contactId}/interactions`,
+      url: `${campaignId}/contacts/${contactId}/interactions`,
       data: {
         channel: 'note',
         notes: note,

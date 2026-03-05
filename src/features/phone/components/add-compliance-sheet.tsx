@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <> */
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: <> */
 'use client';
 
 import { Loader2, ShieldCheck, Upload } from 'lucide-react';
@@ -18,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAuth } from '@/context';
-import { cn } from '@/lib/utils';
 import { phoneNumberService } from '../services/phone.service';
 
 interface AddComplianceSheetProps {
@@ -36,6 +36,10 @@ export function AddComplianceSheet({
 }: AddComplianceSheetProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [purchasedNumbers, setPurchasedNumbers] = useState<any[]>([]);
+  const [isNumbersLoading, setIsNumbersLoading] = useState(false);
+  const [existingCertificateUrl, setExistingCertificateUrl] = useState('');
+  const [existingGstUrl, setExistingGstUrl] = useState('');
   const [formData, setFormData] = useState({
     alias: '',
     country: 'India',
@@ -43,9 +47,9 @@ export function AddComplianceSheet({
     businessName: '',
     firstName: '',
     lastName: '',
-    email: '',
+    email: user?.email || '',
     phone: '',
-    endUserType: 'individual' as 'individual' | 'business',
+    endUserType: 'business' as 'individual' | 'business',
     operationType: 'direct_brand' as 'direct_brand' | 'reseller',
     addressLine1: '',
     city: '',
@@ -56,28 +60,53 @@ export function AddComplianceSheet({
     agreed: false,
   });
 
+  const pickFirst = (...values: any[]) => values.find((v) => v !== undefined && v !== null) || '';
+
+  const getFileNameFromUrl = (url: string) => {
+    try {
+      return decodeURIComponent(url.split('?')[0].split('/').pop() || 'Uploaded document');
+    } catch {
+      return 'Uploaded document';
+    }
+  };
+
   useEffect(() => {
     if (initialData && open) {
+      const certUrl = pickFirst(
+        initialData.certificateRegistrationUrl,
+        initialData.certificate_registration_url,
+        initialData.certificateUrl,
+      );
+      const gstUrl = pickFirst(
+        initialData.gstCertificateUrl,
+        initialData.gst_certificate_url,
+        initialData.gstUrl,
+      );
+      setExistingCertificateUrl(String(certUrl || ''));
+      setExistingGstUrl(String(gstUrl || ''));
+
       setFormData({
-        alias: initialData.alias || '',
-        country: initialData.country || 'India',
-        numberType: initialData.numberType || 'local',
-        businessName: initialData.businessName || '',
-        firstName: initialData.firstName || '',
-        lastName: initialData.lastName || '',
-        email: initialData.email || '',
-        phone: initialData.phone || '',
-        endUserType: initialData.endUserType || 'individual',
-        operationType: initialData.operationType || 'direct_brand',
-        addressLine1: initialData.addressLine1 || '',
-        city: initialData.city || '',
-        region: initialData.region || '',
-        postalCode: initialData.postalCode || '',
+        alias: pickFirst(initialData.alias, initialData.name),
+        country: pickFirst(initialData.country, initialData.countryIso, 'India'),
+        numberType: 'local',
+        businessName: pickFirst(initialData.businessName, initialData.business_name),
+        firstName: pickFirst(initialData.firstName, initialData.first_name),
+        lastName: pickFirst(initialData.lastName, initialData.last_name),
+        email: user?.email || pickFirst(initialData.email, initialData.emailId),
+        phone: pickFirst(initialData.phone, initialData.phoneNumber),
+        endUserType: 'business',
+        operationType: 'direct_brand',
+        addressLine1: pickFirst(initialData.addressLine1, initialData.address_line_1),
+        city: pickFirst(initialData.city, initialData.locality),
+        region: pickFirst(initialData.region, initialData.state),
+        postalCode: pickFirst(initialData.postalCode, initialData.postal_code, initialData.zipCode),
         certificateFile: null,
         gstFile: null,
         agreed: true,
       });
     } else if (!open) {
+      setExistingCertificateUrl('');
+      setExistingGstUrl('');
       // Reset on close
       setFormData({
         alias: '',
@@ -86,9 +115,9 @@ export function AddComplianceSheet({
         businessName: '',
         firstName: '',
         lastName: '',
-        email: '',
+        email: user?.email || '',
         phone: '',
-        endUserType: 'individual',
+        endUserType: 'business',
         operationType: 'direct_brand',
         addressLine1: '',
         city: '',
@@ -98,8 +127,27 @@ export function AddComplianceSheet({
         gstFile: null,
         agreed: false,
       });
+    } else if (open && !initialData) {
+      setFormData((prev) => ({ ...prev, email: user?.email || '' }));
     }
-  }, [initialData, open]);
+  }, [initialData, open, user?.email]);
+
+  useEffect(() => {
+    const loadPurchasedNumbers = async () => {
+      if (!open || !user?.id) return;
+      setIsNumbersLoading(true);
+      try {
+        const response = await phoneNumberService.getMyNumbers(user.id);
+        setPurchasedNumbers(response.data || []);
+      } catch {
+        setPurchasedNumbers([]);
+      } finally {
+        setIsNumbersLoading(false);
+      }
+    };
+
+    loadPurchasedNumbers();
+  }, [open, user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +164,6 @@ export function AddComplianceSheet({
     if (
       !formData.alias ||
       !formData.country ||
-      !formData.numberType ||
       !formData.firstName ||
       !formData.lastName ||
       !formData.email ||
@@ -126,31 +173,21 @@ export function AddComplianceSheet({
       return;
     }
 
-    if (formData.country === 'India' && formData.endUserType === 'individual') {
-      toast.error(
-        'Indian compliance requires "Business" as the End User Type. Please change it to continue.',
-      );
-      return;
-    }
-
     const submissionData = new FormData();
     submissionData.append('alias', formData.alias);
     submissionData.append('country', formData.country);
-    submissionData.append('numberType', formData.numberType);
+    submissionData.append('numberType', 'local');
     submissionData.append('userId', user.id);
     submissionData.append('firstName', formData.firstName);
     submissionData.append('lastName', formData.lastName);
     submissionData.append('email', formData.email);
     submissionData.append('phone', formData.phone);
-    submissionData.append('endUserType', formData.endUserType);
+    submissionData.append('endUserType', 'business');
+    submissionData.append('operationType', 'direct_brand');
     if (formData.addressLine1) submissionData.append('addressLine1', formData.addressLine1);
     if (formData.city) submissionData.append('city', formData.city);
     if (formData.region) submissionData.append('region', formData.region);
     if (formData.postalCode) submissionData.append('postalCode', formData.postalCode);
-
-    if (formData.country === 'India') {
-      submissionData.append('operationType', formData.operationType);
-    }
 
     if (formData.businessName) submissionData.append('businessName', formData.businessName);
     if (formData.certificateFile)
@@ -265,22 +302,41 @@ export function AddComplianceSheet({
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  readOnly
                   className="border-slate-300 focus:border-primary h-11 rounded-lg"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-slate-700 font-medium">
-                  Phone (International Format) *
+                  Purchased Number *
                 </Label>
-                <Input
-                  id="phone"
-                  placeholder="+91..."
+                <Select
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="border-slate-300 focus:border-primary h-11 rounded-lg"
-                />
+                  onValueChange={(val) => setFormData({ ...formData, phone: val })}
+                  disabled={isNumbersLoading}
+                >
+                  <SelectTrigger className="border-slate-300 h-11 rounded-lg bg-slate-50/50">
+                    <SelectValue
+                      placeholder={
+                        isNumbersLoading ? 'Loading numbers...' : 'Select purchased number'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {purchasedNumbers.length > 0 ? (
+                      purchasedNumbers.map((num) => (
+                        <SelectItem key={num.id} value={num.phoneNumber}>
+                          {num.phoneNumber}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="__no_numbers__" disabled>
+                        No purchased numbers found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -336,109 +392,6 @@ export function AddComplianceSheet({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">End User Type</Label>
-                <Select
-                  value={formData.endUserType}
-                  onValueChange={(val) => setFormData({ ...formData, endUserType: val as any })}
-                >
-                  <SelectTrigger
-                    className={cn(
-                      'border-slate-300 h-11 rounded-lg bg-slate-50/50',
-                      formData.country === 'India' &&
-                        formData.endUserType === 'individual' &&
-                        'border-amber-500 ring-2 ring-amber-500/20',
-                    )}
-                  >
-                    <SelectValue placeholder="Select End User Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formData.country === 'India' && formData.endUserType === 'individual' && (
-                  <p className="text-[10px] text-amber-600 font-semibold uppercase">
-                    Business type is mandatory for India
-                  </p>
-                )}
-              </div>
-
-              {formData.country === 'India' && (
-                <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">Operation Type</Label>
-                  <Select
-                    value={formData.operationType}
-                    onValueChange={(val) => setFormData({ ...formData, operationType: val as any })}
-                  >
-                    <SelectTrigger className="border-slate-300 h-11 rounded-lg bg-slate-50/50">
-                      <SelectValue placeholder="Select Operation Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="direct_brand">Direct Brand</SelectItem>
-                      <SelectItem value="reseller">Reseller</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-slate-500 italic">Required for India compliance</p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">Number Type</Label>
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div
-                      className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData.numberType === 'local' ? 'border-primary bg-primary/10' : 'border-slate-300'}`}
-                    >
-                      {formData.numberType === 'local' && (
-                        <div className="size-2.5 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <input
-                      type="radio"
-                      className="hidden"
-                      name="numberType"
-                      value="local"
-                      checked={formData.numberType === 'local'}
-                      onChange={() => setFormData({ ...formData, numberType: 'local' })}
-                    />
-                    <span
-                      className={`text-sm ${formData.numberType === 'local' ? 'text-slate-900 font-medium' : 'text-slate-500'}`}
-                    >
-                      Local
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div
-                      className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData.numberType === 'tollfree' ? 'border-primary bg-primary/10' : 'border-slate-300'}`}
-                    >
-                      {formData.numberType === 'tollfree' && (
-                        <div className="size-2.5 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <input
-                      type="radio"
-                      className="hidden"
-                      name="numberType"
-                      value="tollfree"
-                      checked={formData.numberType === 'tollfree'}
-                      onChange={() => setFormData({ ...formData, numberType: 'tollfree' })}
-                    />
-                    <span
-                      className={`text-sm ${formData.numberType === 'tollfree' ? 'text-slate-900 font-medium' : 'text-slate-500'}`}
-                    >
-                      Toll Free
-                    </span>
-                  </label>
-                </div>
-                {formData.country === 'India' && (
-                  <p className="text-[11px] text-amber-600 bg-amber-50 p-2 rounded-md border border-amber-100 italic">
-                    Note: Indian local numbers can only be rented by registered businesses.
-                    Individual applications are not supported for India.
-                  </p>
-                )}
-              </div>
-
               <div className="space-y-4">
                 <h3 className="font-bold text-slate-900">Compliance Documents</h3>
 
@@ -480,6 +433,16 @@ export function AddComplianceSheet({
                           {formData.certificateFile.name}
                         </p>
                       )}
+                      {!formData.certificateFile && existingCertificateUrl && (
+                        <a
+                          href={existingCertificateUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-primary mt-2 hover:underline"
+                        >
+                          Existing: {getFileNameFromUrl(existingCertificateUrl)}
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -509,6 +472,16 @@ export function AddComplianceSheet({
                           <ShieldCheck className="h-3 w-3" />
                           {formData.gstFile.name}
                         </p>
+                      )}
+                      {!formData.gstFile && existingGstUrl && (
+                        <a
+                          href={existingGstUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-primary mt-2 hover:underline"
+                        >
+                          Existing: {getFileNameFromUrl(existingGstUrl)}
+                        </a>
                       )}
                     </div>
                   </div>

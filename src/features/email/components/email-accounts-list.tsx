@@ -65,7 +65,7 @@ export function EmailAccountsList() {
       setRemovingId(null);
     }
   };
-
+  console.info('accountsflex', accounts);
   return (
     <div className="flex flex-1 flex-col p-6 min-w-0 space-y-6">
       {/* Header */}
@@ -132,7 +132,8 @@ export function EmailAccountsList() {
                   <TableCell>{account.name}</TableCell>
                   <TableCell className="font-mono text-xs">{account.fromEmail}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {account.apiKeyMasked}
+                    {account.apikey.slice(0, 6) +
+                      '*'.repeat(Math.floor((account.apikey.length - 6) / 2))}
                   </TableCell>
                   <TableCell>
                     <Badge
