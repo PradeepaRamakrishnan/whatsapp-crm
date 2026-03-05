@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { FileSpreadsheet, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -10,14 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { getAllFinancialInstitutionsName } from '@/features/settings/services';
 import { cn } from '@/lib/utils';
 import { fileUploadSchema } from '../lib/validation';
 import { createFile } from '../services';
@@ -28,15 +20,9 @@ export function FileCreatePage() {
 
   const queryClient = useQueryClient();
 
-  const { data: banksResponse } = useQuery({
-    queryKey: ['financial-institutions-names'],
-    queryFn: () => getAllFinancialInstitutionsName(),
-  });
-
   const form = useForm({
     defaultValues: {
       files: [] as File[],
-      bank: '',
       customFileName: '',
     },
     onSubmit: async ({ value }) => {
@@ -50,7 +36,6 @@ export function FileCreatePage() {
         value.files.forEach((file) => {
           formData.append('files', file);
         });
-        formData.append('bankName', value.bank);
         formData.append('name', value.customFileName);
 
         toast.loading('Uploading files...', { id: 'file-upload' });
@@ -129,78 +114,33 @@ export function FileCreatePage() {
               {/* File Upload Configuration */}
               <div>
                 <h3 className="mb-4 text-lg font-semibold">File Upload Configuration</h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <form.Field
-                    name="bank"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const result = fileUploadSchema.shape.bank.safeParse(value);
-                        return result.success ? undefined : result.error.errors[0].message;
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <Field data-invalid={field.state.meta.errors.length > 0}>
-                        <FieldLabel htmlFor="select-bank">Select Bank</FieldLabel>
-                        <Select
-                          value={field.state.value}
-                          onValueChange={(val) => field.handleChange(val)}
-                          disabled={!banksResponse?.data || banksResponse.data.length === 0}
-                        >
-                          <SelectTrigger id="select-bank">
-                            <SelectValue placeholder="Choose bank" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {banksResponse?.data && banksResponse.data.length > 0 ? (
-                              banksResponse.data.map((bank) => (
-                                <SelectItem key={bank.id} value={bank.name}>
-                                  {bank.name}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground text-center">
-                                No banks available
-                              </div>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FieldError>
-                          {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                            ? field.state.meta.errors[0]
-                            : null}
-                        </FieldError>
-                      </Field>
-                    )}
-                  </form.Field>
-
-                  <form.Field
-                    name="customFileName"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const result = fileUploadSchema.shape.customFileName.safeParse(value);
-                        return result.success ? undefined : result.error.errors[0].message;
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <Field data-invalid={field.state.meta.errors.length > 0}>
-                        <FieldLabel htmlFor="custom-file-name">Custom File Name</FieldLabel>
-                        <Input
-                          id="custom-file-name"
-                          placeholder="Enter custom name for file"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                        />
-                        <FieldError>
-                          {field.state.meta.isTouched && field.state.meta.errors.length > 0
-                            ? field.state.meta.errors[0]
-                            : null}
-                        </FieldError>
-                      </Field>
-                    )}
-                  </form.Field>
-                </div>
+                <form.Field
+                  name="customFileName"
+                  validators={{
+                    onChange: ({ value }) => {
+                      const result = fileUploadSchema.shape.customFileName.safeParse(value);
+                      return result.success ? undefined : result.error.errors[0].message;
+                    },
+                  }}
+                >
+                  {(field) => (
+                    <Field data-invalid={field.state.meta.errors.length > 0}>
+                      <FieldLabel htmlFor="custom-file-name">Custom File Name</FieldLabel>
+                      <Input
+                        id="custom-file-name"
+                        placeholder="Enter custom name for file"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                      />
+                      <FieldError>
+                        {field.state.meta.isTouched && field.state.meta.errors.length > 0
+                          ? field.state.meta.errors[0]
+                          : null}
+                      </FieldError>
+                    </Field>
+                  )}
+                </form.Field>
               </div>
 
               {/* Drag and Drop Zone */}

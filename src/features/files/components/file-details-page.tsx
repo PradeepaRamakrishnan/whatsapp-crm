@@ -137,7 +137,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <Database className="h-4 w-4" />
-                <span>{file.bankName}</span>
+                <span>{file.source}</span>
               </div>
             </div>
           </div>
