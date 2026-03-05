@@ -94,7 +94,7 @@ const PRIORITY_OPTIONS = [
 
 const MOCK_FILES = [
   {
-    id: '1',
+    id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
     name: 'ICICI_Borrowers_Jan_2024',
     ext: 'csv',
     records: 2500,
@@ -102,7 +102,7 @@ const MOCK_FILES = [
     bank: 'ICICI',
   },
   {
-    id: '2',
+    id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     name: 'HDFC_Borrowers_Dec_2023',
     ext: 'xlsx',
     records: 1800,
@@ -110,7 +110,7 @@ const MOCK_FILES = [
     bank: 'HDFC',
   },
   {
-    id: '3',
+    id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
     name: 'SBI_Borrowers_Jan_2024',
     ext: 'csv',
     records: 3200,
@@ -302,6 +302,7 @@ export function CreateCampaignForm() {
         await createCampaign({
           name: value.name,
           description: value.description,
+          bankName: selectedFileData?.bank || '',
           fileId: selectedFile,
           configurationId: config.id,
         });
