@@ -16,7 +16,7 @@ export interface FileErrorDetails {
 export interface FileData {
   id: string;
   name: string;
-  bankName: string;
+  source: string;
   status: FileStatus;
   jobId: string | null;
   errorDetails: FileErrorDetails | null;

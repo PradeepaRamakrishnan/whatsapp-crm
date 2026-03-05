@@ -16,13 +16,17 @@ import {
   Lightbulb,
   Loader2,
   Mail,
+  MessageCircle,
   MessageSquare,
   Minus,
+  Phone,
   Plus,
+  Search,
   Send,
   Target,
+  Trash2,
   UserCog,
-  Users,
+  UserPlus,
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -37,12 +41,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getAllFiles } from '@/features/files/services';
 import {
   createConfiguration,
   getAllEmailTemplates,
   getAllSmsTemplates,
   getAllWhatsAppTemplates,
 } from '@/features/settings/services';
+import { getContacts } from '@/features/whatsapp/services';
 import { createCampaign } from '../services';
 import type { CampaignSequenceStep, ManualAction } from '../types';
 import { RecordSelectionTable } from './record-selection-table';
@@ -92,32 +99,8 @@ const PRIORITY_OPTIONS = [
   },
 ];
 
-const MOCK_FILES = [
-  {
-    id: '1',
-    name: 'ICICI_Borrowers_Jan_2024',
-    ext: 'csv',
-    records: 2500,
-    date: 'Jan 15, 2024',
-    bank: 'ICICI',
-  },
-  {
-    id: '2',
-    name: 'HDFC_Borrowers_Dec_2023',
-    ext: 'xlsx',
-    records: 1800,
-    date: 'Jan 10, 2024',
-    bank: 'HDFC',
-  },
-  {
-    id: '3',
-    name: 'SBI_Borrowers_Jan_2024',
-    ext: 'csv',
-    records: 3200,
-    date: 'Jan 12, 2024',
-    bank: 'SBI',
-  },
-];
+type ManualContact = { id: string; name: string; phone: string; email: string };
+type RecipientMode = 'file' | 'whatsapp' | 'manual';
 
 const CH = {
   whatsapp: {
@@ -236,7 +219,13 @@ function SummaryRow({
 export function CreateCampaignForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [recipientMode, setRecipientMode] = useState<RecipientMode>('file');
   const [selectedFile, setSelectedFile] = useState('');
+  const [waContactSearch, setWaContactSearch] = useState('');
+  const [selectedWaContacts, setSelectedWaContacts] = useState<string[]>([]);
+  const [manualContacts, setManualContacts] = useState<ManualContact[]>([
+    { id: '1', name: '', phone: '', email: '' },
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
@@ -326,6 +315,15 @@ export function CreateCampaignForm() {
     queryKey: ['sms-templates'],
     queryFn: getAllSmsTemplates,
   });
+  const { data: filesData, isLoading: filesLoading } = useQuery({
+    queryKey: ['campaign-recipient-files'],
+    queryFn: () => getAllFiles(1, 100),
+  });
+  const { data: waContactsData, isLoading: waContactsLoading } = useQuery({
+    queryKey: ['wa-contacts-campaign', waContactSearch],
+    queryFn: () => getContacts({ page: 1, limit: 50, search: waContactSearch || undefined }),
+    enabled: recipientMode === 'whatsapp',
+  });
 
   const emailTpls = ed?.data ?? [];
   const waTpls = wd?.data ?? [];
@@ -335,7 +333,35 @@ export function CreateCampaignForm() {
   const getTplName = (s: CampaignSequenceStep) =>
     getTpls(s.channel).find((t) => t.id === s.templateId)?.name ?? s.templateId ?? '—';
 
-  const selectedFileData = MOCK_FILES.find((f) => f.id === selectedFile);
+  const filesList = filesData?.data ?? [];
+  const selectedFileData = filesList.find((f) => f.id === selectedFile);
+  const waContacts: Array<{ id: string; name: string; phone: string; email?: string }> =
+    waContactsData?.data ?? waContactsData?.contacts ?? [];
+  const toggleWaContact = (id: string) =>
+    setSelectedWaContacts((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+    );
+  const addManualRow = () =>
+    setManualContacts((prev) => [
+      ...prev,
+      { id: String(Date.now()), name: '', phone: '', email: '' },
+    ]);
+  const removeManualRow = (id: string) =>
+    setManualContacts((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
+  const updateManualRow = (id: string, field: keyof ManualContact, value: string) =>
+    setManualContacts((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+
+  recipientMode === 'whatsapp'
+    ? selectedWaContacts.length
+    : recipientMode === 'manual'
+      ? manualContacts.filter((r) => r.phone).length
+      : 0;
+  const canNext2 =
+    recipientMode === 'file'
+      ? !!selectedFile
+      : recipientMode === 'whatsapp'
+        ? selectedWaContacts.length > 0
+        : manualContacts.some((r) => r.phone);
   const canNext3 =
     sequence.every((s) => s.channel === 'manual' || s.templateId) && sequence.length > 0;
   const currentPriority = PRIORITY_OPTIONS.find((p) => p.value === form.getFieldValue('priority'))!;
@@ -523,56 +549,209 @@ export function CreateCampaignForm() {
 
               {/* ══ Step 2 ══ */}
               {step === 2 && (
-                <>
-                  <div>
-                    <FieldLabel>Select Borrower File</FieldLabel>
-                    <div className="space-y-2">
-                      {MOCK_FILES.map((file) => {
-                        const sel = selectedFile === file.id;
-                        return (
-                          <button
-                            key={file.id}
-                            type="button"
-                            onClick={() => setSelectedFile(file.id)}
-                            className={`flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${sel ? 'border-primary/40 bg-primary/5 ring-2 ring-primary/15' : 'border-border/60 hover:bg-muted/20'}`}
-                          >
-                            <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${sel ? 'bg-primary/15' : 'bg-muted/60'}`}
-                            >
-                              <FileSpreadsheet
-                                className={`h-4.5 w-4.5 ${sel ? 'text-primary' : 'text-muted-foreground/50'}`}
-                                style={{ width: 18, height: 18 }}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold">{file.name}</p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {file.records.toLocaleString()} records · .{file.ext} · {file.date}
-                              </p>
-                            </div>
-                            <div
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${sel ? 'bg-primary border-primary' : 'border-border/50'}`}
-                            >
-                              {sel && <Check className="h-3 w-3 text-white" />}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                <Tabs
+                  value={recipientMode}
+                  onValueChange={(v) => setRecipientMode(v as RecipientMode)}
+                  className="space-y-4"
+                >
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="file" className="flex items-center gap-1.5 text-xs">
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      Upload File
+                    </TabsTrigger>
+                    <TabsTrigger value="whatsapp" className="flex items-center gap-1.5 text-xs">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      WhatsApp Contacts
+                    </TabsTrigger>
+                    <TabsTrigger value="manual" className="flex items-center gap-1.5 text-xs">
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Manual Entry
+                    </TabsTrigger>
+                  </TabsList>
 
-                  {selectedFile && (
-                    <div className="rounded-xl border border-border/50 p-4">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                        Record Preview
-                      </p>
-                      <RecordSelectionTable
-                        totalRecords={selectedFileData?.records ?? 0}
-                        selectedRecords={selectedFileData?.records ?? 0}
+                  {/* ── Tab: Uploaded File ── */}
+                  <TabsContent value="file" className="space-y-3 mt-0">
+                    <FieldLabel>Select Recipient File</FieldLabel>
+                    {filesLoading ? (
+                      <div className="flex items-center gap-2 py-6 text-[12px] text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading files…
+                      </div>
+                    ) : filesList.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 py-8 text-center">
+                        <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                        <p className="text-[12px] font-medium text-muted-foreground/60">
+                          No files uploaded yet
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/40">
+                          Go to Recipients → Recipient Files to upload a CSV
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {filesList.map((file) => {
+                          const sel = selectedFile === file.id;
+                          return (
+                            <button
+                              key={file.id}
+                              type="button"
+                              onClick={() => setSelectedFile(file.id)}
+                              className={`flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${sel ? 'border-primary/40 bg-primary/5 ring-2 ring-primary/15' : 'border-border/60 hover:bg-muted/20'}`}
+                            >
+                              <div
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${sel ? 'bg-primary/15' : 'bg-muted/60'}`}
+                              >
+                                <FileSpreadsheet
+                                  className={`h-4.5 w-4.5 ${sel ? 'text-primary' : 'text-muted-foreground/50'}`}
+                                  style={{ width: 18, height: 18 }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-semibold capitalize">{file.name}</p>
+                                <p className="text-[11px] text-muted-foreground capitalize">
+                                  {file.status} · {file.createdAt.slice(0, 10)}
+                                </p>
+                              </div>
+                              <div
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${sel ? 'bg-primary border-primary' : 'border-border/50'}`}
+                              >
+                                {sel && <Check className="h-3 w-3 text-white" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {selectedFile && (
+                      <div className="rounded-xl border border-border/50 p-4">
+                        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                          Record Preview
+                        </p>
+                        <RecordSelectionTable totalRecords={0} selectedRecords={0} />
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* ── Tab: WhatsApp Contacts ── */}
+                  <TabsContent value="whatsapp" className="space-y-3 mt-0">
+                    <FieldLabel>Select WhatsApp Contacts</FieldLabel>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                      <input
+                        className="flex h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        placeholder="Search by name or phone…"
+                        value={waContactSearch}
+                        onChange={(e) => setWaContactSearch(e.target.value)}
                       />
                     </div>
-                  )}
-                </>
+                    {waContactsLoading ? (
+                      <div className="flex items-center gap-2 py-6 text-[12px] text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading contacts…
+                      </div>
+                    ) : waContacts.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 py-8 text-center">
+                        <MessageCircle className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                        <p className="text-[12px] font-medium text-muted-foreground/60">
+                          No WhatsApp contacts found
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/40">
+                          Connect a WhatsApp account and add contacts first
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="max-h-64 space-y-1.5 overflow-y-auto">
+                        {waContacts.map((contact) => {
+                          const sel = selectedWaContacts.includes(contact.id);
+                          return (
+                            <button
+                              key={contact.id}
+                              type="button"
+                              onClick={() => toggleWaContact(contact.id)}
+                              className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-all ${sel ? 'border-emerald-400/40 bg-emerald-50/60 dark:bg-emerald-950/30 ring-1 ring-emerald-400/20' : 'border-border/60 hover:bg-muted/20'}`}
+                            >
+                              <div
+                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${sel ? 'bg-emerald-500 text-white' : 'bg-muted/60 text-muted-foreground/50'}`}
+                              >
+                                {contact.name?.[0]?.toUpperCase() ?? '?'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-semibold">{contact.name}</p>
+                                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                  <Phone className="h-2.5 w-2.5" />
+                                  {contact.phone}
+                                </p>
+                              </div>
+                              <div
+                                className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border ${sel ? 'bg-emerald-500 border-emerald-500' : 'border-border/50'}`}
+                                style={{ width: 18, height: 18 }}
+                              >
+                                {sel && <Check className="h-2.5 w-2.5 text-white" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {selectedWaContacts.length > 0 && (
+                      <p className="text-[11.5px] font-semibold text-emerald-600">
+                        {selectedWaContacts.length} contact
+                        {selectedWaContacts.length > 1 ? 's' : ''} selected
+                      </p>
+                    )}
+                  </TabsContent>
+
+                  {/* ── Tab: Manual Entry ── */}
+                  <TabsContent value="manual" className="space-y-3 mt-0">
+                    <div className="flex items-center justify-between">
+                      <FieldLabel>Add Recipients Manually</FieldLabel>
+                      <button
+                        type="button"
+                        onClick={addManualRow}
+                        className="flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/8"
+                      >
+                        <Plus className="h-3 w-3" /> Add Row
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {manualContacts.map((row, idx) => (
+                        <div key={row.id} className="flex items-center gap-2">
+                          <span className="w-5 shrink-0 text-center text-[10px] text-muted-foreground/40">
+                            {idx + 1}
+                          </span>
+                          <input
+                            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="Name"
+                            value={row.name}
+                            onChange={(e) => updateManualRow(row.id, 'name', e.target.value)}
+                          />
+                          <input
+                            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="Phone *"
+                            value={row.phone}
+                            onChange={(e) => updateManualRow(row.id, 'phone', e.target.value)}
+                          />
+                          <input
+                            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="Email (optional)"
+                            value={row.email}
+                            onChange={(e) => updateManualRow(row.id, 'email', e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeManualRow(row.id)}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/50">
+                      {manualContacts.filter((r) => r.phone).length} recipient
+                      {manualContacts.filter((r) => r.phone).length !== 1 ? 's' : ''} with phone
+                      number
+                    </p>
+                  </TabsContent>
+                </Tabs>
               )}
 
               {/* ══ Step 3 ══ */}
@@ -945,8 +1124,15 @@ export function CreateCampaignForm() {
                     { label: 'Campaign Name', value: form.getFieldValue('name') || '—' },
                     { label: 'Description', value: form.getFieldValue('description') || '—' },
                     { label: 'Priority', value: currentPriority?.label ?? '—' },
-                    { label: 'File', value: selectedFileData?.name ?? '—' },
-                    { label: 'Records', value: selectedFileData?.records.toLocaleString() ?? '0' },
+                    {
+                      label: 'Recipients',
+                      value:
+                        recipientMode === 'file'
+                          ? `File: ${selectedFileData?.name ?? '—'}`
+                          : recipientMode === 'whatsapp'
+                            ? `WhatsApp: ${selectedWaContacts.length} contact${selectedWaContacts.length !== 1 ? 's' : ''}`
+                            : `Manual: ${manualContacts.filter((r) => r.phone).length} contact${manualContacts.filter((r) => r.phone).length !== 1 ? 's' : ''}`,
+                    },
                     {
                       label: 'Steps',
                       value: `${sequence.length} step${sequence.length > 1 ? 's' : ''}`,
@@ -1001,7 +1187,7 @@ export function CreateCampaignForm() {
                     size="sm"
                     className="h-8 min-w-[120px] px-5 text-xs font-semibold"
                     disabled={
-                      isSubmitting || (step === 2 && !selectedFile) || (step === 3 && !canNext3)
+                      isSubmitting || (step === 2 && !canNext2) || (step === 3 && !canNext3)
                     }
                   >
                     {isSubmitting ? (
@@ -1093,38 +1279,72 @@ export function CreateCampaignForm() {
             {/* Step 2 info */}
             {step === 2 && (
               <>
-                {selectedFileData ? (
-                  <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
-                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      <BarChart3 className="h-3 w-3" /> File Summary
-                    </p>
-                    <SummaryRow label="Bank" value={selectedFileData.bank} highlight />
-                    <SummaryRow
-                      label="Records"
-                      value={selectedFileData.records.toLocaleString()}
-                      highlight
-                    />
-                    <SummaryRow label="Format" value={`.${selectedFileData.ext.toUpperCase()}`} />
-                    <SummaryRow label="Uploaded" value={selectedFileData.date} />
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-4 text-center">
-                    <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
-                    <p className="text-[12px] text-muted-foreground/50">
-                      Select a file to see its details here
-                    </p>
-                  </div>
+                {recipientMode === 'file' && (
+                  <>
+                    {selectedFileData ? (
+                      <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                          <BarChart3 className="h-3 w-3" /> File Summary
+                        </p>
+                        <SummaryRow label="Name" value={selectedFileData.name} highlight />
+                        <SummaryRow label="Bank" value={selectedFileData.source} highlight />
+                        <SummaryRow label="Status" value={selectedFileData.status} />
+                        <SummaryRow
+                          label="Uploaded"
+                          value={selectedFileData.createdAt.slice(0, 10)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-4 text-center">
+                        <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                        <p className="text-[12px] text-muted-foreground/50">
+                          Select a file to see its details
+                        </p>
+                      </div>
+                    )}
+                    <Tip icon={Info} title="File Requirements">
+                      Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file. Each row needs
+                      borrower name, phone, and amount details.
+                    </Tip>
+                  </>
                 )}
-
-                <Tip icon={Info} title="File Requirements">
-                  Accepted formats: <strong>.csv</strong> and <strong>.xlsx</strong>. Each row
-                  should contain borrower name, phone, and loan details.
-                </Tip>
-
-                <Tip icon={Users} title="Record Count">
-                  Larger files may take longer to process. For campaigns above 5,000 records,
-                  consider splitting by bank or region.
-                </Tip>
+                {recipientMode === 'whatsapp' && (
+                  <>
+                    <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        <BarChart3 className="h-3 w-3" /> Selection
+                      </p>
+                      <SummaryRow
+                        label="Selected"
+                        value={`${selectedWaContacts.length} contacts`}
+                        highlight={selectedWaContacts.length > 0}
+                      />
+                    </div>
+                    <Tip icon={MessageCircle} title="WhatsApp Contacts">
+                      These are contacts already saved in your connected WhatsApp account. Only
+                      opted-in contacts will receive messages.
+                    </Tip>
+                  </>
+                )}
+                {recipientMode === 'manual' && (
+                  <>
+                    <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        <BarChart3 className="h-3 w-3" /> Entry
+                      </p>
+                      <SummaryRow
+                        label="With Phone"
+                        value={manualContacts.filter((r) => r.phone).length}
+                        highlight={manualContacts.some((r) => r.phone)}
+                      />
+                      <SummaryRow label="Total Rows" value={manualContacts.length} />
+                    </div>
+                    <Tip icon={UserPlus} title="Manual Entry Tips">
+                      Phone number is required for each recipient. Email is optional but improves
+                      multi-channel reach.
+                    </Tip>
+                  </>
+                )}
               </>
             )}
 
@@ -1228,10 +1448,7 @@ export function CreateCampaignForm() {
                     />
                   )}
                   <SummaryRow label="Steps" value={sequence.length} />
-                  <SummaryRow
-                    label="Recipients"
-                    value={selectedFileData?.records.toLocaleString() ?? '0'}
-                  />
+                  <SummaryRow label="Recipients" value={'0'} />
                 </div>
 
                 <Tip icon={Clock} title="Scheduling Tips">
@@ -1268,11 +1485,7 @@ export function CreateCampaignForm() {
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                     Campaign Stats
                   </p>
-                  <SummaryRow
-                    label="Recipients"
-                    value={selectedFileData?.records.toLocaleString() ?? '0'}
-                    highlight
-                  />
+                  <SummaryRow label="Recipients" value={'0'} highlight />
                   <SummaryRow label="Touchpoints" value={sequence.length} />
                   <SummaryRow
                     label="Channels"

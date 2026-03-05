@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
@@ -50,16 +48,15 @@ export const columns: ColumnDef<FileData>[] = [
     cell: ({ row }) => <div className="font-medium capitalize">{row.getValue('name')}</div>,
   },
   {
-    accessorKey: 'bankName',
-    header: 'Bank Name',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('bankName')}</div>,
+    accessorKey: 'source',
+    header: 'Source',
+    cell: ({ row }) => <div className="capitalize">{row.getValue('source')}</div>,
   },
   {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
       const status: FileStatus = row.getValue('status');
-
       const statusStyles: Record<FileStatus, string> = {
         uploaded: 'bg-sky-50 text-sky-700 border border-sky-200',
         queued: 'bg-slate-50 text-slate-600 border border-slate-200',
@@ -69,7 +66,6 @@ export const columns: ColumnDef<FileData>[] = [
         archived: 'bg-zinc-50 text-zinc-600 border border-zinc-200',
         failed: 'bg-rose-50 text-rose-700 border border-rose-200',
       };
-
       const statusLabels: Record<FileStatus, string> = {
         uploaded: 'Uploaded',
         queued: 'Queued',
@@ -79,7 +75,6 @@ export const columns: ColumnDef<FileData>[] = [
         archived: 'Archived',
         failed: 'Failed',
       };
-
       return (
         <Badge
           variant="outline"
@@ -109,18 +104,24 @@ export const columns: ColumnDef<FileData>[] = [
     cell: ({ row }) => {
       const file = row.original;
       return (
-        <div onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className="p-0 h-auto bg-transparent border-0 cursor-pointer"
+        >
           <FileActions
             fileId={file.id}
             fileName={file.name}
             currentStatus={file.status}
             variant="dropdown"
           />
-        </div>
+        </button>
       );
     },
   },
 ];
+
+// ─── FilesTable ────────────────────────────────────────────────────────────────
 
 export function FilesTable() {
   const router = useRouter();
@@ -134,12 +135,8 @@ export function FilesTable() {
   const updateParams = React.useCallback(
     (updates: { page?: number; pageSize?: number }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (updates.page !== undefined) {
-        params.set('page', String(updates.page));
-      }
-      if (updates.pageSize !== undefined) {
-        params.set('pageSize', String(updates.pageSize));
-      }
+      if (updates.page !== undefined) params.set('page', String(updates.page));
+      if (updates.pageSize !== undefined) params.set('pageSize', String(updates.pageSize));
       router.replace(`?${params.toString()}`);
     },
     [searchParams, router],
@@ -147,14 +144,12 @@ export function FilesTable() {
 
   const { data: filesResponse } = useQuery<FilesResponse>({
     queryKey: ['files', { page, limit: pageSize }],
-    queryFn: () => {
-      return getAllFiles(page, pageSize);
-    },
+    queryFn: () => getAllFiles(page, pageSize),
     placeholderData: (previousData) => previousData,
   });
 
   const files = filesResponse?.data || [];
-  const totalRecords = filesResponse?.meta.total || 0;
+  const totalRecords = filesResponse?.meta.total ?? 0;
   const totalPages = filesResponse?.meta.totalPages || 0;
 
   const table = useReactTable({
@@ -168,15 +163,12 @@ export function FilesTable() {
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
-      pagination: {
-        pageIndex: page - 1,
-        pageSize: pageSize,
-      },
+      pagination: { pageIndex: page - 1, pageSize },
     },
   });
 
   return (
-    <div className="w-full ">
+    <div className="w-full">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
         <div className="flex-1">
           <Input
@@ -186,7 +178,6 @@ export function FilesTable() {
             className="max-w-sm w-full"
           />
         </div>
-
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
             Rows per page
@@ -213,20 +204,19 @@ export function FilesTable() {
           </Select>
         </div>
       </div>
+
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -259,6 +249,7 @@ export function FilesTable() {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2 p-4">
         <div className="text-muted-foreground flex-1 text-sm">
           Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of{' '}

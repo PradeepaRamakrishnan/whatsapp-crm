@@ -29,15 +29,15 @@ export const dashboardData = {
       ],
     },
     {
-      label: 'Management',
+      label: 'Campaigns',
       items: [
         {
-          title: 'Files',
+          title: 'Contact Sources',
           url: '/files/list',
           icon: FileText,
           items: [
-            { title: 'File Management', url: '/files/list' },
-            { title: 'Pending Review', url: '/files/pending' },
+            { title: 'Recipients', url: '/files/list' },
+            { title: 'Pending Approval', url: '/files/pending' },
           ],
         },
         {
@@ -45,7 +45,7 @@ export const dashboardData = {
           url: '/campaigns/list',
           icon: Briefcase,
           items: [
-            { title: 'Configuration', url: '/campaigns/configuration' },
+            // { title: 'Configuration', url: '/campaigns/configuration' },
             { title: 'All Campaigns', url: '/campaigns/list' },
           ],
         },

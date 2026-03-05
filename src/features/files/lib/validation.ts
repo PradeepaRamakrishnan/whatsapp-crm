@@ -27,8 +27,7 @@ export const fileUploadSchema = z.object({
         ),
       'Only .csv, .xls, and .xlsx formats are supported',
     ),
-  bank: z.string().min(1, 'Bank is required'),
-  customFileName: z.string().min(1, 'Custom file name is required'),
+  customFileName: z.string().min(1, 'List name is required'),
 });
 
 export type FileUploadFormData = z.infer<typeof fileUploadSchema>;

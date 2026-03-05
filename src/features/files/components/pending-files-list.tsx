@@ -9,8 +9,8 @@ export function PendingFilesList() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pending Review Files</h1>
-          <p className="mt-1 text-muted-foreground">View and manage files awaiting review</p>
+          <h1 className="text-2xl font-bold tracking-tight">Pending Approval</h1>
+          <p className="mt-1 text-muted-foreground">View and manage files awaiting approval</p>
         </div>
       </div>
 
