@@ -10,6 +10,7 @@ export interface EmailAccount {
   isActive: boolean;
   status: string;
   apiKeyMasked: string;
+  apikey: string;
   createdAt: string;
   updatedAt: string;
 }
