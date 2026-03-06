@@ -11,8 +11,10 @@ import type {
   WhatsAppTemplatesResponse,
 } from '../types';
 
+const SETTINGS_API_URL = process.env.SETTINGS_API_URL ?? process.env.NEXT_PUBLIC_SETTINGS_API_URL;
+
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_SETTINGS_API_URL}`,
+  baseURL: SETTINGS_API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

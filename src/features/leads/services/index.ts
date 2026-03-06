@@ -12,8 +12,10 @@ import type {
   TimelineEntry,
 } from '../types';
 
+const LEADS_API_URL = process.env.LEADS_API_URL ?? process.env.NEXT_PUBLIC_LEADS_API_URL;
+
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_LEADS_API_URL}`,
+  baseURL: LEADS_API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -121,7 +123,7 @@ export const getCompaignById = getCampaignById;
 export async function uploadDocument(leadId: string, formData: FormData): Promise<Document> {
   try {
     const cookieStore = await cookies();
-    const baseUrl = process.env.NEXT_PUBLIC_LEADS_API_URL;
+    const baseUrl = LEADS_API_URL;
 
     const response = await fetch(`${baseUrl}/${leadId}/documents`, {
       method: 'POST',

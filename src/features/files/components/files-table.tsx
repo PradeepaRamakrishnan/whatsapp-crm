@@ -104,18 +104,12 @@ export const columns: ColumnDef<FileData>[] = [
     cell: ({ row }) => {
       const file = row.original;
       return (
-        <button
-          type="button"
-          onClick={(e) => e.stopPropagation()}
-          className="p-0 h-auto bg-transparent border-0 cursor-pointer"
-        >
-          <FileActions
-            fileId={file.id}
-            fileName={file.name}
-            currentStatus={file.status}
-            variant="dropdown"
-          />
-        </button>
+        <FileActions
+          fileId={file.id}
+          fileName={file.name}
+          currentStatus={file.status}
+          variant="dropdown"
+        />
       );
     },
   },

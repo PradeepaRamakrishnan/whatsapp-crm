@@ -10,8 +10,10 @@ import type {
   FilesResponse,
 } from '../types/file.types';
 
+const FILES_API_URL = process.env.FILES_API_URL ?? process.env.NEXT_PUBLIC_FILES_API_URL;
+
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_FILES_API_URL}`,
+  baseURL: FILES_API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -25,7 +27,7 @@ export async function createEmptyList(name: string): Promise<FileData> {
   formData.append('name', name);
   formData.append('source', 'Manual');
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_FILES_API_URL}/create`, {
+  const res = await fetch(`${FILES_API_URL}/create`, {
     method: 'POST',
     headers: { Cookie: cookieStore.toString() },
     body: formData,

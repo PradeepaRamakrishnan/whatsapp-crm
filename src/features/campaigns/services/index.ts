@@ -10,8 +10,11 @@ import type {
   CampaignTimelineResponse,
 } from '../types';
 
+const CAMPAIGNS_API_URL =
+  process.env.CAMPAIGNS_API_URL ?? process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL;
+
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL}`,
+  baseURL: CAMPAIGNS_API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
