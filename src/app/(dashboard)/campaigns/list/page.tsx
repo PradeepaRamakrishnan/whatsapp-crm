@@ -23,10 +23,14 @@ const CampaignListPage = async ({ searchParams }: PageProps) => {
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(pageSize) || 10;
 
-  await queryClient.prefetchQuery({
-    queryKey: ['campaigns', { page: pageNumber, limit: limitNumber }],
-    queryFn: () => getAllCampaigns(pageNumber, limitNumber),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['campaigns', { page: pageNumber, limit: limitNumber }],
+      queryFn: () => getAllCampaigns(pageNumber, limitNumber),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

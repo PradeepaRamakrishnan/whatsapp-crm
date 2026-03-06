@@ -5,10 +5,14 @@ import { getAllConfiguration } from '@/features/settings/services';
 const AgentConfigurationPage = async () => {
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ['configurations'],
-    queryFn: () => getAllConfiguration(),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['configurations'],
+      queryFn: () => getAllConfiguration(),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

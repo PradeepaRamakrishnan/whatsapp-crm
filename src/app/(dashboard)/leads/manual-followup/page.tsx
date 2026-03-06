@@ -22,10 +22,14 @@ const ManualFollowupPage = async ({ searchParams }: PageProps) => {
   const limitNumber = Number(pageSize) || 10;
   const searchTerm = typeof search === 'string' ? search : undefined;
 
-  await queryClient.prefetchQuery({
-    queryKey: ['manual-followups', { page: pageNumber, limit: limitNumber, search: searchTerm }],
-    queryFn: () => getManualFollowups(pageNumber, limitNumber, searchTerm),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['manual-followups', { page: pageNumber, limit: limitNumber, search: searchTerm }],
+      queryFn: () => getManualFollowups(pageNumber, limitNumber, searchTerm),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

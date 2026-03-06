@@ -37,11 +37,15 @@ const LeadDetails = async ({ params }: PageProps) => {
 
   const queryClient = new QueryClient();
 
-  // This call will hit the cache if generateMetadata already called it
-  await queryClient.prefetchQuery({
-    queryKey: ['campaign', id],
-    queryFn: () => getCampaignById(id),
-  });
+  try {
+    // This call will hit the cache if generateMetadata already called it
+    await queryClient.prefetchQuery({
+      queryKey: ['campaign', id],
+      queryFn: () => getCampaignById(id),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

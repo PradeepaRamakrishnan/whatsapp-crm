@@ -11,10 +11,14 @@ export const metadata: Metadata = {
 const PendingFilesPage = async () => {
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ['files', { page: 1, limit: 10 }],
-    queryFn: () => getAllFiles(1, 10),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['files', { page: 1, limit: 10 }],
+      queryFn: () => getAllFiles(1, 10),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

@@ -20,10 +20,14 @@ const FileDetailRoute = async ({ params }: FileDetailRouteProps) => {
 
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ['file', fileId, { page: 1, limit: 10 }],
-    queryFn: () => getFileById(fileId, 1, 10),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['file', fileId, { page: 1, limit: 10 }],
+      queryFn: () => getFileById(fileId, 1, 10),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

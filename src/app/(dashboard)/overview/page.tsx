@@ -11,7 +11,7 @@ import {
 const OverviewPage = async () => {
   const queryClient = new QueryClient();
 
-  await Promise.all([
+  await Promise.allSettled([
     queryClient.prefetchQuery({
       queryKey: ['overview-counts'],
       queryFn: () => getOverviewCounts(),

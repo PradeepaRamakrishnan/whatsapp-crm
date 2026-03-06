@@ -21,10 +21,14 @@ const InterestedLeadsPage = async ({ searchParams }: PageProps) => {
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(pageSize) || 10;
 
-  await queryClient.prefetchQuery({
-    queryKey: ['leads', { page: pageNumber, limit: limitNumber }],
-    queryFn: () => getAllLeads(pageNumber, limitNumber),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['leads', { page: pageNumber, limit: limitNumber }],
+      queryFn: () => getAllLeads(pageNumber, limitNumber),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
