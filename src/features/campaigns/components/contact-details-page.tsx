@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  DollarSign,
-  Mail,
-  MessageSquare,
-  Phone,
-  User,
-} from 'lucide-react';
+import { CheckCircle2, Clock, CreditCard, Mail, MessageSquare, Phone, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,19 +28,6 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Settlement Amount</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
-              ₹{contact.loanAmount.toLocaleString('en-IN')}
-            </div>
-            <p className="text-xs text-muted-foreground">Primary loan</p>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Settlement Count</CardTitle>

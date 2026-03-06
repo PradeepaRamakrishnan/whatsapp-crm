@@ -102,17 +102,11 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         <div className="text-sm text-muted-foreground">{row.getValue('mobileNumber')}</div>
       ),
     },
-    {
-      accessorKey: 'settlementAmount',
-      header: 'Settlement Amount',
-      cell: ({ row }) => {
-        const amount = row.getValue('settlementAmount') as number;
-        return <div className="font-medium">₹{Number(amount).toLocaleString('en-IN')}</div>;
-      },
-    },
+
     {
       id: 'campaigns',
       header: 'Campaigns',
+
       cell: ({ row }) => {
         const campaigns = row.original.campaigns || [];
         if (campaigns.length === 0) {

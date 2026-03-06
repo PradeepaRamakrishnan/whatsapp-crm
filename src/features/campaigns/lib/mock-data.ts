@@ -1,0 +1,67 @@
+import type { CampaignsResponse } from '../types';
+
+export const MOCK_CAMPAIGNS_RESPONSE: CampaignsResponse = {
+  data: [
+    {
+      id: 'mock-1',
+      name: 'Q1 Loan Recovery Drive',
+      description: 'Outreach to overdue loan holders for Q1 settlement offers',
+      fileId: 'file-mock-1',
+      status: 'active',
+      lastRunAt: '2026-02-20T09:15:00Z',
+      createdAt: '2026-01-05T08:00:00Z',
+      updatedAt: '2026-02-20T09:15:00Z',
+    },
+    {
+      id: 'mock-2',
+      name: 'February Settlement Offers',
+      description: 'Special settlement discounts for February batch contacts',
+      fileId: 'file-mock-2',
+      status: 'completed',
+      lastRunAt: '2026-02-28T18:00:00Z',
+      createdAt: '2026-02-01T10:00:00Z',
+      updatedAt: '2026-02-28T18:00:00Z',
+    },
+    {
+      id: 'mock-3',
+      name: 'NBFC Credit Card Recovery',
+      description: 'Credit card overdue recovery campaign for partner NBFCs',
+      fileId: 'file-mock-3',
+      status: 'paused',
+      lastRunAt: '2026-02-10T14:30:00Z',
+      createdAt: '2026-01-20T09:00:00Z',
+      updatedAt: '2026-02-10T14:30:00Z',
+    },
+    {
+      id: 'mock-4',
+      name: 'Home Loan Reminder Blast',
+      description: 'Reminder campaign for home loan EMI defaults',
+      fileId: 'file-mock-4',
+      status: 'failed',
+      lastRunAt: '2026-01-30T11:00:00Z',
+      createdAt: '2026-01-15T07:30:00Z',
+      updatedAt: '2026-01-30T11:00:00Z',
+    },
+    {
+      id: 'mock-5',
+      name: 'March Early Settlement',
+      description: 'Early settlement incentive outreach for March quarter',
+      fileId: 'file-mock-5',
+      status: 'draft',
+      createdAt: '2026-03-01T08:00:00Z',
+      updatedAt: '2026-03-01T08:00:00Z',
+    },
+  ],
+  meta: {
+    total: 5,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  },
+  stats: {
+    active: 1,
+    running: 0,
+    paused: 1,
+    failed: 1,
+  },
+};

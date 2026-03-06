@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MOCK_CAMPAIGNS_RESPONSE } from '../lib/mock-data';
 import { getAllCampaigns } from '../services';
 import type { CampaignsResponse, CampaignsStats } from '../types';
 import { CampaignsTable } from './campaigns-table';
@@ -53,6 +54,7 @@ export function CampaignsList() {
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
     queryKey: ['campaigns', { page: 1, limit: 10 }],
     queryFn: () => getAllCampaigns(1, 10),
+    placeholderData: MOCK_CAMPAIGNS_RESPONSE,
   });
 
   const stats = campaignsResponse?.stats || { active: 0, running: 0, paused: 0, failed: 0 };

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { FileCreatePage } from '@/features/files/components/file-create-page';
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
 };
 
 const CampaignFilesUploadPage = () => {
-  return <FileCreatePage />;
+  return (
+    <Suspense>
+      <FileCreatePage />
+    </Suspense>
+  );
 };
 
 export default CampaignFilesUploadPage;

@@ -22,10 +22,14 @@ const FilesPage = async ({ searchParams }: PageProps) => {
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(limit) || 10;
 
-  await queryClient.prefetchQuery({
-    queryKey: ['files', { page: pageNumber, limit: limitNumber }],
-    queryFn: () => getAllFiles(pageNumber, limitNumber),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['files', { page: pageNumber, limit: limitNumber }],
+      queryFn: () => getAllFiles(pageNumber, limitNumber),
+    });
+  } catch {
+    // API unavailable — client will refetch on mount
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

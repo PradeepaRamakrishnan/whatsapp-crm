@@ -2,7 +2,13 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
-import type { FileDetailData, FileRecord, FileStatus, FilesResponse } from '../types/file.types';
+import type {
+  FileData,
+  FileDetailData,
+  FileRecord,
+  FileStatus,
+  FilesResponse,
+} from '../types/file.types';
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_FILES_API_URL}`,
@@ -13,7 +19,26 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function createFile(formData: FormData) {
+export async function createEmptyList(name: string): Promise<FileData> {
+  const cookieStore = await cookies();
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('source', 'Manual');
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_FILES_API_URL}/create`, {
+    method: 'POST',
+    headers: { Cookie: cookieStore.toString() },
+    body: formData,
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.message || `Failed to create list (${res.status})`);
+  }
+  return (json?.data ?? json) as FileData;
+}
+
+export async function createFile(formData: FormData): Promise<FileData> {
   try {
     const cookieStore = await cookies();
     const response = await axiosClient({
@@ -26,7 +51,8 @@ export async function createFile(formData: FormData) {
       },
     });
 
-    return response.data;
+    // Support both { data: FileData } and FileData response shapes
+    return (response.data?.data ?? response.data) as FileData;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to upload file');
@@ -34,6 +60,31 @@ export async function createFile(formData: FormData) {
     throw error;
   }
 }
+
+export async function addContactsToFile(fileId: string, formData: FormData): Promise<void> {
+  try {
+    const cookieStore = await cookies();
+    await axiosClient({
+      method: 'POST',
+      url: `/${fileId}/upload`,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Cookie: cookieStore.toString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to add contacts');
+    }
+    throw error;
+  }
+}
+
+const EMPTY_FILES_RESPONSE: FilesResponse = {
+  data: [],
+  meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+};
 
 export async function getAllFiles(
   page: number,
@@ -45,7 +96,6 @@ export async function getAllFiles(
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      active: 'true',
     });
 
     if (search) {
@@ -60,12 +110,29 @@ export async function getAllFiles(
       },
     });
 
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch files');
+    const r = response.data;
+
+    // Flat: { data: [...], meta: {...} }
+    if (Array.isArray(r?.data) && r?.meta) {
+      return r as FilesResponse;
     }
-    throw error;
+    // Nested: { data: { data: [...], meta: {...} } }
+    if (Array.isArray(r?.data?.data) && r?.data?.meta) {
+      return r.data as FilesResponse;
+    }
+    // Bare array
+    if (Array.isArray(r)) {
+      return {
+        data: r as FileData[],
+        meta: { total: r.length, page, limit, totalPages: Math.ceil(r.length / limit) },
+      };
+    }
+
+    console.error('[getAllFiles] Unexpected response shape:', JSON.stringify(r)?.slice(0, 300));
+    return EMPTY_FILES_RESPONSE;
+  } catch (error: unknown) {
+    console.error('[getAllFiles] Error fetching files:', error);
+    return EMPTY_FILES_RESPONSE;
   }
 }
 

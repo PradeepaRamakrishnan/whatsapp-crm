@@ -93,7 +93,7 @@ export function FileActions({
     return (
       <>
         <div className="flex items-center gap-2">
-          {!isReviewed && (
+          {/* {!isReviewed && (
             <Button size="sm" onClick={() => setShowConfirmDialog(true)} disabled={isLoading}>
               {markAsReviewedMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -102,7 +102,7 @@ export function FileActions({
               )}
               Move to Campaign
             </Button>
-          )}
+          )} */}
           <Button
             variant="ghost"
             size="icon"

@@ -56,6 +56,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MOCK_CAMPAIGNS_RESPONSE } from '../lib/mock-data';
 import { deleteCampaign, getAllCampaigns } from '../services';
 import type { CampaignData, CampaignsResponse } from '../types';
 
@@ -255,7 +256,7 @@ export function CampaignsTable() {
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
     queryKey: ['campaigns', { page, limit: pageSize, search: searchParams.get('search') }],
     queryFn: () => getAllCampaigns(page, pageSize, searchParams.get('search') || undefined),
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData) => previousData ?? MOCK_CAMPAIGNS_RESPONSE,
   });
 
   const campaigns = campaignsResponse?.data || [];
