@@ -11,12 +11,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { getRecentActivity } from '@/features/dashboard/services';
+import { MOCK_RECENT_ACTIVITY } from '../lib/mock-data';
 import type { RecentActivityItem } from '../types/dashboard.type';
 
 export function RecentActivity() {
   const { data: campaigns = [], isLoading } = useQuery<RecentActivityItem[]>({
     queryKey: ['recent-activity', { limit: 5 }],
     queryFn: () => getRecentActivity(5),
+    select: (data) => (data.length === 0 ? MOCK_RECENT_ACTIVITY : data),
   });
 
   // const getStatusColor = (status: string) => {

@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCampaignPerformanceStats } from '../../campaigns/services';
+import { MOCK_CAMPAIGN_PERFORMANCE, MOCK_LEADS_CHART } from '../lib/mock-data';
 import { getLeadsChartData } from '../services';
 
 const GETTING_STARTED_STEPS = [
@@ -65,11 +66,13 @@ export function OverviewCharts() {
   const { data: leadChartDataResponse } = useQuery({
     queryKey: ['leads-chart'],
     queryFn: () => getLeadsChartData(),
+    select: (data) => (data.length === 0 ? MOCK_LEADS_CHART : data),
   });
 
   const { data: campaignDataResponse = [] } = useQuery({
     queryKey: ['campaign-stats'],
     queryFn: () => getCampaignPerformanceStats(),
+    select: (data) => (data.length === 0 ? MOCK_CAMPAIGN_PERFORMANCE : data),
   });
 
   const chartData = React.useMemo(() => {

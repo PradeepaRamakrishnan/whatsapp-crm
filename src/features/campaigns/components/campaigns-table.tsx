@@ -256,7 +256,8 @@ export function CampaignsTable() {
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
     queryKey: ['campaigns', { page, limit: pageSize, search: searchParams.get('search') }],
     queryFn: () => getAllCampaigns(page, pageSize, searchParams.get('search') || undefined),
-    placeholderData: (previousData) => previousData ?? MOCK_CAMPAIGNS_RESPONSE,
+    placeholderData: (previousData) => previousData,
+    select: (data) => (data.meta.total === 0 ? MOCK_CAMPAIGNS_RESPONSE : data),
   });
 
   const campaigns = campaignsResponse?.data || [];

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, FileSpreadsheet, Send, Target, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
+import { MOCK_OVERVIEW_COUNTS } from '../lib/mock-data';
 import { getOverviewCounts } from '../services';
 
 interface OverviewCounts {
@@ -61,6 +62,10 @@ export function OverviewStats() {
     queryKey: ['overview-counts'],
     queryFn: () => getOverviewCounts(),
     retry: false,
+    select: (data) =>
+      data.totalCampaigns === 0 && data.totalFiles === 0 && data.totalLeads === 0
+        ? MOCK_OVERVIEW_COUNTS
+        : data,
   });
 
   const getValue = (key: keyof OverviewCounts) => counts?.[key]?.toLocaleString() ?? '0';

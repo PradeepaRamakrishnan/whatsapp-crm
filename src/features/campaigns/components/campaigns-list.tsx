@@ -54,7 +54,7 @@ export function CampaignsList() {
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
     queryKey: ['campaigns', { page: 1, limit: 10 }],
     queryFn: () => getAllCampaigns(1, 10),
-    placeholderData: MOCK_CAMPAIGNS_RESPONSE,
+    select: (data) => (data.meta.total === 0 ? MOCK_CAMPAIGNS_RESPONSE : data),
   });
 
   const stats = campaignsResponse?.stats || { active: 0, running: 0, paused: 0, failed: 0 };
