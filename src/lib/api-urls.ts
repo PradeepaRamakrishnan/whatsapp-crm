@@ -1,13 +1,33 @@
 /**
  * Centralized API URL configuration.
  *
- * Set ONE env var in Railway/production:
- *   NEXT_PUBLIC_API_BASE_URL=https://your-ec2-domain.com
+ * Automatically derives the base URL from whichever service URL is already
+ * configured in Railway (auth or users). No extra env vars required.
+ *
+ * Priority order for base:
+ *   1. NEXT_PUBLIC_API_BASE_URL       (explicit override)
+ *   2. Derived from NEXT_PUBLIC_AUTH_API_URL  (strip /auth)
+ *   3. Derived from NEXT_PUBLIC_USERS_API_URL (strip /users)
  *
  * Individual service URLs can still be overridden:
- *   NEXT_PUBLIC_AUTH_API_URL, NEXT_PUBLIC_CAMPAIGNS_API_URL, etc.
+ *   NEXT_PUBLIC_CAMPAIGNS_API_URL, NEXT_PUBLIC_FILES_API_URL, etc.
  */
-const BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/+$/, '');
+function deriveBase(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/+$/, '');
+  }
+  const auth = process.env.NEXT_PUBLIC_AUTH_API_URL || '';
+  if (auth) {
+    return auth.replace(/\/auth\/?$/, '').replace(/\/+$/, '');
+  }
+  const users = process.env.NEXT_PUBLIC_USERS_API_URL || '';
+  if (users) {
+    return users.replace(/\/users\/?$/, '').replace(/\/+$/, '');
+  }
+  return '';
+}
+
+const BASE = deriveBase();
 
 export const API_URLS = {
   auth: process.env.NEXT_PUBLIC_AUTH_API_URL || `${BASE}/auth`,
