@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/correctness/useExhaustiveDependencies: <explanation> */
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: stable refs excluded intentionally */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -69,6 +69,7 @@ function transformMessage(m: InteractionRecord, channel: string = 'email') {
   };
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: messages have dynamic structure based on channel type
 function groupMessagesByDate(messages: any[]) {
   const groups: { [key: string]: any[] } = {};
   messages.forEach((msg) => {
@@ -503,7 +504,6 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
                                   </CollapsibleTrigger>
                                   <CollapsibleContent className="border-t bg-muted/5">
                                     <div className="p-5  text-muted-foreground">
-                                      {/* biome-ignore lint/suspicious/noExplicitAny: Message transformation adds required fields */}
                                       <EmailMessageCard message={message} />
                                     </div>
                                   </CollapsibleContent>

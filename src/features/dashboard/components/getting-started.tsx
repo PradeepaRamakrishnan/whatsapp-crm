@@ -102,7 +102,7 @@ export function GettingStarted() {
       {/* Steps */}
       <div className="grid divide-y divide-border/40 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         {CHECKLIST.map(({ key, icon: Icon, color, bg, doneBg, title, desc, href, isDone }) => {
-          const done = counts ? isDone(counts as any) : false;
+          const done = counts ? isDone(counts as OverviewCounts) : false;
           return (
             <Link
               key={key}

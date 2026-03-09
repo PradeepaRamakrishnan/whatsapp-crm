@@ -2,15 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Copy, Pencil, Trash2 } from 'lucide-react';
+  AlertCircle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Filter,
+  MinusCircle,
+  Pencil,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -26,7 +29,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,15 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// import { Separator } from '@/components/ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { deleteFileRecord, getFileById } from '../services';
 import { useFileFilterStore } from '../store/file-filter-store';
@@ -57,16 +50,106 @@ interface FileRecordsTableProps {
   fileId: string;
 }
 
+// ─── Skeleton row ──────────────────────────────────────────────────────────────
+
+function SkeletonTableRow({ cols }: { cols: number }) {
+  return (
+    <tr className="border-b border-border/40 last:border-0">
+      {Array.from({ length: cols }, (_, i) => i).map((col) => (
+        <td key={col} className="px-4 py-3">
+          <div
+            className="h-3.5 animate-pulse rounded bg-muted/60"
+            style={{ width: `${60 + (col % 3) * 15}%` }}
+          />
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+// ─── Status badge ──────────────────────────────────────────────────────────────
+
+function RecordStatusBadge({ isValid, isExcluded }: { isValid: boolean; isExcluded: boolean }) {
+  if (isExcluded) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+        <MinusCircle className="h-2.5 w-2.5" />
+        Excluded
+      </span>
+    );
+  }
+  if (isValid) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+        <CheckCircle2 className="h-2.5 w-2.5" />
+        Valid
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400">
+      <XCircle className="h-2.5 w-2.5" />
+      Invalid
+    </span>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyState({
+  filter,
+  searchQuery,
+  onClear,
+}: {
+  filter: string;
+  searchQuery: string;
+  onClear: () => void;
+}) {
+  const hasFilters = filter !== 'all' || searchQuery.length > 0;
+  return (
+    <tr>
+      <td colSpan={6}>
+        <div className="flex flex-col items-center justify-center gap-3 py-14">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
+            <AlertCircle className="h-5 w-5 text-muted-foreground/40" />
+          </div>
+          <div className="text-center">
+            <p className="text-[13px] font-semibold text-foreground/70">
+              {hasFilters ? 'No records match your filters' : 'No contacts yet'}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/50">
+              {hasFilters
+                ? 'Try adjusting your search or filter.'
+                : 'Add contacts using the button above.'}
+            </p>
+            {hasFilters && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-2 h-7 text-xs"
+                onClick={onClear}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
 export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [selectedRecord, setSelectedRecord] = React.useState<FileRecord | null>(null);
   const [recordToEdit, setRecordToEdit] = React.useState<FileRecord | null>(null);
   const [recordToDelete, setRecordToDelete] = React.useState<FileRecord | null>(null);
-
-  // console.log(selectedRecord, 'data')
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const queryClient = useQueryClient();
 
@@ -75,100 +158,12 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['file', fileId] });
       setRecordToDelete(null);
-      toast.success('Record deleted successfully');
+      toast.success('Record deleted');
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete record');
     },
   });
-
-  const columns: ColumnDef<FileRecord>[] = [
-    {
-      accessorKey: 'customerName',
-      header: 'Customer Name',
-      cell: ({ row }) => <div className="font-medium">{row.getValue('customerName')}</div>,
-    },
-    {
-      accessorKey: 'emailId',
-      header: 'Email',
-      cell: ({ row }) => (
-        <div className="text-sm text-muted-foreground">{row.getValue('emailId')}</div>
-      ),
-    },
-    {
-      accessorKey: 'mobileNumber',
-      header: 'Mobile No.',
-      cell: ({ row }) => (
-        <div className="text-sm text-muted-foreground">{row.getValue('mobileNumber')}</div>
-      ),
-    },
-
-    {
-      id: 'campaigns',
-      header: 'Campaigns',
-
-      cell: ({ row }) => {
-        const campaigns = row.original.campaigns || [];
-        if (campaigns.length === 0) {
-          return <span className="text-sm text-muted-foreground">-</span>;
-        }
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5 cursor-pointer">
-                  <Copy className="h-3.5 w-3.5 text-blue-500" />
-                  <span className="text-sm text-blue-600 font-medium">
-                    {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold">Used in campaigns:</p>
-                  {campaigns.map((campaign) => (
-                    <p key={campaign.id} className="text-xs">
-                      • {campaign.name}
-                    </p>
-                  ))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRecordToEdit(row.original);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRecordToDelete(row.original);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -178,30 +173,20 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const updateParams = React.useCallback(
     (updates: { page?: number; pageSize?: number; filter?: string }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (updates.page !== undefined) {
-        params.set('page', String(updates.page));
-      }
-      if (updates.pageSize !== undefined) {
-        params.set('pageSize', String(updates.pageSize));
-      }
+      if (updates.page !== undefined) params.set('page', String(updates.page));
+      if (updates.pageSize !== undefined) params.set('pageSize', String(updates.pageSize));
       if (updates.filter !== undefined) {
-        if (updates.filter === 'all') {
-          params.delete('filter');
-        } else {
-          params.set('filter', updates.filter);
-        }
-        params.set('page', '1'); // Reset to page 1 on filter change
+        if (updates.filter === 'all') params.delete('filter');
+        else params.set('filter', updates.filter);
+        params.set('page', '1');
       }
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
 
-  // Sync URL to Store (for highlighting external components)
   useEffect(() => {
-    if (urlFilter !== storeFilter) {
-      setStoreFilter(urlFilter);
-    }
+    if (urlFilter !== storeFilter) setStoreFilter(urlFilter);
   }, [urlFilter, storeFilter, setStoreFilter]);
 
   const {
@@ -214,161 +199,285 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     placeholderData: (previousData) => previousData,
   });
 
-  // console.log(fileData, 'filedata')
-
   const showLoading = isLoading || (isFetching && !fileData);
-
   const records = fileData?.contents.data || [];
   const totalRecords = fileData?.contents.meta.total || 0;
   const totalPages = fileData?.contents.meta.totalPages || 0;
 
-  // console.log(records, 'records');
+  // Client-side name search
+  const filteredRecords = React.useMemo(() => {
+    if (!searchQuery) return records;
+    const q = searchQuery.toLowerCase();
+    return records.filter(
+      (r) =>
+        r.customerName.toLowerCase().includes(q) ||
+        r.mobileNumber.includes(q) ||
+        r.emailId?.toLowerCase().includes(q),
+    );
+  }, [records, searchQuery]);
 
-  const table = useReactTable({
-    data: records,
-    columns,
-    pageCount: totalPages,
-    manualPagination: true,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      pagination: {
-        pageIndex: page - 1,
-        pageSize: pageSize,
-      },
-    },
-  });
+  const hasFilters = urlFilter !== 'all' || searchQuery.length > 0;
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
-        <div className="flex flex-1 items-center gap-3">
+    <div className="space-y-3">
+      {/* ── Toolbar ── */}
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
           <Input
-            placeholder="Search records..."
-            value={(table.getColumn('customerName')?.getFilterValue() as string) ?? ''}
-            onChange={(event) =>
-              table.getColumn('customerName')?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm w-full"
+            placeholder="Search by name, phone or email…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 pl-8 text-sm"
             disabled={showLoading}
           />
+        </div>
+
+        <div className="flex items-center gap-2">
           <Select value={urlFilter} onValueChange={(val) => updateParams({ filter: val })}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger
+              className={`h-9 w-[160px] text-sm ${urlFilter !== 'all' ? 'border-primary/40 bg-primary/5 text-primary' : ''}`}
+            >
+              <Filter
+                className={`mr-1.5 h-3 w-3 ${urlFilter !== 'all' ? 'text-primary' : 'text-muted-foreground/50'}`}
+              />
               <SelectValue placeholder="All Records" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Records</SelectItem>
-              <SelectItem value="invalid">Invalid Records</SelectItem>
+              <SelectItem value="invalid">Invalid Only</SelectItem>
               <SelectItem value="duplicate_email">Duplicates</SelectItem>
               <SelectItem value="excluded">Excluded</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <label htmlFor="rowsPerPage" className="text-sm text-muted-foreground">
-            Rows per page
-          </label>
           <Select
             value={String(pageSize)}
-            onValueChange={(val) => {
-              const v = Number(val) || 10;
-              updateParams({ pageSize: v, page: 1 });
-            }}
+            onValueChange={(val) => updateParams({ pageSize: Number(val) || 10, page: 1 })}
           >
-            <SelectTrigger size="sm" className="w-28">
+            <SelectTrigger className="h-9 w-[100px] text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="15">15</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="25">25</SelectItem>
+                {[5, 10, 15, 20, 25].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n} / page
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+
+      {/* ── Table ── */}
+      <div className="overflow-hidden rounded-xl border border-border/50 bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/40 bg-muted/30">
+                <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Customer
+                </th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Phone
+                </th>
+                <th className="hidden px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 md:table-cell">
+                  Email
+                </th>
+                <th className="hidden px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 lg:table-cell">
+                  Settlement
+                </th>
+                <th className="px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Status
+                </th>
+                <th className="hidden px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
+                  Campaigns
+                </th>
+                <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {showLoading ? (
+                Array.from({ length: Math.min(pageSize, 5) }, (_, i) => i).map((n) => (
+                  <SkeletonTableRow key={n} cols={7} />
+                ))
+              ) : filteredRecords.length === 0 ? (
+                <EmptyState
+                  filter={urlFilter}
+                  searchQuery={searchQuery}
+                  onClear={() => {
+                    setSearchQuery('');
+                    updateParams({ filter: 'all' });
+                  }}
+                />
+              ) : (
+                filteredRecords.map((record, i) => (
+                  <tr
+                    key={record.id}
+                    onClick={() => setSelectedRecord(record)}
+                    className={`cursor-pointer border-b border-border/30 transition-colors last:border-0 hover:bg-muted/20 ${
+                      record.isExcluded
+                        ? 'bg-amber-50/30 hover:bg-amber-50/50 dark:bg-amber-950/10 dark:hover:bg-amber-950/20'
+                        : !record.isValid
+                          ? 'bg-red-50/20 hover:bg-red-50/40 dark:bg-red-950/10 dark:hover:bg-red-950/20'
+                          : i % 2 !== 0
+                            ? 'bg-muted/10'
+                            : ''
+                    }`}
+                  >
+                    {/* Customer name */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/60 text-[10px] font-bold text-muted-foreground">
+                          {record.customerName.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-[12.5px] font-semibold leading-tight">
+                          {record.customerName}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Phone */}
+                    <td className="px-4 py-3 font-mono text-[11.5px] text-muted-foreground">
+                      {record.mobileNumber}
+                    </td>
+
+                    {/* Email */}
+                    <td className="hidden px-4 py-3 text-[11.5px] text-muted-foreground/80 md:table-cell">
+                      {record.emailId || <span className="text-muted-foreground/30">—</span>}
+                    </td>
+
+                    {/* Settlement */}
+                    <td className="hidden px-4 py-3 text-right lg:table-cell">
+                      <span className="text-[12.5px] font-semibold">
+                        ₹{record.settlementAmount.toLocaleString('en-IN')}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3 text-center">
+                      <RecordStatusBadge isValid={record.isValid} isExcluded={record.isExcluded} />
+                    </td>
+
+                    {/* Campaigns */}
+                    <td className="hidden px-4 py-3 text-center sm:table-cell">
+                      {record.campaigns?.length > 0 ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex cursor-pointer items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Copy className="h-3 w-3 text-blue-500" />
+                                <span className="text-[11.5px] font-medium text-blue-600 dark:text-blue-400">
+                                  {record.campaigns.length}
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="mb-1 text-xs font-semibold">Used in campaigns:</p>
+                              {record.campaigns.map((c) => (
+                                <p key={c.id} className="text-xs text-muted-foreground">
+                                  · {c.name}
+                                </p>
+                              ))}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground/30">—</span>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()} role="none">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
+                          onClick={() => setRecordToEdit(record)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive/60 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100 hover:text-destructive"
+                          onClick={() => setRecordToDelete(record)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        {!showLoading && totalRecords > 0 && (
+          <div className="flex items-center justify-between gap-2 border-t border-border/40 bg-muted/20 px-4 py-2.5">
+            <p className="text-[11px] text-muted-foreground/60 tabular-nums">
+              {hasFilters ? `${filteredRecords.length.toLocaleString()} matching · ` : ''}
+              {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of{' '}
+              {totalRecords.toLocaleString()} records
+            </p>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+
+                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                  let p = i + 1;
+                  if (totalPages > 5 && page > 3) p = page - 2 + i;
+                  if (p < 1 || p > totalPages) return null;
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
+                    <Button
+                      key={p}
+                      variant={p === page ? 'default' : 'outline'}
+                      size="icon"
+                      className="h-6 w-6 text-[11px]"
+                      onClick={() => updateParams({ page: p })}
+                    >
+                      {p}
+                    </Button>
                   );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {showLoading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Loading records...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={`cursor-pointer ${row.original.isExcluded ? 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30' : ''}`}
-                  onClick={() => setSelectedRecord(row.original)}
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
+                  disabled={page >= totalPages}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
             )}
-          </TableBody>
-        </Table>
+          </div>
+        )}
       </div>
-      <div className="flex items-center justify-end space-x-2 p-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of{' '}
-          {totalRecords} results
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
-            disabled={page === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+
+      {/* ── Sheets & Dialogs ── */}
       <FileRecordDetailsSheet
         record={selectedRecord}
         onOpenChange={(open) => !open && setSelectedRecord(null)}
@@ -403,7 +512,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

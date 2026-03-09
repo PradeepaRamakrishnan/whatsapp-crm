@@ -11,7 +11,7 @@ import {
 import dayjs from 'dayjs';
 import { CheckCircle2, Info, Mail, MessageSquare, Phone, User, XCircle, Zap } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { type ElementType, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +59,7 @@ export function ManualFollowupTable() {
 
   const { data: followupDetails, isLoading: isDetailsLoading } = useQuery<ManualFollowupCase>({
     queryKey: ['manual-followup', selectedId],
-    queryFn: () => getManualFollowupById(selectedId!),
+    queryFn: () => getManualFollowupById(selectedId ?? ''),
     enabled: !!selectedId,
   });
 
@@ -474,7 +474,7 @@ function ChannelCard({
   color,
   details,
 }: {
-  icon: any;
+  icon: ElementType;
   title: string;
   color: 'blue' | 'green' | 'emerald';
   details: {

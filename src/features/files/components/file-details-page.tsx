@@ -9,12 +9,15 @@ import {
   FileSpreadsheet,
   FileText,
   MessageCircle,
+  MinusCircle,
   Pencil,
   Plus,
   Search,
   Trash2,
   Upload,
+  Users,
   X,
+  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useCallback, useState } from 'react';
@@ -972,6 +975,70 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Stats bar ── */}
+      {file.stats && (
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {[
+            {
+              label: 'Total',
+              value: file.stats.totalRecords,
+              icon: Users,
+              iconClass: 'text-blue-500',
+              iconBg: 'bg-blue-500/10',
+              border: 'border-border/50',
+            },
+            {
+              label: 'Valid',
+              value: file.stats.totalRecords - file.stats.totalInvalidRecords,
+              icon: CheckCircle2,
+              iconClass: 'text-emerald-500',
+              iconBg: 'bg-emerald-500/10',
+              border: 'border-emerald-200/60 dark:border-emerald-800/40',
+              textClass: 'text-emerald-700 dark:text-emerald-400',
+            },
+            {
+              label: 'Invalid',
+              value: file.stats.totalInvalidRecords,
+              icon: XCircle,
+              iconClass: 'text-red-500',
+              iconBg: 'bg-red-500/10',
+              border: 'border-red-200/60 dark:border-red-800/40',
+              textClass: file.stats.totalInvalidRecords > 0 ? 'text-red-600 dark:text-red-400' : '',
+            },
+            {
+              label: 'Excluded',
+              value: file.stats.excludedCount,
+              icon: MinusCircle,
+              iconClass: 'text-amber-500',
+              iconBg: 'bg-amber-500/10',
+              border: 'border-amber-200/60 dark:border-amber-800/40',
+              textClass: file.stats.excludedCount > 0 ? 'text-amber-600 dark:text-amber-400' : '',
+            },
+          ].map(({ label, value, icon: Icon, iconClass, iconBg, border, textClass }) => (
+            <div
+              key={label}
+              className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm ${border}`}
+            >
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
+              >
+                <Icon className={`h-4 w-4 ${iconClass}`} />
+              </div>
+              <div>
+                <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                  {label}
+                </p>
+                <p
+                  className={`text-[18px] font-bold leading-tight tabular-nums ${textClass ?? 'text-foreground'}`}
+                >
+                  {value.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Tabs ── */}
       <Tabs

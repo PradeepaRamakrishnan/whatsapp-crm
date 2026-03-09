@@ -1,9 +1,17 @@
 'use client';
 
-import { Users } from 'lucide-react';
-import { useState } from 'react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Filter,
+  Loader2,
+  MinusCircle,
+  Search,
+  Users,
+  XCircle,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -21,232 +29,328 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-// Mock data for preview
-const mockRecords = Array.from({ length: 2500 }, (_, i) => ({
-  id: i + 1,
-  customerName: `Customer ${i + 1}`,
-  phone: `98${String(i).padStart(8, '0')}`,
-  email: `customer${i + 1}@example.com`,
-  outstandingAmount: Math.floor(Math.random() * 30000) + 15000,
-  bank: ['ICICI', 'HDFC', 'SBI'][Math.floor(Math.random() * 3)],
-  settlements: Math.floor(Math.random() * 3),
-}));
+import type { FileRecord, FileStats } from '@/features/files/types/file.types';
 
 type RecordSelectionTableProps = {
-  totalRecords?: number;
-  selectedRecords?: number;
+  records: FileRecord[];
+  stats: FileStats;
+  isLoading?: boolean;
 };
 
-export function RecordSelectionTable({
-  totalRecords = 2500,
-  selectedRecords = 2500,
-}: RecordSelectionTableProps) {
+export function RecordSelectionTable({ records, stats, isLoading }: RecordSelectionTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [bankFilter, setBankFilter] = useState('all');
   const [amountFilter, setAmountFilter] = useState('all');
-  const [settlementFilter, setSettlementFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [tempAmountFilter, setTempAmountFilter] = useState('all');
-  const [tempSettlementFilter, setTempSettlementFilter] = useState('all');
+  const [tempStatusFilter, setTempStatusFilter] = useState('all');
 
   const handleEditSelection = () => {
     setTempAmountFilter(amountFilter);
-    setTempSettlementFilter(settlementFilter);
+    setTempStatusFilter(statusFilter);
     setIsEditDialogOpen(true);
   };
 
   const handleApplyFilters = () => {
     setAmountFilter(tempAmountFilter);
-    setSettlementFilter(tempSettlementFilter);
+    setStatusFilter(tempStatusFilter);
     setIsEditDialogOpen(false);
   };
 
+  const filteredRecords = useMemo(() => {
+    return records.filter((r) => {
+      if (searchQuery && !r.customerName.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      if (amountFilter !== 'all') {
+        if (amountFilter.endsWith('+')) {
+          if (r.settlementAmount < Number(amountFilter.replace('+', ''))) return false;
+        } else {
+          const [minStr, maxStr] = amountFilter.split('-');
+          const min = Number(minStr);
+          const max = Number(maxStr);
+          if (r.settlementAmount < min || r.settlementAmount > max) return false;
+        }
+      }
+      if (statusFilter === 'valid' && (!r.isValid || r.isExcluded)) return false;
+      if (statusFilter === 'invalid' && r.isValid) return false;
+      if (statusFilter === 'excluded' && !r.isExcluded) return false;
+      return true;
+    });
+  }, [records, searchQuery, amountFilter, statusFilter]);
+
+  const validCount = records.filter((r) => r.isValid && !r.isExcluded).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-14 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <span className="text-[12px]">Loading records…</span>
+      </div>
+    );
+  }
+
+  const hasActiveFilters =
+    amountFilter !== 'all' || statusFilter !== 'all' || searchQuery.length > 0;
+
   return (
     <>
-      <div className="space-y-6">
-        {/* Summary Card */}
-        <Card className="border-blue-200 bg-linear-to-br from-blue-50 to-blue-100/50 dark:border-blue-800 dark:from-blue-950/30 dark:to-blue-900/20">
-          <div className="flex items-start justify-between gap-4 p-6">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-blue-500 p-3">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
-                  Selected Records Summary
-                </h3>
-                <p className="mb-3 text-2xl font-bold text-foreground">
-                  {selectedRecords.toLocaleString()} records selected for this campaign
-                </p>
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                  <span>Total customers: {totalRecords.toLocaleString()}</span>
-                  <span>Amount range: ₹15,000 - ₹45,000</span>
-                </div>
-              </div>
+      <div className="space-y-3">
+        {/* ── Stats grid ── */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-500/10">
+              <Users className="h-3.5 w-3.5 text-blue-500" />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={handleEditSelection}
-            >
-              Edit Selection
-            </Button>
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground/60">Total</p>
+              <p className="text-[14px] font-bold leading-tight text-foreground">
+                {stats.totalRecords.toLocaleString()}
+              </p>
+            </div>
           </div>
-        </Card>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <Input
-            placeholder="Search by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-10"
-          />
-          <Select value={bankFilter} onValueChange={setBankFilter}>
-            <SelectTrigger className="h-10">
-              <SelectValue placeholder="All Banks" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Banks</SelectItem>
-              <SelectItem value="icici">ICICI</SelectItem>
-              <SelectItem value="hdfc">HDFC</SelectItem>
-              <SelectItem value="sbi">SBI</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={amountFilter} onValueChange={setAmountFilter}>
-            <SelectTrigger className="h-10">
-              <SelectValue placeholder="All Amounts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Amounts</SelectItem>
-              <SelectItem value="25000-50000">₹25,000 - ₹50,000</SelectItem>
-              <SelectItem value="50000-75000">₹50,000 - ₹75,000</SelectItem>
-              <SelectItem value="75000-100000">₹75,000 - ₹1,00,000</SelectItem>
-              <SelectItem value="100000+">₹1,00,000+</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={settlementFilter} onValueChange={setSettlementFilter}>
-            <SelectTrigger className="h-10">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="2">2 Settlements</SelectItem>
-              <SelectItem value="3+">3+ Settlements</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200/60 bg-emerald-50/50 px-3 py-2.5 dark:border-emerald-800/40 dark:bg-emerald-950/20">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-500/10">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-emerald-600/70 dark:text-emerald-400/60">
+                Valid
+              </p>
+              <p className="text-[14px] font-bold leading-tight text-emerald-700 dark:text-emerald-400">
+                {validCount.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-lg border border-red-200/60 bg-red-50/50 px-3 py-2.5 dark:border-red-800/40 dark:bg-red-950/20">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-red-500/10">
+              <XCircle className="h-3.5 w-3.5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-red-600/70 dark:text-red-400/60">
+                Invalid
+              </p>
+              <p className="text-[14px] font-bold leading-tight text-red-600 dark:text-red-400">
+                {stats.totalInvalidRecords.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-lg border border-amber-200/60 bg-amber-50/50 px-3 py-2.5 dark:border-amber-800/40 dark:bg-amber-950/20">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/10">
+              <MinusCircle className="h-3.5 w-3.5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-amber-600/70 dark:text-amber-400/60">
+                Excluded
+              </p>
+              <p className="text-[14px] font-bold leading-tight text-amber-600 dark:text-amber-400">
+                {stats.excludedCount.toLocaleString()}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Table Preview */}
-        <Card>
-          <div className="p-4">
-            <h4 className="mb-4 font-semibold">Records Preview</h4>
-            <div className="overflow-hidden rounded-md border">
-              <ScrollArea className="h-100">
+        {/* ── Filter toolbar ── */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <Input
+              placeholder="Search by name…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={`h-8 gap-1.5 px-3 text-xs ${hasActiveFilters ? 'border-primary/40 bg-primary/5 text-primary' : ''}`}
+            onClick={handleEditSelection}
+          >
+            <Filter className="h-3 w-3" />
+            Filters
+            {hasActiveFilters && (
+              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                !
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {/* ── Table ── */}
+        <div className="overflow-hidden rounded-lg border border-border/50">
+          {filteredRecords.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-10">
+              <AlertCircle className="h-7 w-7 text-muted-foreground/25" />
+              <p className="text-[12px] text-muted-foreground/60">
+                No records match the current filters
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 h-7 text-[11px]"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setAmountFilter('all');
+                    setStatusFilter('all');
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              <ScrollArea className="h-64">
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-muted/80 backdrop-blur">
-                    <tr className="border-b">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        Customer Name
+                  <thead>
+                    <tr className="border-b border-border/50 bg-muted/40">
+                      <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        Customer
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                         Phone
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      <th className="hidden px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
                         Email
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        Outstanding
+                      <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        Amount
                       </th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                        Settlements
+                      <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        Status
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-background">
-                    {mockRecords.slice(0, 50).map((record) => (
-                      <tr key={record.id} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="px-4 py-3 font-medium">{record.customerName}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                          {record.phone}
+                  <tbody>
+                    {filteredRecords.slice(0, 100).map((record, i) => (
+                      <tr
+                        key={record.id}
+                        className={`border-b border-border/30 transition-colors last:border-0 hover:bg-muted/20 ${
+                          i % 2 === 0 ? 'bg-background' : 'bg-muted/10'
+                        }`}
+                      >
+                        <td className="px-3 py-2 text-[12px] font-medium">{record.customerName}</td>
+                        <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                          {record.mobileNumber}
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{record.email}</td>
-                        <td className="px-4 py-3 font-semibold">
-                          ₹{record.outstandingAmount.toLocaleString('en-IN')}
+                        <td className="hidden px-3 py-2 text-[11px] text-muted-foreground sm:table-cell">
+                          {record.emailId || <span className="text-muted-foreground/30">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">
-                          {record.settlements}
+                        <td className="px-3 py-2 text-right text-[12px] font-semibold">
+                          ₹{record.settlementAmount.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          {record.isExcluded ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                              <MinusCircle className="h-2.5 w-2.5" />
+                              Excluded
+                            </span>
+                          ) : record.isValid ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                              <CheckCircle2 className="h-2.5 w-2.5" />
+                              Valid
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                              <XCircle className="h-2.5 w-2.5" />
+                              Invalid
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </ScrollArea>
-            </div>
-            <div className="mt-3 text-center text-xs text-muted-foreground">
-              Showing 50 of {totalRecords.toLocaleString()} records
-            </div>
-          </div>
-        </Card>
+
+              <div className="border-t border-border/40 bg-muted/20 px-3 py-2 text-center text-[10.5px] text-muted-foreground/60">
+                Showing {Math.min(100, filteredRecords.length).toLocaleString()} of{' '}
+                {filteredRecords.length.toLocaleString()} matching
+                {filteredRecords.length !== stats.totalRecords &&
+                  ` · ${stats.totalRecords.toLocaleString()} total`}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Edit Selection Modal */}
+      {/* ── Filter Modal ── */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Edit Selection Criteria</DialogTitle>
-            <DialogDescription>
-              Refine the selection by applying filters for amount and settlement count
+            <DialogTitle className="text-[15px]">Filter Records</DialogTitle>
+            <DialogDescription className="text-[12px]">
+              Narrow down which records are included in this campaign
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
-            {/* Amount Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="amount-filter" className="text-sm font-medium">
-                Outstanding Amount
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="amount-filter" className="text-[12px] font-semibold">
+                Settlement Amount
               </Label>
               <Select value={tempAmountFilter} onValueChange={setTempAmountFilter}>
-                <SelectTrigger id="amount-filter">
+                <SelectTrigger id="amount-filter" className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Amounts</SelectItem>
-                  <SelectItem value="25000-50000">₹25,000 - ₹50,000</SelectItem>
-                  <SelectItem value="50000-75000">₹50,000 - ₹75,000</SelectItem>
-                  <SelectItem value="75000-100000">₹75,000 - ₹1,00,000</SelectItem>
-                  <SelectItem value="100000+">₹1,00,000+</SelectItem>
+                  <SelectItem value="0-25000">Below ₹25,000</SelectItem>
+                  <SelectItem value="25000-50000">₹25,000 – ₹50,000</SelectItem>
+                  <SelectItem value="50000-100000">₹50,000 – ₹1,00,000</SelectItem>
+                  <SelectItem value="100000+">Above ₹1,00,000</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Settlement Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="settlement-filter" className="text-sm font-medium">
-                Settlement Count
+            <div className="space-y-1.5">
+              <Label htmlFor="status-filter" className="text-[12px] font-semibold">
+                Record Status
               </Label>
-              <Select value={tempSettlementFilter} onValueChange={setTempSettlementFilter}>
-                <SelectTrigger id="settlement-filter">
+              <Select value={tempStatusFilter} onValueChange={setTempStatusFilter}>
+                <SelectTrigger id="status-filter" className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-
-                  <SelectItem value="2">2 Settlements</SelectItem>
-                  <SelectItem value="3+">3+ Settlements</SelectItem>
+                  <SelectItem value="all">All Records</SelectItem>
+                  <SelectItem value="valid">Valid only</SelectItem>
+                  <SelectItem value="invalid">Invalid only</SelectItem>
+                  <SelectItem value="excluded">Excluded only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                setTempAmountFilter('all');
+                setTempStatusFilter('all');
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleApplyFilters}>Apply Filters</Button>
+            <Button size="sm" className="text-xs" onClick={handleApplyFilters}>
+              Apply
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

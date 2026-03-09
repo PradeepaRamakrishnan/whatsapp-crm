@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/performance/noImgElement: <explanation> */
+/** biome-ignore-all lint/performance/noImgElement: document preview requires img element */
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -181,7 +181,7 @@ export function DocumentUploader({
   initialDocuments = [],
   timeline,
   onUploadSuccess,
-  isLoading,
+  isLoading: _isLoading,
 }: DocumentUploaderProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -216,12 +216,10 @@ export function DocumentUploader({
       queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
       toast.success('Document deleted successfully');
     },
-    onError: (error: any) => {
+    onError: (error: { message?: string }) => {
       toast.error(error.message || 'Failed to delete document');
     },
   });
-
-  // console.log(documents, 'documents in uploader');
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');

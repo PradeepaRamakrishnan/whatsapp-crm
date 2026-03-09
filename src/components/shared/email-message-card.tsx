@@ -79,8 +79,8 @@ export function EmailMessageCard({ message }: EmailMessageCardProps) {
           {message.content.includes('<') ? (
             <div
               className="prose prose-sm dark:prose-invert max-w-full overflow-x-auto"
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-              // biome-ignore lint/style/useNamingConvention: <explanation>
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: renders trusted HTML email content
+              // biome-ignore lint/style/useNamingConvention: React prop name required
               dangerouslySetInnerHTML={{ __html: message.content }}
             />
           ) : (

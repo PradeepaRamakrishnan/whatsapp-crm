@@ -48,7 +48,7 @@ export function SMSMessageCard({ message }: SMSMessageCardProps) {
             >
               {typeof message.error === 'string'
                 ? message.error
-                : (message.error as any)?.message || 'Unknown error'}
+                : (message.error as { message?: string })?.message || 'Unknown error'}
             </p>
           </div>
         )}

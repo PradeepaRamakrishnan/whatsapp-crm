@@ -7,8 +7,10 @@ import {
   ArrowDown,
   ArrowUp,
   BarChart3,
+  Building2,
   Calendar,
   Check,
+  CheckCircle2,
   ChevronRight,
   Clock,
   FileSpreadsheet,
@@ -19,9 +21,11 @@ import {
   MessageSquare,
   Minus,
   Plus,
+  Search,
   Send,
   Target,
   UserCog,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -36,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getAllFiles } from '@/features/files/services';
+import { getAllFiles, getFileById } from '@/features/files/services';
 import {
   createConfiguration,
   getAllEmailTemplates,
@@ -210,6 +214,7 @@ export function CreateCampaignForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [selectedFile, setSelectedFile] = useState('');
+  const [fileSearch, setFileSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [scheduleMode, setScheduleMode] = useState<'now' | 'schedule'>('now');
@@ -261,7 +266,7 @@ export function CreateCampaignForm() {
         const steps = sequence
           .filter((s) => s.channel !== 'manual' && s.templateId)
           .map((s, i) => ({
-            channel: s.channel as any,
+            channel: s.channel as 'email' | 'sms' | 'whatsapp',
             templateId: s.templateId,
             delayMs: i === 0 ? 0 : toDelayMs(s.delayValue, s.delayUnit),
           }));
@@ -304,6 +309,11 @@ export function CreateCampaignForm() {
     queryKey: ['campaign-recipient-files'],
     queryFn: () => getAllFiles(1, 100),
   });
+  const { data: fileDetail, isLoading: fileDetailLoading } = useQuery({
+    queryKey: ['campaign-file-detail', selectedFile],
+    queryFn: () => getFileById(selectedFile, 1, 500),
+    enabled: !!selectedFile,
+  });
   const emailTpls = ed?.data ?? [];
   const waTpls = wd?.data ?? [];
   const smsTpls = sd?.data ?? [];
@@ -317,7 +327,8 @@ export function CreateCampaignForm() {
   const canNext2 = !!selectedFile;
   const canNext3 =
     sequence.every((s) => s.channel === 'manual' || s.templateId) && sequence.length > 0;
-  const currentPriority = PRIORITY_OPTIONS.find((p) => p.value === form.getFieldValue('priority'))!;
+  const currentPriority =
+    PRIORITY_OPTIONS.find((p) => p.value === form.getFieldValue('priority')) ?? PRIORITY_OPTIONS[1];
   const selectedSeqStep = sequence.find((s) => s.id === selectedSeqStepId) ?? sequence[0];
 
   return (
@@ -406,7 +417,7 @@ export function CreateCampaignForm() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (step < 4) setStep((s) => (s + 1) as any);
+            if (step < 4) setStep((s) => (s + 1) as 1 | 2 | 3 | 4 | 5);
             else if (step === 4) {
               if (scheduleMode === 'schedule' && (!scheduledDate || !scheduledTime)) return;
               setStep(5);
@@ -502,63 +513,184 @@ export function CreateCampaignForm() {
 
               {/* ══ Step 2 ══ */}
               {step === 2 && (
-                <div className="space-y-3">
-                  <FieldLabel>Select Recipient File</FieldLabel>
-                  {filesLoading ? (
-                    <div className="flex items-center gap-2 py-6 text-[12px] text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading files…
-                    </div>
-                  ) : filesList.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 py-8 text-center">
-                      <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
-                      <p className="text-[12px] font-medium text-muted-foreground/60">
-                        No files uploaded yet
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground/40">
-                        Go to Contact Sources to upload a CSV
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filesList.map((file) => {
-                        const sel = selectedFile === file.id;
-                        return (
-                          <button
-                            key={file.id}
-                            type="button"
-                            onClick={() => setSelectedFile(file.id)}
-                            className={`flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${sel ? 'border-primary/40 bg-primary/5 ring-2 ring-primary/15' : 'border-border/60 hover:bg-muted/20'}`}
-                          >
-                            <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${sel ? 'bg-primary/15' : 'bg-muted/60'}`}
-                            >
-                              <FileSpreadsheet
-                                className={`h-4.5 w-4.5 ${sel ? 'text-primary' : 'text-muted-foreground/50'}`}
-                                style={{ width: 18, height: 18 }}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold capitalize">{file.name}</p>
-                              <p className="text-[11px] text-muted-foreground capitalize">
-                                {file.status} · {file.createdAt.slice(0, 10)}
-                              </p>
-                            </div>
-                            <div
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${sel ? 'bg-primary border-primary' : 'border-border/50'}`}
-                            >
-                              {sel && <Check className="h-3 w-3 text-white" />}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  {/* File picker */}
+                  <div className="space-y-2.5">
+                    <FieldLabel>Select Recipient File</FieldLabel>
+
+                    {filesLoading ? (
+                      <div className="flex items-center justify-center gap-2 py-10 text-[12px] text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        Loading files…
+                      </div>
+                    ) : filesList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 bg-muted/10 py-10 text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
+                          <FileSpreadsheet className="h-6 w-6 text-muted-foreground/40" />
+                        </div>
+                        <p className="mt-3 text-[13px] font-semibold text-muted-foreground/70">
+                          No files uploaded yet
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/40">
+                          Go to Contact Sources to upload a CSV
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Search */}
+                        {filesList.length > 4 && (
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+                            <Input
+                              placeholder="Search files…"
+                              value={fileSearch}
+                              onChange={(e) => setFileSearch(e.target.value)}
+                              className="h-8 pl-8 text-xs"
+                            />
+                          </div>
+                        )}
+
+                        {/* File list */}
+                        <div className="space-y-1.5">
+                          {filesList
+                            .filter(
+                              (f) =>
+                                !fileSearch ||
+                                f.name.toLowerCase().includes(fileSearch.toLowerCase()) ||
+                                f.source.toLowerCase().includes(fileSearch.toLowerCase()),
+                            )
+                            .map((file) => {
+                              const sel = selectedFile === file.id;
+                              const statusColors: Record<string, string> = {
+                                reviewed:
+                                  'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
+                                processing:
+                                  'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
+                                pending_review:
+                                  'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
+                                uploaded:
+                                  'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400',
+                                failed:
+                                  'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400',
+                                archived: 'bg-muted text-muted-foreground',
+                              };
+                              const statusClass =
+                                statusColors[file.status] ?? 'bg-muted/60 text-muted-foreground/60';
+                              return (
+                                <button
+                                  key={file.id}
+                                  type="button"
+                                  onClick={() => setSelectedFile(file.id)}
+                                  className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all ${
+                                    sel
+                                      ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20'
+                                      : 'border-border/50 bg-background hover:border-border hover:bg-muted/20'
+                                  }`}
+                                >
+                                  {/* Icon */}
+                                  <div
+                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                      sel ? 'bg-primary/15' : 'bg-muted/50 group-hover:bg-muted'
+                                    }`}
+                                  >
+                                    <FileSpreadsheet
+                                      className={`h-4.5 w-4.5 transition-colors ${sel ? 'text-primary' : 'text-muted-foreground/50'}`}
+                                      style={{ width: 18, height: 18 }}
+                                    />
+                                  </div>
+
+                                  {/* Info */}
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className={`truncate text-[12.5px] font-semibold leading-tight capitalize ${
+                                        sel ? 'text-foreground' : 'text-foreground/80'
+                                      }`}
+                                    >
+                                      {file.name}
+                                    </p>
+                                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                      {file.source && (
+                                        <span className="flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/70 capitalize">
+                                          <Building2 className="h-2.5 w-2.5" />
+                                          {file.source}
+                                        </span>
+                                      )}
+                                      <span
+                                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize ${statusClass}`}
+                                      >
+                                        {file.status.replace('_', ' ')}
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground/40">
+                                        {file.createdAt.slice(0, 10)}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Selection indicator */}
+                                  <div
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                                      sel
+                                        ? 'border-primary bg-primary'
+                                        : 'border-border/40 group-hover:border-border/70'
+                                    }`}
+                                  >
+                                    {sel && <Check className="h-3 w-3 text-white" />}
+                                  </div>
+                                </button>
+                              );
+                            })}
+
+                          {filesList.filter(
+                            (f) =>
+                              !fileSearch ||
+                              f.name.toLowerCase().includes(fileSearch.toLowerCase()) ||
+                              f.source.toLowerCase().includes(fileSearch.toLowerCase()),
+                          ).length === 0 && (
+                            <p className="py-6 text-center text-[12px] text-muted-foreground/50">
+                              No files match "{fileSearch}"
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Record Preview */}
                   {selectedFile && (
-                    <div className="rounded-xl border border-border/50 p-4">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                        Record Preview
-                      </p>
-                      <RecordSelectionTable totalRecords={0} selectedRecords={0} />
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <FieldLabel>Record Preview</FieldLabel>
+                        {fileDetail?.stats && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 className="h-3 w-3" />
+                              {fileDetail.stats.totalRecords - fileDetail.stats.totalInvalidRecords}{' '}
+                              valid
+                            </span>
+                            {fileDetail.stats.totalInvalidRecords > 0 && (
+                              <span className="flex items-center gap-1 text-[11px] text-red-500">
+                                <XCircle className="h-3 w-3" />
+                                {fileDetail.stats.totalInvalidRecords} invalid
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="rounded-xl border border-border/50 bg-muted/5 p-3.5">
+                        <RecordSelectionTable
+                          records={fileDetail?.contents?.data ?? []}
+                          stats={
+                            fileDetail?.stats ?? {
+                              totalRecords: 0,
+                              totalInvalidRecords: 0,
+                              duplicateEmailInCampaign: 0,
+                              duplicateMobileInCampaign: 0,
+                              excludedCount: 0,
+                            }
+                          }
+                          isLoading={fileDetailLoading}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -976,7 +1108,7 @@ export function CreateCampaignForm() {
                     variant="outline"
                     size="sm"
                     className="h-8 px-4 text-xs"
-                    onClick={() => setStep((s) => (s - 1) as any)}
+                    onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3 | 4 | 5)}
                   >
                     ← Back
                   </Button>
@@ -1038,7 +1170,8 @@ export function CreateCampaignForm() {
                     </form.Subscribe>
                     <form.Subscribe selector={(s) => s.values.priority}>
                       {(priority) => {
-                        const p = PRIORITY_OPTIONS.find((o) => o.value === priority)!;
+                        const p =
+                          PRIORITY_OPTIONS.find((o) => o.value === priority) ?? PRIORITY_OPTIONS[1];
                         return (
                           <SummaryRow
                             label="Priority"
@@ -1085,26 +1218,63 @@ export function CreateCampaignForm() {
             {step === 2 && (
               <>
                 {selectedFileData ? (
-                  <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                  <div className="space-y-2 rounded-xl border border-border/50 bg-card p-4">
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                       <BarChart3 className="h-3 w-3" /> File Summary
                     </p>
                     <SummaryRow label="Name" value={selectedFileData.name} highlight />
-                    <SummaryRow label="Bank" value={selectedFileData.source} highlight />
-                    <SummaryRow label="Status" value={selectedFileData.status} />
+                    <SummaryRow label="Bank" value={selectedFileData.source || '—'} highlight />
+                    <SummaryRow
+                      label="Status"
+                      value={
+                        <span className="capitalize">
+                          {selectedFileData.status.replace('_', ' ')}
+                        </span>
+                      }
+                    />
                     <SummaryRow label="Uploaded" value={selectedFileData.createdAt.slice(0, 10)} />
+                    {fileDetail?.stats && (
+                      <>
+                        <div className="my-1 border-t border-border/30" />
+                        <SummaryRow
+                          label="Total"
+                          value={fileDetail.stats.totalRecords.toLocaleString()}
+                          highlight
+                        />
+                        <SummaryRow
+                          label="Valid"
+                          value={
+                            <span className="text-emerald-600 dark:text-emerald-400">
+                              {(
+                                fileDetail.stats.totalRecords - fileDetail.stats.totalInvalidRecords
+                              ).toLocaleString()}
+                            </span>
+                          }
+                        />
+                        {fileDetail.stats.totalInvalidRecords > 0 && (
+                          <SummaryRow
+                            label="Invalid"
+                            value={
+                              <span className="text-red-500">
+                                {fileDetail.stats.totalInvalidRecords.toLocaleString()}
+                              </span>
+                            }
+                          />
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-4 text-center">
-                    <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 bg-muted/10 py-8 text-center">
+                    <FileSpreadsheet className="mb-2 h-8 w-8 text-muted-foreground/25" />
                     <p className="text-[12px] text-muted-foreground/50">
-                      Select a file to see its details
+                      Select a file to see details
                     </p>
                   </div>
                 )}
                 <Tip icon={Info} title="File Requirements">
                   Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file. Each row needs
-                  borrower name, phone, and amount details.
+                  borrower name, phone, and settlement amount.
                 </Tip>
               </>
             )}

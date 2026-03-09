@@ -340,7 +340,7 @@ export function SteppedDocumentUploader({
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
       toast.success('Document deleted successfully');
     },
-    onError: (error: any) => {
+    onError: (error: { message?: string }) => {
       toast.error(error.message || 'Failed to delete document');
     },
   });
@@ -549,7 +549,7 @@ export function SteppedDocumentUploader({
                             d.type === DocumentType.AadharFront ||
                             d.type === DocumentType.AadharBack,
                         )
-                        .sort((a, b) => (a.type === DocumentType.AadharFront ? -1 : 1))
+                        .sort((a, _b) => (a.type === DocumentType.AadharFront ? -1 : 1))
                     : [];
                 const isAadhaarComplete =
                   doc.id === 'aadhaar' &&
@@ -590,7 +590,9 @@ export function SteppedDocumentUploader({
                                 variant="outline"
                                 className="h-8 text-[11px] font-bold uppercase tracking-tight gap-1.5 border-emerald-200 hover:bg-emerald-50"
                                 onClick={() =>
-                                  setPreviewDoc(doc.id === 'aadhaar' ? aadhaarDocs : uploadedDoc!)
+                                  setPreviewDoc(
+                                    doc.id === 'aadhaar' ? aadhaarDocs : (uploadedDoc ?? null),
+                                  )
                                 }
                               >
                                 <Eye className="size-3.5" />

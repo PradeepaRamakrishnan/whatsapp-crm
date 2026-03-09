@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: table rows handle click navigation */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: table rows handle click navigation */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

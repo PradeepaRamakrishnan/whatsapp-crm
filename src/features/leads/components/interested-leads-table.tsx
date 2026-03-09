@@ -1,7 +1,7 @@
-/** biome-ignore-all lint/a11y/useButtonType: <> */
-/** biome-ignore-all lint/correctness/useExhaustiveDependencies: <explanation> */
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/useButtonType: table action buttons */
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: stable refs excluded intentionally */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: table rows handle click navigation */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: table rows handle click navigation */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

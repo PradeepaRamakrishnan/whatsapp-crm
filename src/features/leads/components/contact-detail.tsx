@@ -50,9 +50,11 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
   const sms = contact.contact?.sms;
   const whatsapp = contact.contact?.whatsapp;
 
-  const getBouncedAt = (channel: any) =>
-    channel?.bouncedAt || (typeof channel?.bounced === 'string' ? channel.bounced : undefined);
-  const isBounced = (channel: any) => !!(channel?.bounced || channel?.bouncedAt);
+  type ChannelStatus = Record<string, unknown> | undefined;
+  const getBouncedAt = (channel: ChannelStatus) =>
+    (channel?.bouncedAt as string | undefined) ||
+    (typeof channel?.bounced === 'string' ? channel.bounced : undefined);
+  const isBounced = (channel: ChannelStatus) => !!(channel?.bounced || channel?.bouncedAt);
 
   const getChannelIcon = (channel: string) => {
     switch (channel.toLowerCase()) {
@@ -260,13 +262,15 @@ export function ContactDetailsPage({ contact }: ContactDetailsPageProps) {
                   /* sms.deliveredAt || */ isBounced(sms) && (
                     <div className="grid grid-cols-2 gap-2 pl-1 border-l-2 border-green-100 dark:border-green-900/40 ml-4 pb-1">
                       {/* SMS usually doesn't have deliveredAt in Lead type but checking anyway if available */}
-                      {(sms as any).deliveredAt && (
+                      {(sms as { deliveredAt?: string }).deliveredAt && (
                         <div className="flex flex-col gap-0.5 px-2 py-1 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20">
                           <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
                             Delivered
                           </span>
                           <span className="text-[10px] font-semibold text-foreground truncate">
-                            {dayjs((sms as any).deliveredAt).format('hh:mm A, MMM DD')}
+                            {dayjs((sms as { deliveredAt?: string }).deliveredAt).format(
+                              'hh:mm A, MMM DD',
+                            )}
                           </span>
                         </div>
                       )}
