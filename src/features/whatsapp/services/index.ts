@@ -1,21 +1,15 @@
+import { API_URLS } from '@/lib/api-urls';
+
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 
-const deriveFallbackWhatsappApiUrl = () => {
-  const usersApiUrl = process.env.NEXT_PUBLIC_USERS_API_URL || '';
-  if (!usersApiUrl) return '';
-
-  const usersBase = trimTrailingSlash(usersApiUrl);
-  if (!usersBase) return '';
-
-  const origin = usersBase.endsWith('/users') ? usersBase.slice(0, -'/users'.length) : usersBase;
-  return `${origin}/business-whatsapp`;
-};
-
-const API_URL =
-  trimTrailingSlash(process.env.NEXT_PUBLIC_WHATSAPP_API_URL || '') ||
-  deriveFallbackWhatsappApiUrl();
+const API_URL = trimTrailingSlash(API_URLS.whatsapp);
 const ACCESS_TOKEN_KEY = 'crm_access_token';
 const LEGACY_ACCESS_TOKEN_KEYS = ['access_token', 'accessToken'] as const;
+
+const deriveFallbackWhatsappApiUrl = () => {
+  if (typeof window === 'undefined') return '';
+  return process.env.NEXT_PUBLIC_API_BASE_URL || '';
+};
 
 const getAuthToken = () => {
   if (typeof window === 'undefined') return '';
@@ -39,7 +33,7 @@ const request = async (url: string, init: RequestInit = {}) => {
   }
   if (!API_URL) {
     throw new Error(
-      'WhatsApp API URL is not configured. Set NEXT_PUBLIC_WHATSAPP_API_URL or NEXT_PUBLIC_USERS_API_URL.',
+      'WhatsApp API URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_WHATSAPP_API_URL in your environment.',
     );
   }
 

@@ -3,6 +3,7 @@
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
 import type { Configuration, ConfigurationResponse } from '@/features/campaigns/types';
+import { API_URLS } from '@/lib/api-urls';
 import type {
   FinancialInstitution,
   FinancialInstitutionsResponse,
@@ -11,7 +12,7 @@ import type {
   WhatsAppTemplatesResponse,
 } from '../types';
 
-const SETTINGS_API_URL = process.env.NEXT_PUBLIC_SETTINGS_API_URL;
+const SETTINGS_API_URL = API_URLS.settings;
 
 const axiosClient = axios.create({
   baseURL: SETTINGS_API_URL,

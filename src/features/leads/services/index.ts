@@ -3,6 +3,7 @@
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
+import { API_URLS } from '@/lib/api-urls';
 import type {
   Document,
   Lead,
@@ -12,7 +13,7 @@ import type {
   TimelineEntry,
 } from '../types';
 
-const LEADS_API_URL = process.env.NEXT_PUBLIC_LEADS_API_URL;
+const LEADS_API_URL = API_URLS.leads;
 
 const axiosClient = axios.create({
   baseURL: LEADS_API_URL,

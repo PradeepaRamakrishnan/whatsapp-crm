@@ -10,6 +10,7 @@ function handleAxiosError(error: unknown, defaultMessage: string): never {
   throw error;
 }
 
+import { API_URLS } from '@/lib/api-urls';
 import type {
   InstagramAccount,
   InstagramConversation,
@@ -18,12 +19,12 @@ import type {
 } from '../types';
 
 const usersClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_USERS_API_URL}`,
+  baseURL: API_URLS.users,
   withCredentials: true,
 });
 
 const axiosUrl = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_INSTAGRAM_API_URL}`,
+  baseURL: API_URLS.instagram,
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
   withCredentials: true,
 });

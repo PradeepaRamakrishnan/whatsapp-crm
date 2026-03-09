@@ -118,8 +118,10 @@ const extractLoginPayload = (payload: LoginApiResponse): User => {
   };
 };
 
+import { API_URLS } from '@/lib/api-urls';
+
 const axiosClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_AUTH_API_URL}`,
+  baseURL: API_URLS.auth,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -151,7 +153,7 @@ export async function getCurrentUser(): Promise<User> {
 
     const response = await axios<User>({
       method: 'GET',
-      url: `${process.env.NEXT_PUBLIC_USERS_API_URL}/me`,
+      url: `${API_URLS.users}/me`,
       withCredentials: true,
       headers: {
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

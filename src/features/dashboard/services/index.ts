@@ -2,9 +2,10 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import { API_URLS } from '@/lib/api-urls';
 import type { LeadChartData, RecentActivityItem } from '../types/dashboard.type';
 
-const USERS_API_URL = process.env.NEXT_PUBLIC_USERS_API_URL;
+const USERS_API_URL = API_URLS.users;
 
 const axiosClient = axios.create({
   baseURL: USERS_API_URL,

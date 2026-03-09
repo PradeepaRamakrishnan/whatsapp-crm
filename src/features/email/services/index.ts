@@ -1,3 +1,4 @@
+import { API_URLS } from '@/lib/api-urls';
 import type {
   ConnectProviderPayload,
   EmailAccount,
@@ -7,9 +8,7 @@ import type {
 } from '../types';
 
 const trimSlash = (s: string) => s.replace(/\/+$/, '');
-const API_URL = trimSlash(
-  process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:3013/email-business',
-);
+const API_URL = trimSlash(API_URLS.email);
 const ACCESS_TOKEN_KEY = 'crm_access_token';
 
 const getToken = (): string => {

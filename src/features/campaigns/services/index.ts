@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import { API_URLS } from '@/lib/api-urls';
 import type {
   CampaignContactsResponse,
   CampaignDetailsResponse,
@@ -10,7 +11,7 @@ import type {
   CampaignTimelineResponse,
 } from '../types';
 
-const CAMPAIGNS_API_URL = process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL;
+const CAMPAIGNS_API_URL = API_URLS.campaigns;
 
 const axiosClient = axios.create({
   baseURL: CAMPAIGNS_API_URL,

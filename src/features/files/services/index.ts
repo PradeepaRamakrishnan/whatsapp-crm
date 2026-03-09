@@ -2,6 +2,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
+import { API_URLS } from '@/lib/api-urls';
 import type {
   FileData,
   FileDetailData,
@@ -10,7 +11,7 @@ import type {
   FilesResponse,
 } from '../types/file.types';
 
-const FILES_API_URL = process.env.NEXT_PUBLIC_FILES_API_URL;
+const FILES_API_URL = API_URLS.files;
 
 const axiosClient = axios.create({
   baseURL: FILES_API_URL,
