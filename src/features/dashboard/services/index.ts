@@ -1,8 +1,6 @@
-'use server';
-
 import axios, { AxiosError } from 'axios';
-import { cookies } from 'next/headers';
 import { API_URLS } from '@/lib/api-urls';
+import { getAuthHeaders } from '@/lib/auth-headers';
 import type { LeadChartData, RecentActivityItem } from '../types/dashboard.type';
 
 const USERS_API_URL = API_URLS.users;
@@ -18,12 +16,11 @@ const axiosClient = axios.create({
 
 export async function getOverviewCounts() {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: '/overview',
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -40,13 +37,12 @@ export async function getOverviewCounts() {
 
 export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: '/recent-activity',
       params: { limit },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -61,12 +57,11 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
 
 export async function getLeadsChartData(): Promise<LeadChartData[]> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: '/daily-leads',
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 

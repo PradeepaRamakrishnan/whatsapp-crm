@@ -1,9 +1,7 @@
-'use server';
-
 import axios, { AxiosError } from 'axios';
-import { cookies } from 'next/headers';
 import type { Configuration, ConfigurationResponse } from '@/features/campaigns/types';
 import { API_URLS } from '@/lib/api-urls';
+import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
   FinancialInstitution,
   FinancialInstitutionsResponse,
@@ -28,13 +26,11 @@ export async function getAllFinancialInstitutions(
   limit: number,
 ): Promise<FinancialInstitutionsResponse> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `/financial-institutions?page=${page}&limit=${limit}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -51,13 +47,11 @@ export async function getAllFinancialInstitutions(
 
 export async function getAllFinancialInstitutionsName(): Promise<FinancialInstitutionsResponse> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `/financial-institutions/names/list`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -76,14 +70,12 @@ export async function createFinancialInstitution(
   data: Record<string, unknown>,
 ): Promise<FinancialInstitution> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'POST',
       url: `/financial-institutions`,
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -101,14 +93,12 @@ export async function updateFinancialInstitution(
   data: Record<string, unknown>,
 ): Promise<FinancialInstitution> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'PATCH',
       url: `/financial-institutions/${id}`,
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -123,12 +113,11 @@ export async function updateFinancialInstitution(
 
 export async function getAllConfiguration(): Promise<ConfigurationResponse> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/configurations`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -143,12 +132,11 @@ export async function getAllConfiguration(): Promise<ConfigurationResponse> {
 
 export async function getConfigurationyId(id: string): Promise<Configuration> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/configurations/${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -166,13 +154,12 @@ export async function updateConfiguration(
   body: Record<string, unknown>,
 ): Promise<void> {
   try {
-    const cookieStore = await cookies();
     await axiosClient({
       method: 'PATCH',
       url: `/configurations/${id}`,
       data: body,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
   } catch (error: unknown) {
@@ -185,12 +172,11 @@ export async function updateConfiguration(
 
 export async function getAllEmailTemplates(): Promise<TemplatesResponse> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/email-templates`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -205,12 +191,11 @@ export async function getAllEmailTemplates(): Promise<TemplatesResponse> {
 
 export async function getEmailTemplateById(id: string): Promise<Template> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/email-templates/${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -225,12 +210,11 @@ export async function getEmailTemplateById(id: string): Promise<Template> {
 
 export async function syncWhatsAppTemplates(): Promise<{ success: boolean; message: string }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `/whatsapp/sync`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -245,12 +229,11 @@ export async function syncWhatsAppTemplates(): Promise<{ success: boolean; messa
 
 export async function syncResendTemplates(): Promise<{ success: boolean; message: string }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `/resend/sync`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -265,12 +248,11 @@ export async function syncResendTemplates(): Promise<{ success: boolean; message
 
 export async function getAllSmsTemplates(): Promise<TemplatesResponse> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/sms-templates`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -294,13 +276,12 @@ export async function createConfiguration(body: {
   cronPattern?: string | null;
 }): Promise<{ id: string }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `/configurations`,
       data: body,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -315,12 +296,11 @@ export async function createConfiguration(body: {
 
 export async function getAllWhatsAppTemplates(): Promise<WhatsAppTemplatesResponse> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/whatsapp-templates`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -337,12 +317,11 @@ export async function toggleEmailTemplateDefault(
   id: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/email-templates/${id}/default`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -359,13 +338,12 @@ export async function createWhatsAppTemplate(
   data: Record<string, unknown>,
 ): Promise<{ success: boolean; message: string; data?: unknown }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `/whatsapp-templates`,
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -382,12 +360,11 @@ export async function toggleWhatsAppTemplateDefault(
   id: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/whatsapp-templates/${id}/default`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 

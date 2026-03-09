@@ -1,9 +1,7 @@
-'use server';
-
 import axios, { AxiosError } from 'axios';
-import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { API_URLS } from '@/lib/api-urls';
+import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
   Document,
   Lead,
@@ -27,7 +25,6 @@ const axiosClient = axios.create({
 export const getAllLeads = cache(
   async (page: number, limit: number, search?: string): Promise<LeadsResponse> => {
     try {
-      const cookieStore = await cookies();
       const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -42,7 +39,7 @@ export const getAllLeads = cache(
         method: 'GET',
         url: `/?${queryParams.toString()}`,
         headers: {
-          Cookie: cookieStore.toString(),
+          ...getAuthHeaders(),
         },
       });
 
@@ -58,13 +55,12 @@ export const getAllLeads = cache(
 
 export async function deleteLead(id: string): Promise<void> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/${id}`,
       data: { active: false },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -78,13 +74,11 @@ export async function deleteLead(id: string): Promise<void> {
 
 export const getLeadsById = cache(async (id: string): Promise<LeadsResponse> => {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `/${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -99,13 +93,11 @@ export const getLeadsById = cache(async (id: string): Promise<LeadsResponse> => 
 
 export const getCampaignById = cache(async (id: string): Promise<LeadsResponse> => {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `/${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -123,14 +115,13 @@ export const getCompaignById = getCampaignById;
 
 export async function uploadDocument(leadId: string, formData: FormData): Promise<Document> {
   try {
-    const cookieStore = await cookies();
     const baseUrl = LEADS_API_URL;
 
     const response = await fetch(`${baseUrl}/${leadId}/documents`, {
       method: 'POST',
       body: formData,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
         Accept: 'application/json',
       },
     });
@@ -154,14 +145,12 @@ export async function generateUploadLink(
   email?: string,
 ): Promise<{ message: string; link: string; token: string; expiresAt: string }> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'POST',
       url: `/${leadId}/generate-document-link`,
       data: { email },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -176,12 +165,11 @@ export async function generateUploadLink(
 
 export async function deleteDocument(id: string, documentId: string): Promise<void> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'DELETE',
       url: `/${id}/documents/${documentId}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -197,13 +185,11 @@ export async function getDocuments(
   leadId: string,
 ): Promise<{ leadId: string; documents: Document[] }> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `/${leadId}/documents`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -218,13 +204,12 @@ export async function getDocuments(
 
 export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PUT',
       url: `/${id}`,
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -256,7 +241,6 @@ export async function getManualFollowups(
   search?: string,
 ): Promise<ManualFollowupsResponse> {
   try {
-    const cookieStore = await cookies();
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -270,7 +254,7 @@ export async function getManualFollowups(
       method: 'GET',
       url: `/manual-followups?${queryParams.toString()}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -283,12 +267,11 @@ export async function getManualFollowups(
 }
 export async function getManualFollowupById(id: string): Promise<ManualFollowupCase> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/manual-followups/${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;

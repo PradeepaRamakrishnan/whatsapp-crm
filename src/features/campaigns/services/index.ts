@@ -1,8 +1,6 @@
-'use server';
-
 import axios, { AxiosError } from 'axios';
-import { cookies } from 'next/headers';
 import { API_URLS } from '@/lib/api-urls';
+import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
   CampaignContactsResponse,
   CampaignDetailsResponse,
@@ -30,13 +28,12 @@ export async function createCampaign(data: {
   configurationId: string;
 }): Promise<CampaignDetailsResponse> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: 'create',
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -55,7 +52,6 @@ export async function getAllCampaigns(
   search?: string,
 ): Promise<CampaignsResponse> {
   try {
-    const cookieStore = await cookies();
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -70,7 +66,7 @@ export async function getAllCampaigns(
       method: 'GET',
       url: `?${queryParams.toString()}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -85,13 +81,11 @@ export async function getAllCampaigns(
 
 export async function getCampaignById(id: string): Promise<CampaignDetailsResponse> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -110,13 +104,11 @@ export async function getCampaignContacts(
   limit: number,
 ): Promise<CampaignContactsResponse> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `${id}/contacts?page=${page}&limit=${limit}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -131,13 +123,11 @@ export async function getCampaignContacts(
 
 export async function getCampaignTimeline(id: string): Promise<CampaignTimelineResponse> {
   try {
-    const cookieStore = await cookies();
-
     const response = await axiosClient({
       method: 'GET',
       url: `${id}/timeline`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -152,12 +142,11 @@ export async function getCampaignTimeline(id: string): Promise<CampaignTimelineR
 
 export async function runCampaign(id: string): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${id}/run`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -172,12 +161,11 @@ export async function runCampaign(id: string): Promise<unknown> {
 
 export async function pauseCampaign(id: string): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${id}/pause`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -192,12 +180,11 @@ export async function pauseCampaign(id: string): Promise<unknown> {
 
 export async function resumeCampaign(id: string): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${id}/resume`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -212,12 +199,11 @@ export async function resumeCampaign(id: string): Promise<unknown> {
 
 export async function deleteCampaign(id: string): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'DELETE',
       url: `${id}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -232,13 +218,12 @@ export async function deleteCampaign(id: string): Promise<unknown> {
 
 export async function updateTemplate(id: string, body: Record<string, unknown>): Promise<void> {
   try {
-    const cookieStore = await cookies();
     await axiosClient({
       method: 'PATCH',
       url: `templates/${id}`,
       data: { body },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
   } catch (error: unknown) {
@@ -255,12 +240,11 @@ export async function markContactInterested(
   channel?: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `interested?campaignId=${campaignId}&contactId=${contactId}${channel ? `&channel=${channel}` : ''}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -278,12 +262,11 @@ export async function markContactNotInterested(
   contactId: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `not-interested?campaignId=${campaignId}&contactId=${contactId}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -303,7 +286,6 @@ export async function markContactConsent(
   panNumber?: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const queryParams = new URLSearchParams({
       campaignId,
       contactId,
@@ -317,7 +299,7 @@ export async function markContactConsent(
         panNumber,
       },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -332,12 +314,11 @@ export async function markContactConsent(
 
 export async function unsubscribeContact(campaignId: string, contactId: string): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `unsubscribe?campaignId=${campaignId}&contactId=${contactId}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -356,7 +337,6 @@ export async function getContactMessages(
   channel?: 'email' | 'sms' | 'whatsapp' | 'call' | 'note',
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const params = new URLSearchParams();
     params.set('page', '1');
     params.set('limit', '50');
@@ -369,7 +349,7 @@ export async function getContactMessages(
         ? `${campaignId}/contacts/${contactId}/conversations${queryString}`
         : `${campaignId}/conversations${queryString}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -389,13 +369,12 @@ export async function sendReplyEmail(
   body: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${campaignId}/contacts/${contactId}/reply`,
       data: { subject, body, channel: 'email' },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -414,13 +393,12 @@ export async function sendReplySMS(
   body: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `/${campaignId}/contacts/${contactId}/reply`,
       data: { body, channel: 'sms' },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -439,13 +417,12 @@ export async function sendReplyWhatsApp(
   body: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${campaignId}/contacts/${contactId}/reply`,
       data: { body, channel: 'whatsapp' },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -466,13 +443,13 @@ export async function sendReplyWhatsApp(
 //   contactId?: string;
 // }): Promise<unknown> {
 //   try {
-//     const cookieStore = await cookies();
+//
 //     const response = await axiosClient({
 //       method: 'POST',
 //       url: '/leads',
 //       data,
 //       headers: {
-//         Cookie: cookieStore.toString(),
+//         ...getAuthHeaders(),
 //       },
 //     });
 
@@ -487,12 +464,11 @@ export async function sendReplyWhatsApp(
 
 export async function getCampaignPerformanceStats(): Promise<CampaignPerformanceStat[]> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: 'campaign-performance',
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -515,7 +491,6 @@ export async function logCallInteraction(
   },
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${campaignId}/contacts/${contactId}/interactions`,
@@ -524,7 +499,7 @@ export async function logCallInteraction(
         ...data,
       },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -543,7 +518,6 @@ export async function logNoteInteraction(
   note: string,
 ): Promise<unknown> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: `${campaignId}/contacts/${contactId}/interactions`,
@@ -554,7 +528,7 @@ export async function logNoteInteraction(
         status: 'completed',
       },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 

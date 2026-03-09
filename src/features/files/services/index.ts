@@ -1,8 +1,6 @@
-'use server';
-
 import axios, { AxiosError } from 'axios';
-import { cookies } from 'next/headers';
 import { API_URLS } from '@/lib/api-urls';
+import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
   FileData,
   FileDetailData,
@@ -26,14 +24,13 @@ type ActionResult<T> = { success: true; data: T } | { success: false; error: str
 
 export async function createEmptyList(name: string): Promise<ActionResult<FileData>> {
   try {
-    const cookieStore = await cookies();
     const formData = new FormData();
     formData.append('name', name);
     formData.append('source', 'Manual');
 
     const res = await fetch(`${FILES_API_URL}/create`, {
       method: 'POST',
-      headers: { Cookie: cookieStore.toString() },
+      headers: { ...getAuthHeaders() },
       body: formData,
     });
 
@@ -49,14 +46,13 @@ export async function createEmptyList(name: string): Promise<ActionResult<FileDa
 
 export async function createFile(formData: FormData): Promise<FileData> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'POST',
       url: '/create',
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data',
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -72,14 +68,13 @@ export async function createFile(formData: FormData): Promise<FileData> {
 
 export async function addContactsToFile(fileId: string, formData: FormData): Promise<void> {
   try {
-    const cookieStore = await cookies();
     await axiosClient({
       method: 'POST',
       url: `/${fileId}/upload`,
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data',
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
   } catch (error: unknown) {
@@ -101,7 +96,6 @@ export async function getAllFiles(
   search?: string,
 ): Promise<FilesResponse> {
   try {
-    const cookieStore = await cookies();
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -115,7 +109,7 @@ export async function getAllFiles(
       method: 'GET',
       url: `/?${queryParams.toString()}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -152,12 +146,11 @@ export async function getFileById(
   filter?: string,
 ): Promise<FileDetailData> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'GET',
       url: `/${id}?page=${page}&limit=${limit}${filter ? `&filter=${filter}` : ''}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
 
@@ -172,13 +165,12 @@ export async function getFileById(
 
 export async function updateFileStatus(id: string, status: FileStatus): Promise<void> {
   try {
-    const cookieStore = await cookies();
     await axiosClient({
       method: 'PATCH',
       url: `/${id}/status`,
       data: { status },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
   } catch (error: unknown) {
@@ -191,12 +183,11 @@ export async function updateFileStatus(id: string, status: FileStatus): Promise<
 
 export async function markAsReviewed(id: string): Promise<void> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/${id}/reviewed`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -210,13 +201,12 @@ export async function markAsReviewed(id: string): Promise<void> {
 
 export async function deleteFile(id: string): Promise<void> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/${id}`,
       data: { active: false },
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -235,13 +225,12 @@ export async function updateFileRecord(
   data: Partial<FileRecord>,
 ): Promise<FileRecord> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'PATCH',
       url: `/${fileId}/contents/${recordId}`,
       data,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
@@ -255,12 +244,11 @@ export async function updateFileRecord(
 
 export async function deleteFileRecord(fileId: string, recordId: string): Promise<void> {
   try {
-    const cookieStore = await cookies();
     const response = await axiosClient({
       method: 'DELETE',
       url: `/${fileId}/contents/${recordId}`,
       headers: {
-        Cookie: cookieStore.toString(),
+        ...getAuthHeaders(),
       },
     });
     return response.data;
