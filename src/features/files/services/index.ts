@@ -1,6 +1,8 @@
+'use server';
+
 import axios, { AxiosError } from 'axios';
+import { cookies } from 'next/headers';
 import { API_URLS } from '@/lib/api-urls';
-import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
   FileData,
   FileDetailData,
@@ -11,14 +13,25 @@ import type {
 
 const FILES_API_URL = API_URLS.files;
 
-const axiosClient = axios.create({
-  baseURL: FILES_API_URL,
-  headers: {
+async function getServerHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-  },
-  withCredentials: true,
-});
+    ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+  };
+}
+
+async function getServerMultipartHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  // Do NOT set Content-Type for multipart — let axios set it with the correct boundary
+  return {
+    Accept: 'application/json',
+    ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+  };
+}
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -28,35 +41,34 @@ export async function createEmptyList(name: string): Promise<ActionResult<FileDa
     formData.append('name', name);
     formData.append('source', 'Manual');
 
-    const res = await fetch(`${FILES_API_URL}/create`, {
+    const headers = await getServerMultipartHeaders();
+    const response = await axios({
       method: 'POST',
-      headers: { ...getAuthHeaders() },
-      body: formData,
+      url: `${FILES_API_URL}/create`,
+      data: formData,
+      headers,
     });
 
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { success: false, error: json?.message || `Failed to create list (${res.status})` };
-    }
-    return { success: true, data: (json?.data ?? json) as FileData };
+    const data = (response.data?.data ?? response.data) as FileData;
+    return { success: true, data };
   } catch (err) {
+    if (err instanceof AxiosError) {
+      return { success: false, error: err.response?.data?.message || 'Failed to create list' };
+    }
     return { success: false, error: err instanceof Error ? err.message : 'Failed to create list' };
   }
 }
 
 export async function createFile(formData: FormData): Promise<FileData> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerMultipartHeaders();
+    const response = await axios({
       method: 'POST',
-      url: '/create',
+      url: `${FILES_API_URL}/create`,
       data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...getAuthHeaders(),
-      },
+      headers,
     });
 
-    // Support both { data: FileData } and FileData response shapes
     return (response.data?.data ?? response.data) as FileData;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -68,14 +80,12 @@ export async function createFile(formData: FormData): Promise<FileData> {
 
 export async function addContactsToFile(fileId: string, formData: FormData): Promise<void> {
   try {
-    await axiosClient({
+    const headers = await getServerMultipartHeaders();
+    await axios({
       method: 'POST',
-      url: `/${fileId}/upload`,
+      url: `${FILES_API_URL}/${fileId}/upload`,
       data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...getAuthHeaders(),
-      },
+      headers,
     });
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -105,12 +115,11 @@ export async function getAllFiles(
       queryParams.append('filter', search);
     }
 
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'GET',
-      url: `/?${queryParams.toString()}`,
-      headers: {
-        ...getAuthHeaders(),
-      },
+      url: `${FILES_API_URL}/?${queryParams.toString()}`,
+      headers,
     });
 
     const r = response.data;
@@ -146,15 +155,14 @@ export async function getFileById(
   filter?: string,
 ): Promise<FileDetailData> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'GET',
-      url: `/${id}?page=${page}&limit=${limit}${filter ? `&filter=${filter}` : ''}`,
-      headers: {
-        ...getAuthHeaders(),
-      },
+      url: `${FILES_API_URL}/${id}?page=${page}&limit=${limit}${filter ? `&filter=${encodeURIComponent(filter)}` : ''}`,
+      headers,
     });
 
-    return response.data.data;
+    return response.data.data ?? response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to fetch file by ID');
@@ -165,13 +173,12 @@ export async function getFileById(
 
 export async function updateFileStatus(id: string, status: FileStatus): Promise<void> {
   try {
-    await axiosClient({
+    const headers = await getServerHeaders();
+    await axios({
       method: 'PATCH',
-      url: `/${id}/status`,
+      url: `${FILES_API_URL}/${id}/status`,
       data: { status },
-      headers: {
-        ...getAuthHeaders(),
-      },
+      headers,
     });
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -183,12 +190,11 @@ export async function updateFileStatus(id: string, status: FileStatus): Promise<
 
 export async function markAsReviewed(id: string): Promise<void> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'PATCH',
-      url: `/${id}/reviewed`,
-      headers: {
-        ...getAuthHeaders(),
-      },
+      url: `${FILES_API_URL}/${id}/reviewed`,
+      headers,
     });
     return response.data;
   } catch (error: unknown) {
@@ -201,13 +207,12 @@ export async function markAsReviewed(id: string): Promise<void> {
 
 export async function deleteFile(id: string): Promise<void> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'PATCH',
-      url: `/${id}`,
+      url: `${FILES_API_URL}/${id}`,
       data: { active: false },
-      headers: {
-        ...getAuthHeaders(),
-      },
+      headers,
     });
     return response.data;
   } catch (error: unknown) {
@@ -218,20 +223,18 @@ export async function deleteFile(id: string): Promise<void> {
   }
 }
 
-// ... existing code ...
 export async function updateFileRecord(
   fileId: string,
   recordId: string,
   data: Partial<FileRecord>,
 ): Promise<FileRecord> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'PATCH',
-      url: `/${fileId}/contents/${recordId}`,
+      url: `${FILES_API_URL}/${fileId}/contents/${recordId}`,
       data,
-      headers: {
-        ...getAuthHeaders(),
-      },
+      headers,
     });
     return response.data;
   } catch (error: unknown) {
@@ -244,12 +247,11 @@ export async function updateFileRecord(
 
 export async function deleteFileRecord(fileId: string, recordId: string): Promise<void> {
   try {
-    const response = await axiosClient({
+    const headers = await getServerHeaders();
+    const response = await axios({
       method: 'DELETE',
-      url: `/${fileId}/contents/${recordId}`,
-      headers: {
-        ...getAuthHeaders(),
-      },
+      url: `${FILES_API_URL}/${fileId}/contents/${recordId}`,
+      headers,
     });
     return response.data;
   } catch (error: unknown) {

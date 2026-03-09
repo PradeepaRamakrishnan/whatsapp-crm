@@ -71,6 +71,7 @@ function transformMessage(m: InteractionRecord, channel: string = 'email') {
 
 // biome-ignore lint/suspicious/noExplicitAny: messages have dynamic structure based on channel type
 function groupMessagesByDate(messages: any[]) {
+  // biome-ignore lint/suspicious/noExplicitAny: groups mirror the same dynamic message structure
   const groups: { [key: string]: any[] } = {};
   messages.forEach((msg) => {
     const date = dayjs(msg.timestamp).format('YYYY-MM-DD');

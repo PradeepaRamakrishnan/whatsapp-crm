@@ -25,7 +25,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllAccounts, getUniqueConversations } from '@/features/whatsapp/services';
 import { cn } from '@/lib/utils';
 import { addContactsToFile, getFileById } from '../services';
@@ -813,7 +812,6 @@ function AddContactsMethodPicker({
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
-  const [activeTab, setActiveTab] = useState('contacts');
   const [addView, setAddView] = useState<'select' | 'upload' | 'whatsapp' | 'manual' | null>(null);
 
   const { data: file, isLoading } = useQuery<FileDetailData>({
@@ -895,84 +893,69 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-5 p-5 min-w-0">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs">
-        <Link
-          href="/files/list"
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors font-medium"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Recipients
-        </Link>
-        <span className="text-border">/</span>
-        <span className="text-foreground font-semibold truncate max-w-48">{file.name}</span>
-      </nav>
-
       {/* ── Header ── */}
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-        <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary text-lg font-bold ring-1 ring-primary/20">
-              {file.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-lg font-bold tracking-tight truncate">{file.name}</h1>
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
-                    statusConfig.className,
-                  )}
-                >
-                  {statusConfig.label}
-                </span>
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3" />
-                  {new Date(file.createdAt).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </span>
-                {file.source && (
-                  <>
-                    <span className="text-border">·</span>
-                    <span className="flex items-center gap-1.5">
-                      <Database className="h-3 w-3" />
-                      {file.source}
-                    </span>
-                  </>
-                )}
-                <span className="text-border">·</span>
-                <span className="flex items-center gap-1.5 font-medium text-foreground/80">
-                  <FileText className="h-3 w-3" />
-                  {totalRecords.toLocaleString()} {totalRecords === 1 ? 'contact' : 'contacts'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setActiveTab('contacts');
-                setAddView('select');
-              }}
-              className="h-8 text-xs font-medium"
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href="/files/list"
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-medium shrink-0"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Recipients
+          </Link>
+          <span className="text-border text-xs">/</span>
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+            <h1 className="text-sm font-bold tracking-tight truncate max-w-48">{file.name}</h1>
+            <span
+              className={cn(
+                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0',
+                statusConfig.className,
+              )}
             >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Add Contacts
-            </Button>
-            <FileActions
-              fileId={fileId}
-              fileName={file.name}
-              currentStatus={file.status}
-              variant="buttons"
-            />
+              {statusConfig.label}
+            </span>
+            <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(file.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+              {file.source && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="flex items-center gap-1">
+                    <Database className="h-3 w-3" />
+                    {file.source}
+                  </span>
+                </>
+              )}
+              <span className="text-border">·</span>
+              <span className="flex items-center gap-1 font-medium text-foreground/70">
+                <FileText className="h-3 w-3" />
+                {totalRecords.toLocaleString()} {totalRecords === 1 ? 'contact' : 'contacts'}
+              </span>
+            </div>
           </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setAddView('select')}
+            className="h-8 text-xs font-medium"
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Add Contacts
+          </Button>
+          <FileActions
+            fileId={fileId}
+            fileName={file.name}
+            currentStatus={file.status}
+            variant="buttons"
+          />
         </div>
       </div>
 
@@ -1040,88 +1023,65 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
         </div>
       )}
 
-      {/* ── Tabs ── */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => {
-          setActiveTab(v);
-          setAddView(null);
-        }}
-      >
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <TabsList className="h-9 gap-0.5 p-1">
-            <TabsTrigger
-              value="contacts"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Contacts
-              {totalRecords > 0 && (
-                <span className="ml-0.5 rounded-full bg-primary/15 text-primary px-1.5 py-0.5 text-[9px] font-bold tabular-nums">
-                  {totalRecords.toLocaleString()}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          {activeTab === 'contacts' && !addView && totalRecords > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setAddView('select')}
-              className="h-8 text-xs font-medium"
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Add Contacts
-            </Button>
-          )}
-        </div>
-
-        <TabsContent value="contacts" className="mt-4">
-          {/* Add contacts flow */}
-          {addView !== null && (
-            <div className="space-y-4">
-              {/* Breadcrumb back nav */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAddView(addView === 'select' ? null : 'select')}
-                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-                  {addView === 'select' ? 'Back to Contacts' : 'Change Method'}
-                </button>
-                {addView !== 'select' && (
-                  <>
-                    <span className="text-border text-xs">/</span>
-                    <span className="text-xs font-semibold text-foreground">
-                      {addView === 'upload'
-                        ? 'Upload CSV'
-                        : addView === 'whatsapp'
-                          ? 'Import from WhatsApp'
-                          : 'Manual Entry'}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {addView === 'select' && <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />}
-              {addView === 'upload' && (
-                <AddUploadTab fileId={fileId} onSuccess={() => setAddView(null)} />
-              )}
-              {addView === 'whatsapp' && (
-                <AddWhatsAppTab fileId={fileId} onSuccess={() => setAddView(null)} />
-              )}
-              {addView === 'manual' && (
-                <AddManualTab fileId={fileId} onSuccess={() => setAddView(null)} />
+      {/* ── Contacts section ── */}
+      <div>
+        {/* Add contacts flow */}
+        {addView !== null && (
+          <div className="space-y-4">
+            {/* Breadcrumb back nav */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAddView(addView === 'select' ? null : 'select')}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                {addView === 'select' ? 'Back to Contacts' : 'Change Method'}
+              </button>
+              {addView !== 'select' && (
+                <>
+                  <span className="text-border text-xs">/</span>
+                  <span className="text-xs font-semibold text-foreground">
+                    {addView === 'upload'
+                      ? 'Upload CSV'
+                      : addView === 'whatsapp'
+                        ? 'Import from WhatsApp'
+                        : 'Manual Entry'}
+                  </span>
+                </>
               )}
             </div>
-          )}
 
-          {/* Normal contacts / empty state */}
-          {addView === null &&
-            (totalRecords === 0 ? (
-              <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />
-            ) : (
+            {addView === 'select' && <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />}
+            {addView === 'upload' && (
+              <AddUploadTab fileId={fileId} onSuccess={() => setAddView(null)} />
+            )}
+            {addView === 'whatsapp' && (
+              <AddWhatsAppTab fileId={fileId} onSuccess={() => setAddView(null)} />
+            )}
+            {addView === 'manual' && (
+              <AddManualTab fileId={fileId} onSuccess={() => setAddView(null)} />
+            )}
+          </div>
+        )}
+
+        {/* Normal contacts / empty state */}
+        {addView === null &&
+          (totalRecords === 0 ? (
+            <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />
+          ) : (
+            <>
+              <div className="flex items-center justify-end mb-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddView('select')}
+                  className="h-8 text-xs font-medium"
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Add Contacts
+                </Button>
+              </div>
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center p-10 text-sm text-muted-foreground">
@@ -1131,9 +1091,9 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
               >
                 <FileRecordsTable fileId={fileId} />
               </Suspense>
-            ))}
-        </TabsContent>
-      </Tabs>
+            </>
+          ))}
+      </div>
     </div>
   );
 }

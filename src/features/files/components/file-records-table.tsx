@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Copy,
   Filter,
   MinusCircle,
   Pencil,
@@ -39,7 +38,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { deleteFileRecord, getFileById } from '../services';
 import { useFileFilterStore } from '../store/file-filter-store';
 import type { FileRecord } from '../types/file.types';
@@ -108,7 +106,7 @@ function EmptyState({
   const hasFilters = filter !== 'all' || searchQuery.length > 0;
   return (
     <tr>
-      <td colSpan={6}>
+      <td colSpan={4}>
         <div className="flex flex-col items-center justify-center gap-3 py-14">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
             <AlertCircle className="h-5 w-5 text-muted-foreground/40" />
@@ -286,14 +284,8 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                 <th className="hidden px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 md:table-cell">
                   Email
                 </th>
-                <th className="hidden px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 lg:table-cell">
-                  Settlement
-                </th>
                 <th className="px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Status
-                </th>
-                <th className="hidden px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
-                  Campaigns
                 </th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Actions
@@ -303,7 +295,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             <tbody>
               {showLoading ? (
                 Array.from({ length: Math.min(pageSize, 5) }, (_, i) => i).map((n) => (
-                  <SkeletonTableRow key={n} cols={7} />
+                  <SkeletonTableRow key={n} cols={5} />
                 ))
               ) : filteredRecords.length === 0 ? (
                 <EmptyState
@@ -319,7 +311,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                   <tr
                     key={record.id}
                     onClick={() => setSelectedRecord(record)}
-                    className={`cursor-pointer border-b border-border/30 transition-colors last:border-0 hover:bg-muted/20 ${
+                    className={`group cursor-pointer border-b border-border/30 transition-colors last:border-0 hover:bg-muted/20 ${
                       record.isExcluded
                         ? 'bg-amber-50/30 hover:bg-amber-50/50 dark:bg-amber-950/10 dark:hover:bg-amber-950/20'
                         : !record.isValid
@@ -351,48 +343,9 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                       {record.emailId || <span className="text-muted-foreground/30">—</span>}
                     </td>
 
-                    {/* Settlement */}
-                    <td className="hidden px-4 py-3 text-right lg:table-cell">
-                      <span className="text-[12.5px] font-semibold">
-                        ₹{record.settlementAmount.toLocaleString('en-IN')}
-                      </span>
-                    </td>
-
                     {/* Status */}
                     <td className="px-4 py-3 text-center">
                       <RecordStatusBadge isValid={record.isValid} isExcluded={record.isExcluded} />
-                    </td>
-
-                    {/* Campaigns */}
-                    <td className="hidden px-4 py-3 text-center sm:table-cell">
-                      {record.campaigns?.length > 0 ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                className="inline-flex cursor-pointer items-center gap-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Copy className="h-3 w-3 text-blue-500" />
-                                <span className="text-[11.5px] font-medium text-blue-600 dark:text-blue-400">
-                                  {record.campaigns.length}
-                                </span>
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-xs">
-                              <p className="mb-1 text-xs font-semibold">Used in campaigns:</p>
-                              {record.campaigns.map((c) => (
-                                <p key={c.id} className="text-xs text-muted-foreground">
-                                  · {c.name}
-                                </p>
-                              ))}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <span className="text-[11px] text-muted-foreground/30">—</span>
-                      )}
                     </td>
 
                     {/* Actions */}

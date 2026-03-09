@@ -44,7 +44,11 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
       toast.error(result.error, { id: 'create-list' });
       return;
     }
-    await queryClient.invalidateQueries({ queryKey: ['files'] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['files'] }),
+      queryClient.invalidateQueries({ queryKey: ['campaign-recipient-files'] }),
+    ]);
+    await queryClient.refetchQueries({ queryKey: ['files'] });
     toast.success('List created!', { id: 'create-list' });
     setOpen(false);
     setName('');
