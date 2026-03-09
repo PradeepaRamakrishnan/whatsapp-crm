@@ -84,7 +84,7 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
       toast.loading('Uploading contacts...', { id: 'add-upload' });
       await addContactsToFile(fileId, formData);
       await queryClient.invalidateQueries({ queryKey: ['file', fileId] });
-      toast.success('Contacts added successfully!', { id: 'add-upload' });
+      toast.success('Contact added successfully!', { id: 'add-upload' });
       setFiles([]);
       onSuccess();
     } catch (err) {
@@ -95,7 +95,6 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
       setIsSubmitting(false);
     }
   };
-
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
       <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
