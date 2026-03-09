@@ -10,7 +10,7 @@ import type {
   FilesResponse,
 } from '../types/file.types';
 
-const FILES_API_URL = process.env.FILES_API_URL ?? process.env.NEXT_PUBLIC_FILES_API_URL;
+const FILES_API_URL = process.env.NEXT_PUBLIC_FILES_API_URL;
 
 const axiosClient = axios.create({
   baseURL: FILES_API_URL,
@@ -21,23 +21,29 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-export async function createEmptyList(name: string): Promise<FileData> {
-  const cookieStore = await cookies();
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('source', 'Manual');
+type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
-  const res = await fetch(`${FILES_API_URL}/create`, {
-    method: 'POST',
-    headers: { Cookie: cookieStore.toString() },
-    body: formData,
-  });
+export async function createEmptyList(name: string): Promise<ActionResult<FileData>> {
+  try {
+    const cookieStore = await cookies();
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('source', 'Manual');
 
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.message || `Failed to create list (${res.status})`);
+    const res = await fetch(`${FILES_API_URL}/create`, {
+      method: 'POST',
+      headers: { Cookie: cookieStore.toString() },
+      body: formData,
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json?.message || `Failed to create list (${res.status})` };
+    }
+    return { success: true, data: (json?.data ?? json) as FileData };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to create list' };
   }
-  return (json?.data ?? json) as FileData;
 }
 
 export async function createFile(formData: FormData): Promise<FileData> {

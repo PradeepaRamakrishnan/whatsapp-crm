@@ -10,8 +10,7 @@ import type {
   CampaignTimelineResponse,
 } from '../types';
 
-const CAMPAIGNS_API_URL =
-  process.env.CAMPAIGNS_API_URL ?? process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL;
+const CAMPAIGNS_API_URL = process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL;
 
 const axiosClient = axios.create({
   baseURL: CAMPAIGNS_API_URL,
@@ -25,7 +24,7 @@ const axiosClient = axios.create({
 export async function createCampaign(data: {
   name: string;
   description: string;
-  bankName: string;
+  source: string;
   fileId: string;
   configurationId: string;
 }): Promise<CampaignDetailsResponse> {

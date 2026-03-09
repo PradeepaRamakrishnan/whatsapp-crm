@@ -275,7 +275,7 @@ export function CreateCampaignForm() {
         await createCampaign({
           name: value.name,
           description: value.description,
-          bankName: selectedFileData?.source || '',
+          source: selectedFileData?.source || '',
           fileId: selectedFile,
           configurationId: config.id,
         });

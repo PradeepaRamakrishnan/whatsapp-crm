@@ -12,7 +12,7 @@ import type {
   TimelineEntry,
 } from '../types';
 
-const LEADS_API_URL = process.env.LEADS_API_URL ?? process.env.NEXT_PUBLIC_LEADS_API_URL;
+const LEADS_API_URL = process.env.NEXT_PUBLIC_LEADS_API_URL;
 
 const axiosClient = axios.create({
   baseURL: LEADS_API_URL,

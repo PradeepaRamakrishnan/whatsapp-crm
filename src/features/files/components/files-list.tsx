@@ -37,21 +37,18 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
     const trimmed = name.trim();
     if (!trimmed) return;
     setIsCreating(true);
-    try {
-      toast.loading('Creating list...', { id: 'create-list' });
-      const result = await createEmptyList(trimmed);
-      await queryClient.invalidateQueries({ queryKey: ['files'] });
-      toast.success('List created!', { id: 'create-list' });
-      setOpen(false);
-      setName('');
-      router.push(`/files/${slugify(result.name, { lower: true })}/${result.id}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create list', {
-        id: 'create-list',
-      });
-    } finally {
-      setIsCreating(false);
+    toast.loading('Creating list...', { id: 'create-list' });
+    const result = await createEmptyList(trimmed);
+    setIsCreating(false);
+    if (!result.success) {
+      toast.error(result.error, { id: 'create-list' });
+      return;
     }
+    await queryClient.invalidateQueries({ queryKey: ['files'] });
+    toast.success('List created!', { id: 'create-list' });
+    setOpen(false);
+    setName('');
+    router.push(`/files/${slugify(result.data.name, { lower: true })}/${result.data.id}`);
   };
 
   return (
