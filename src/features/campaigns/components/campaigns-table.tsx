@@ -1,8 +1,19 @@
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: cards handle click navigation */
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: cards handle click navigation */
+/** biome-ignore-all lint/a11y/useButtonType: table action buttons */
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: stable refs excluded intentionally */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: table rows handle click navigation */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: table rows handle click navigation */
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  type PaginationState,
+  type SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import {
@@ -14,13 +25,12 @@ import {
   MoreHorizontal,
   PauseCircle,
   PlayCircle,
-  Search,
   Trash2,
   Zap,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import slugify from 'slugify';
 import { toast } from 'sonner';
 import {
@@ -41,19 +51,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { MOCK_CAMPAIGNS_RESPONSE } from '../lib/mock-data';
 import { deleteCampaign, getAllCampaigns } from '../services';
 import type { CampaignData, CampaignStatus, CampaignsResponse } from '../types';
 
 dayjs.extend(utc);
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
 const statusConfig: Record<
   CampaignStatus,
@@ -129,9 +149,11 @@ function StatusBadge({ status }: { status: CampaignStatus }) {
   );
 }
 
-function CampaignCardActions({ id, name }: { id: string; name: string }) {
-  const [open, setOpen] = React.useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+// ─── Row actions ─────────────────────────────────────────────────────────────
+
+function CampaignActions({ id, name }: { id: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -151,11 +173,7 @@ function CampaignCardActions({ id, name }: { id: string; name: string }) {
     <>
       <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
+          <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -188,7 +206,7 @@ function CampaignCardActions({ id, name }: { id: string; name: string }) {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 text-white hover:bg-red-600"
               onClick={(e) => {
                 e.preventDefault();
                 mutate();
@@ -209,78 +227,24 @@ function CampaignCardActions({ id, name }: { id: string; name: string }) {
   );
 }
 
-function CampaignCard({ campaign }: { campaign: CampaignData }) {
-  const router = useRouter();
-  const href = `/campaigns/${slugify(campaign.name, { lower: true })}/${campaign.id}`;
-
-  return (
-    <div
-      className="group relative flex flex-col gap-3 rounded-xl border bg-card p-5 cursor-pointer transition-all hover:shadow-md hover:border-border/80 hover:-translate-y-0.5"
-      onClick={() => router.push(href)}
-    >
-      {/* Top row: name + actions */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm leading-snug truncate">{campaign.name}</h3>
-        </div>
-        <CampaignCardActions id={campaign.id} name={campaign.name} />
-      </div>
-
-      {/* Description */}
-      {campaign.description && (
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {campaign.description}
-        </p>
-      )}
-
-      {/* Footer: status + dates */}
-      <div className="flex items-center justify-between gap-2 pt-1 mt-auto">
-        <StatusBadge status={campaign.status} />
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Calendar className="h-3 w-3 shrink-0" />
-          <span>{dayjs.utc(campaign.createdAt).format('MMM D, YYYY')}</span>
-        </div>
-      </div>
-
-      {/* Last run */}
-      {campaign.lastRunAt && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground border-t pt-2">
-          <Clock className="h-3 w-3 shrink-0" />
-          <span>Last run {dayjs.utc(campaign.lastRunAt).format('MMM D, YYYY · HH:mm')}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function EmptyState({ hasSearch }: { hasSearch: boolean }) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-      <div className="mb-3 rounded-full bg-muted p-4">
-        <Zap className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">
-        {hasSearch ? 'No campaigns match your search' : 'No campaigns yet'}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-        {hasSearch
-          ? 'Try a different search term or clear the filter.'
-          : 'Create your first campaign to start reaching out to contacts.'}
-      </p>
-    </div>
-  );
-}
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function CampaignsTable() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [search, setSearch] = React.useState(() => searchParams.get('search') || '');
-
   const page = Number(searchParams.get('page')) || 1;
-  const pageSize = Number(searchParams.get('pageSize')) || 12;
+  const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const urlSearch = searchParams.get('search') || '';
 
-  const updateParams = React.useCallback(
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: page - 1,
+    pageSize,
+  });
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState(urlSearch);
+
+  const updateParams = useCallback(
     (updates: { page?: number; pageSize?: number; search?: string }) => {
       const params = new URLSearchParams(searchParams.toString());
       if (updates.page !== undefined) params.set('page', String(updates.page));
@@ -298,100 +262,228 @@ export function CampaignsTable() {
     [searchParams, router],
   );
 
-  // Debounce search input
-  React.useEffect(() => {
+  useEffect(() => {
     const id = setTimeout(() => {
-      const current = searchParams.get('search') || '';
-      if (search !== current) updateParams({ search });
+      if (globalFilter === urlSearch) return;
+      updateParams({ search: globalFilter });
     }, 400);
     return () => clearTimeout(id);
-  }, [search, searchParams, updateParams]);
+  }, [globalFilter, urlSearch, updateParams]);
 
   const { data: campaignsResponse, isLoading } = useQuery<CampaignsResponse>({
-    queryKey: ['campaigns', { page, limit: pageSize, search: searchParams.get('search') }],
-    queryFn: () => getAllCampaigns(page, pageSize, searchParams.get('search') || undefined),
+    queryKey: ['campaigns', { page, limit: pageSize, search: urlSearch }],
+    queryFn: () => getAllCampaigns(page, pageSize, urlSearch || undefined),
     placeholderData: (previousData) => previousData,
     select: (data) => (data.meta.total === 0 ? MOCK_CAMPAIGNS_RESPONSE : data),
   });
 
-  const campaigns = campaignsResponse?.data || [];
-  const totalRecords = campaignsResponse?.meta.total || 0;
-  const totalPages = campaignsResponse?.meta.totalPages || 0;
+  const columnHelper = createColumnHelper<CampaignData>();
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: 'Campaign',
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="cursor-pointer font-medium transition-colors hover:text-blue-600 hover:underline">
+              {row.original.name}
+            </span>
+            {row.original.description && (
+              <span className="line-clamp-1 text-xs text-muted-foreground">
+                {row.original.description}
+              </span>
+            )}
+          </div>
+        ),
+        size: 240,
+      }),
+      columnHelper.accessor('status', {
+        header: 'Status',
+        cell: ({ getValue }) => <StatusBadge status={getValue()} />,
+        size: 130,
+      }),
+      columnHelper.accessor('totalContacts', {
+        header: 'Contacts',
+        cell: ({ getValue }) => (
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {getValue()?.toLocaleString() ?? '—'}
+          </span>
+        ),
+        size: 100,
+      }),
+      columnHelper.accessor('lastRunAt', {
+        header: 'Last Run',
+        cell: ({ getValue }) => (
+          <span className="text-sm text-muted-foreground">
+            {getValue() ? dayjs.utc(getValue()).format('MMM DD, YYYY HH:mm') : '—'}
+          </span>
+        ),
+        size: 180,
+      }),
+      columnHelper.accessor('createdAt', {
+        header: 'Created',
+        cell: ({ getValue }) => (
+          <span className="text-sm text-muted-foreground">
+            {dayjs.utc(getValue()).format('MMM DD, YYYY')}
+          </span>
+        ),
+        size: 130,
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => (
+          <div className="text-center" onClick={(e) => e.stopPropagation()}>
+            <CampaignActions id={row.original.id} name={row.original.name} />
+          </div>
+        ),
+        size: 80,
+      }),
+    ],
+    [columnHelper],
+  );
+
+  const table = useReactTable({
+    columns,
+    data: campaignsResponse?.data || [],
+    state: { pagination, sorting },
+    enableSorting: true,
+    enableSortingRemoval: false,
+    manualPagination: true,
+    manualFiltering: true,
+    pageCount: campaignsResponse?.meta?.totalPages || 0,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater;
+      setPagination(next);
+      updateParams({ page: next.pageIndex + 1, pageSize: next.pageSize });
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+    <div className="w-full">
+      {/* ── Toolbar ── */}
+      <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2">
           <Input
+            className="h-8 w-full sm:w-60"
+            value={globalFilter}
+            onChange={(e) => {
+              setGlobalFilter(e.target.value);
+              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+            }}
             placeholder="Search campaigns..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 max-w-sm"
+            type="text"
           />
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Show</span>
+          <Label className="text-sm text-muted-foreground">Rows per page</Label>
           <Select
-            value={String(pageSize)}
-            onValueChange={(val) => updateParams({ pageSize: Number(val) || 12, page: 1 })}
+            value={String(pagination.pageSize)}
+            onValueChange={(val) => {
+              const size = Number(val) || 10;
+              updateParams({ pageSize: size, page: 1 });
+            }}
           >
             <SelectTrigger size="sm" className="w-20">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
-                <SelectItem value="6">6</SelectItem>
-                <SelectItem value="12">12</SelectItem>
-                <SelectItem value="24">24</SelectItem>
-              </SelectGroup>
+              {[10, 20, 30, 50].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Cards Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-sm text-muted-foreground gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading...
-        </div>
-      ) : campaigns.length === 0 ? (
-        <EmptyState hasSearch={!!search} />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {campaigns.map((campaign) => (
-            <CampaignCard key={campaign.id} campaign={campaign} />
-          ))}
-        </div>
-      )}
+      {/* ── Table ── */}
+      <div className="overflow-hidden rounded-lg border">
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    onClick={() =>
+                      router.push(
+                        `/campaigns/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
+                      )
+                    }
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No campaigns found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-muted-foreground">
-            {totalRecords > 0 ? (page - 1) * pageSize + 1 : 0}–
-            {Math.min(page * pageSize, totalRecords)} of {totalRecords} campaigns
-          </p>
-          <div className="flex items-center gap-2">
+      {/* ── Pagination ── */}
+      {!isLoading && (
+        <div className="flex items-center justify-end space-x-2 p-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            Showing{' '}
+            {campaignsResponse?.data?.length ? pagination.pageIndex * pagination.pageSize + 1 : 0}{' '}
+            to{' '}
+            {Math.min(
+              (pagination.pageIndex + 1) * pagination.pageSize,
+              campaignsResponse?.meta?.total || 0,
+            )}{' '}
+            of {campaignsResponse?.meta?.total || 0} results
+          </div>
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => updateParams({ page: Math.max(page - 1, 1) })}
-              disabled={page === 1}
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
             >
               Previous
             </Button>
-            <span className="text-xs text-muted-foreground px-1">
-              {page} / {totalPages}
+            <span className="text-sm">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => updateParams({ page: Math.min(page + 1, totalPages) })}
-              disabled={page >= totalPages}
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
             >
               Next
             </Button>
