@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { BusinessLeadsList } from '@/features/business-leads/components/business-leads-list';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Business Leads',
   description: 'View and manage all saved business leads.',
