@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/a11y/useButtonType: table action buttons */
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: table rows handle click navigation */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: table rows handle click navigation */
+'use no memo';
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

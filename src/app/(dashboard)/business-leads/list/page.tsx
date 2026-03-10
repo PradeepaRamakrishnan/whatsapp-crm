@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { BusinessLeadsList } from '@/features/business-leads/components/business-leads-list';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 export default function BusinessLeadsListPage() {
   return (
     <div className="p-4">
-      <BusinessLeadsList />
+      <Suspense>
+        <BusinessLeadsList />
+      </Suspense>
     </div>
   );
 }
