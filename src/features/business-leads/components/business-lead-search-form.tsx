@@ -478,6 +478,7 @@ function ResultCard({
             </div>
           </div>
         </div>
+        <div></div>
         <div onClick={(e) => e.stopPropagation()}>
           <span className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
             <Mail className="h-3 w-3" />
