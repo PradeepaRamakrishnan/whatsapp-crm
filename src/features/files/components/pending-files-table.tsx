@@ -38,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getAllFiles } from '../services';
+import { fetchFiles as getAllFiles } from '../services/client';
 import type { FileData, FileStatus, FilesResponse } from '../types/file.types';
 import { FileActions } from './file-actions';
 

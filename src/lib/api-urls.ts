@@ -36,6 +36,9 @@ export const API_URLS = {
   campaigns: process.env.NEXT_PUBLIC_CAMPAIGNS_API_URL || `${BASE}/campaigns`,
   settings: process.env.NEXT_PUBLIC_SETTINGS_API_URL || `${BASE}/settings`,
   leads: process.env.NEXT_PUBLIC_LEADS_API_URL || `${BASE}/leads`,
+  businessLeads: process.env.NEXT_PUBLIC_LEADS_API_URL
+    ? process.env.NEXT_PUBLIC_LEADS_API_URL.replace(/\/leads\/?$/, '/business-leads')
+    : `${BASE}/business-leads`,
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_API_URL || `${BASE}/business-whatsapp`,
   instagram: process.env.NEXT_PUBLIC_INSTAGRAM_API_URL || `${BASE}/instagram`,
   email: process.env.NEXT_PUBLIC_EMAIL_API_URL || `${BASE}/email-business`,

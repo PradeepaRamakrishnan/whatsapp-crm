@@ -8,6 +8,7 @@ import {
   MessageCircle,
   PhoneCall,
   Settings,
+  TrendingUp,
   UserCheck,
 } from 'lucide-react';
 
@@ -56,6 +57,20 @@ export const dashboardData = {
           items: [
             { title: 'All Leads', url: '/leads/list' },
             { title: 'Manual Followup', url: '/leads/manual-followup' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'Business Leads',
+      items: [
+        {
+          title: 'Business Leads',
+          url: '#',
+          icon: TrendingUp,
+          items: [
+            { title: 'Search & Add', url: '/business-leads/search' },
+            { title: 'All Leads', url: '/business-leads/list' },
           ],
         },
       ],

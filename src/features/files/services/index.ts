@@ -13,9 +13,17 @@ import type {
 
 const FILES_API_URL = API_URLS.files;
 
-async function getServerHeaders(): Promise<Record<string, string>> {
+async function buildCookieHeader(): Promise<string> {
   const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  // Use getAll() — toString() can return "[object Map]" in some Next.js environments
+  return cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join('; ');
+}
+
+async function getServerHeaders(): Promise<Record<string, string>> {
+  const cookieHeader = await buildCookieHeader();
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -24,8 +32,7 @@ async function getServerHeaders(): Promise<Record<string, string>> {
 }
 
 async function getServerMultipartHeaders(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const cookieHeader = await buildCookieHeader();
   // Do NOT set Content-Type for multipart — let axios set it with the correct boundary
   return {
     Accept: 'application/json',
@@ -143,7 +150,12 @@ export async function getAllFiles(
     console.error('[getAllFiles] Unexpected response shape:', JSON.stringify(r)?.slice(0, 300));
     return EMPTY_FILES_RESPONSE;
   } catch (error: unknown) {
-    console.error('[getAllFiles] Error fetching files:', error);
+    // Silently return empty for network errors (service unavailable) — the client refetches independently
+    const code = (error as { code?: string })?.code;
+    const isNetworkError = code === 'ECONNREFUSED' || code === 'ECONNRESET' || code === 'ENOTFOUND';
+    if (!isNetworkError) {
+      console.error('[getAllFiles] Error fetching files:', error);
+    }
     return EMPTY_FILES_RESPONSE;
   }
 }

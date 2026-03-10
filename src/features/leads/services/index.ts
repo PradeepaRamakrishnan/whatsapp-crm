@@ -3,6 +3,8 @@ import { cache } from 'react';
 import { API_URLS } from '@/lib/api-urls';
 import { getAuthHeaders } from '@/lib/auth-headers';
 import type {
+  DoctorSearchParams,
+  DoctorSearchResponse,
   Document,
   Lead,
   LeadsResponse,
@@ -265,6 +267,25 @@ export async function getManualFollowups(
     throw error;
   }
 }
+export async function searchDoctors(params: DoctorSearchParams): Promise<DoctorSearchResponse> {
+  try {
+    const response = await axiosClient({
+      method: 'POST',
+      url: '/search-doctors',
+      data: params,
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to search doctors');
+    }
+    throw error;
+  }
+}
+
 export async function getManualFollowupById(id: string): Promise<ManualFollowupCase> {
   try {
     const response = await axiosClient({

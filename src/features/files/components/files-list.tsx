@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
 import slugify from 'slugify';
@@ -18,7 +18,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { createEmptyList, getAllFiles } from '../services';
+import { createEmptyList } from '../services';
+import { fetchFiles } from '../services/client';
 import type { FilesResponse } from '../types/file.types';
 import { FilesTable } from './files-table';
 
@@ -134,17 +135,21 @@ function EmptyState() {
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function FilesList() {
+  const router = useRouter();
   const {
     data: filesCheck,
     isFetched: filesCheckFetched,
     isError,
     isLoading,
+    error,
+    refetch,
   } = useQuery<FilesResponse>({
     queryKey: ['files', { page: 1, limit: 10 }],
-    queryFn: () => getAllFiles(1, 10),
+    queryFn: () => fetchFiles(1, 10),
     retry: 1,
   });
 
+  const isAuthError = isError && (error as Error)?.message === 'Unauthorized';
   const hasNoFiles = filesCheckFetched && !isError && (filesCheck?.meta?.total ?? 0) === 0;
 
   return (
@@ -171,6 +176,19 @@ export function FilesList() {
         <div className="flex items-center justify-center p-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
+      ) : isAuthError ? (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-muted/20 py-20 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+            <FileText className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Session expired</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Please log in again to continue.</p>
+          </div>
+          <Button size="sm" onClick={() => router.push('/login')}>
+            Go to Login
+          </Button>
+        </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-muted/20 py-20 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
@@ -182,6 +200,10 @@ export function FilesList() {
               The service may be unavailable. Please try again in a moment.
             </p>
           </div>
+          <Button size="sm" variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Retry
+          </Button>
         </div>
       ) : hasNoFiles ? (
         <EmptyState />

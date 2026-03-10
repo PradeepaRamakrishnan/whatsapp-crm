@@ -40,7 +40,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getAllFiles, getFileById } from '@/features/files/services';
+import { getFileById } from '@/features/files/services';
+import { fetchFiles as getAllFiles } from '@/features/files/services/client';
 import {
   createConfiguration,
   getAllEmailTemplates,

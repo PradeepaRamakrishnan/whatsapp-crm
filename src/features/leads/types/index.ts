@@ -248,3 +248,30 @@ export interface ManualFollowupsResponse {
   data: ManualFollowupCase[];
   meta: LeadsMeta;
 }
+
+export enum LeadType {
+  Hospital = 'Hospital',
+  Clinic = 'Clinic',
+  Doctor = 'Doctor',
+}
+
+export interface DoctorResult {
+  name: string;
+  hospital: string;
+  email: string;
+  phone: string;
+  address: string;
+  location: string;
+}
+
+export interface DoctorSearchResponse {
+  doctors: DoctorResult[];
+}
+
+export interface DoctorSearchParams {
+  type: LeadType;
+  area: string;
+  city: string;
+  location?: string;
+  notes?: string;
+}
