@@ -9,6 +9,7 @@ import {
   CheckSquare,
   ExternalLink,
   Globe,
+  ImageOff,
   Loader2,
   Mail,
   Map as MapIcon,
@@ -39,6 +40,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { COUNTRIES } from '../lib/countries';
 import { bulkCreateBusinessLeads, createBusinessLead, searchBusinessLeads } from '../services';
 import type { SearchResult } from '../types';
+
+// ─── Quick-select type suggestions ────────────────────────────────────────────
+
+const TYPE_SUGGESTIONS: { category: string; types: string[] }[] = [
+  {
+    category: 'Pet Care',
+    types: [
+      'Veterinarian',
+      'Veterinary Clinic',
+      'Animal Hospital',
+      'Pet Hospital',
+      'Pet Doctor',
+      'Pet Grooming',
+      'Pet Boarding',
+      'Pet Daycare',
+      'Pet Store',
+      'Animal Shelter',
+      'Pet Pharmacy',
+      'Exotic Animal Vet',
+    ],
+  },
+];
 
 export function BusinessLeadSearchForm() {
   const router = useRouter();
@@ -169,6 +192,37 @@ export function BusinessLeadSearchForm() {
             }}
             className="space-y-4"
           >
+            {/* Quick-select type chips */}
+            <div className="space-y-2">
+              {TYPE_SUGGESTIONS.map((group) => (
+                <div key={group.category}>
+                  <p className="text-muted-foreground mb-1.5 text-xs font-medium">
+                    {group.category} — quick select:
+                  </p>
+                  <form.Subscribe selector={(s) => s.values.type}>
+                    {(currentType) => (
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.types.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => form.setFieldValue('type', t)}
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                              currentType === t
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </form.Subscribe>
+                </div>
+              ))}
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <form.Field
                 name="type"
@@ -183,7 +237,7 @@ export function BusinessLeadSearchForm() {
                       Industry / Type <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
-                      placeholder="e.g. Electronics Manufacturer, Medical Device..."
+                      placeholder="e.g. Veterinarian, Pet Clinic, or any custom type..."
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
@@ -435,50 +489,77 @@ function ResultCard({
 
   return (
     <Card
-      className={`transition-colors ${
+      className={`overflow-hidden transition-colors ${
         selected ? 'border-primary bg-primary/5' : 'hover:border-primary/40'
       }`}
     >
-      <CardContent className="space-y-3 pt-4 pb-3">
-        {/* Header row: checkbox + name + badges */}
-        <div className="flex cursor-pointer items-start gap-2" onClick={onToggle}>
-          <div
-            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-              selected
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-muted-foreground/40'
-            }`}
-          >
-            {selected && (
-              <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5" aria-hidden="true">
-                <title>Selected</title>
-                <path
-                  d="M2 6l3 3 5-5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+      {/* Photo banner */}
+      <div className="relative h-28 w-full cursor-pointer bg-muted" onClick={onToggle}>
+        {result.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={result.photoUrl}
+            alt={result.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+              (e.currentTarget.nextSibling as HTMLElement | null)?.style.setProperty(
+                'display',
+                'flex',
+              );
+            }}
+          />
+        ) : null}
+        {/* Fallback shown when no photo or image fails to load */}
+        <div
+          className={`absolute inset-0 flex items-center justify-center bg-muted ${result.photoUrl ? 'hidden' : 'flex'}`}
+        >
+          <ImageOff className="h-6 w-6 text-muted-foreground/40" />
+        </div>
+        {/* Selection overlay badge */}
+        {selected && (
+          <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow">
+            <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3" aria-hidden="true">
+              <title>Selected</title>
+              <path
+                d="M2 6l3 3 5-5"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <CardContent className="space-y-3 pt-3 pb-3">
+        {/* Header row: name + badges */}
+        <div className="cursor-pointer" onClick={onToggle}>
+          <p className="truncate text-sm font-semibold leading-tight">{result.name}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            <Badge variant="outline" className="text-xs">
+              {result.type}
+            </Badge>
+            <ScoreBadge score={result.score} />
+            {result.rating > 0 && (
+              <span className="text-muted-foreground flex items-center gap-0.5 text-[10px]">
+                <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                {result.rating.toFixed(1)}
+              </span>
+            )}
+            {result.source === 'justdial' ? (
+              <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[9px] font-bold text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                JD
+              </span>
+            ) : (
+              <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                G
+              </span>
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-tight">{result.name}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-1">
-              <Badge variant="outline" className="text-xs">
-                {result.type}
-              </Badge>
-              <ScoreBadge score={result.score} />
-              {result.rating > 0 && (
-                <span className="text-muted-foreground flex items-center gap-0.5 text-[10px]">
-                  <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                  {result.rating.toFixed(1)}
-                </span>
-              )}
-            </div>
-          </div>
         </div>
-        <div></div>
         <div onClick={(e) => e.stopPropagation()}>
           <span className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
             <Mail className="h-3 w-3" />

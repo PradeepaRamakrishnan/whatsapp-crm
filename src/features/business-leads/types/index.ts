@@ -5,12 +5,14 @@ export interface SearchResult {
   address: string;
   website: string;
   mapsUrl: string;
+  photoUrl: string;
   rating: number;
   score: number;
   type: string;
   area: string;
   city: string;
   location: string;
+  source: 'google' | 'justdial';
 }
 
 export interface SearchResponse {
