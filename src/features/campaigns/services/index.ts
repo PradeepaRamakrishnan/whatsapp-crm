@@ -26,6 +26,10 @@ export async function createCampaign(data: {
   source: string;
   fileId: string;
   configurationId: string;
+  emailTemplateId?: string;
+  smsTemplateId?: string;
+  whatsappTemplateId?: string;
+  channelOrder?: { channel: string; templateId: string; delayMs: number }[];
 }): Promise<CampaignDetailsResponse> {
   try {
     const response = await axiosClient({
