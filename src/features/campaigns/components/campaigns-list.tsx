@@ -12,38 +12,10 @@ import { CampaignsTable } from './campaigns-table';
 
 function getStatsConfig(stats: CampaignsStats, total: number) {
   return [
-    {
-      title: 'Total',
-      value: total,
-      icon: Rocket,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/30',
-      border: 'border-blue-100 dark:border-blue-900/30',
-    },
-    {
-      title: 'Active',
-      value: stats.active,
-      icon: Activity,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
-      border: 'border-emerald-100 dark:border-emerald-900/30',
-    },
-    {
-      title: 'Paused',
-      value: stats.paused,
-      icon: Pause,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50 dark:bg-amber-950/30',
-      border: 'border-amber-100 dark:border-amber-900/30',
-    },
-    {
-      title: 'Failed',
-      value: stats.failed,
-      icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-950/30',
-      border: 'border-red-100 dark:border-red-900/30',
-    },
+    { title: 'Total', value: total, icon: Rocket, iconColor: 'text-blue-600' },
+    { title: 'Active', value: stats.active, icon: Activity, iconColor: 'text-emerald-600' },
+    { title: 'Paused', value: stats.paused, icon: Pause, iconColor: 'text-amber-500' },
+    { title: 'Failed', value: stats.failed, icon: AlertCircle, iconColor: 'text-red-500' },
   ];
 }
 
@@ -85,14 +57,14 @@ export function CampaignsList() {
         {statsConfig.map((stat) => (
           <div
             key={stat.title}
-            className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${stat.bgColor} ${stat.border}`}
+            className="flex items-center gap-3 rounded-md border bg-card px-4 py-3"
           >
-            <div className={`rounded-lg p-1.5 bg-white/60 dark:bg-white/10`}>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <div className="rounded p-1.5 bg-muted">
+              <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{stat.title}</p>
-              <p className={`text-lg font-semibold leading-none ${stat.color}`}>{stat.value}</p>
+              <p className="text-lg font-semibold leading-none">{stat.value}</p>
             </div>
           </div>
         ))}

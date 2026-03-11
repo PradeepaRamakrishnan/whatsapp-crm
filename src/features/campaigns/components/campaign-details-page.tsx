@@ -104,25 +104,21 @@ function StatPill({
   icon: Icon,
   label,
   value,
-  color,
-  bg,
-  border,
+  iconColor,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
-  color: string;
-  bg: string;
-  border: string;
+  iconColor: string;
 }) {
   return (
-    <div className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 ${bg} ${border}`}>
-      <div className="rounded-lg bg-white/60 dark:bg-white/10 p-1.5">
-        <Icon className={`h-4 w-4 ${color}`} />
+    <div className="flex items-center gap-2.5 rounded-md border bg-card px-4 py-3">
+      <div className="rounded p-1.5 bg-muted">
+        <Icon className={`h-4 w-4 ${iconColor}`} />
       </div>
       <div>
         <p className="text-[11px] text-muted-foreground leading-none mb-0.5">{label}</p>
-        <p className={`text-base font-semibold leading-none ${color}`}>{value}</p>
+        <p className="text-base font-semibold leading-none">{value}</p>
       </div>
     </div>
   );
@@ -383,39 +379,31 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
           icon={Users}
           label="Recipients"
           value={(campaign.totalContacts ?? 0).toLocaleString()}
-          color="text-blue-600"
-          bg="bg-blue-50 dark:bg-blue-950/30"
-          border="border-blue-100 dark:border-blue-900/30"
+          iconColor="text-blue-600"
         />
         <StatPill
           icon={CheckCircle2}
           label="Interested"
           value={(campaign.interested ?? 0).toLocaleString()}
-          color="text-emerald-600"
-          bg="bg-emerald-50 dark:bg-emerald-950/30"
-          border="border-emerald-100 dark:border-emerald-900/30"
+          iconColor="text-emerald-600"
         />
         <StatPill
           icon={TrendingUp}
           label="Response Rate"
           value={`${campaign.responseRate ?? 0}%`}
-          color="text-violet-600"
-          bg="bg-violet-50 dark:bg-violet-950/30"
-          border="border-violet-100 dark:border-violet-900/30"
+          iconColor="text-violet-600"
         />
         <StatPill
           icon={Mail}
           label="Conversion"
           value={`${interestedPct.toFixed(1)}%`}
-          color="text-orange-600"
-          bg="bg-orange-50 dark:bg-orange-950/30"
-          border="border-orange-100 dark:border-orange-900/30"
+          iconColor="text-orange-500"
         />
       </div>
 
       {/* ── Tabs ── */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="border-b w-full bg-transparent p-0 h-auto rounded-none justify-start gap-1">
+        <TabsList className="border-b w-full bg-transparent p-0 h-auto rounded-none justify-start gap-6">
           <TabsTrigger
             value="overview"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-2 text-xs font-medium"
