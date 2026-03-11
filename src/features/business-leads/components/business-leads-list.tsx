@@ -15,7 +15,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { Loader2, Mail, MapPin, MoreHorizontal, Phone, Plus, Trash2 } from 'lucide-react';
+import { Download, Loader2, Mail, MapPin, MoreHorizontal, Phone, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -217,6 +217,7 @@ export function BusinessLeadsList() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState(urlSearch);
   const [selectedLead, setSelectedLead] = useState<BusinessLead | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const updateParams = useCallback(
     (updates: { page?: number; pageSize?: number; search?: string }) => {
@@ -248,6 +249,64 @@ export function BusinessLeadsList() {
     queryKey: ['business-leads', { page, limit: pageSize, search: urlSearch }],
     queryFn: () => getBusinessLeads({ page, limit: pageSize, search: urlSearch || undefined }),
   });
+
+  const handleExportCsv = useCallback(async () => {
+    const total = leadsResponse?.meta?.total || 0;
+    if (total === 0) {
+      toast.info('No leads to export');
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const allData = await getBusinessLeads({
+        page: 1,
+        limit: total,
+        search: urlSearch || undefined,
+      });
+      const leads = allData.data;
+
+      const headers = [
+        'Name',
+        'Type',
+        'Email',
+        'Phone',
+        'Area',
+        'City',
+        'Address',
+        'Notes',
+        'Added',
+      ];
+      const rows = leads.map((lead) => [
+        lead.name,
+        lead.type,
+        lead.email || '',
+        lead.phone || '',
+        lead.area,
+        lead.city,
+        lead.address || '',
+        lead.notes || '',
+        dayjs(lead.createdAt).format('MMM DD, YYYY'),
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `business-leads-export-${dayjs().format('YYYY-MM-DD')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${leads.length} lead${leads.length !== 1 ? 's' : ''}`);
+    } catch (error) {
+      toast.error('Failed to export leads');
+      console.error(error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [leadsResponse?.meta?.total, urlSearch]);
 
   const columnHelper = createColumnHelper<BusinessLead>();
 
@@ -383,6 +442,19 @@ export function BusinessLeadsList() {
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={isExporting || isLoading}
+          >
+            {isExporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
           <Label className="text-sm text-muted-foreground">Rows per page</Label>
           <Select
             value={String(pagination.pageSize)}
