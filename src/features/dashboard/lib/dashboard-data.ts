@@ -1,7 +1,6 @@
 /** biome-ignore-all assist/source/organizeImports: <> */
 import {
   Briefcase,
-  FileText,
   Instagram,
   LayoutDashboard,
   Mail,
@@ -30,24 +29,29 @@ export const dashboardData = {
       ],
     },
     {
-      label: 'Campaigns',
+      label: 'Leads Generation',
       items: [
         {
-          title: 'Contact Sources',
-          url: '/files/list',
-          icon: FileText,
+          title: 'Leads Generation',
+          url: '#',
+          icon: TrendingUp,
           items: [
-            { title: 'Recipients', url: '/files/list' },
-            { title: 'Pending Approval', url: '/files/pending' },
+            { title: 'Search & Add', url: '/business-leads/search' },
+            { title: 'All Leads', url: '/business-leads/list' },
           ],
         },
+      ],
+    },
+    {
+      label: 'Campaigns',
+      items: [
         {
           title: 'Campaigns',
           url: '/campaigns/list',
           icon: Briefcase,
           items: [
-            // { title: 'Configuration', url: '/campaigns/configuration' },
             { title: 'All Campaigns', url: '/campaigns/list' },
+            { title: 'Recipients', url: '/files/list' },
           ],
         },
         {
@@ -57,20 +61,6 @@ export const dashboardData = {
           items: [
             { title: 'All Leads', url: '/leads/list' },
             { title: 'Manual Followup', url: '/leads/manual-followup' },
-          ],
-        },
-      ],
-    },
-    {
-      label: 'Business Leads',
-      items: [
-        {
-          title: 'Business Leads',
-          url: '#',
-          icon: TrendingUp,
-          items: [
-            { title: 'Search & Add', url: '/business-leads/search' },
-            { title: 'All Leads', url: '/business-leads/list' },
           ],
         },
       ],
