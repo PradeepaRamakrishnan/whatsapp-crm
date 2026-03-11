@@ -278,12 +278,30 @@ export function CreateCampaignForm() {
               ? toCron(scheduledDate, scheduledTime)
               : nowCron(),
         });
+        const emailTemplateId = sequence.find(
+          (s) => s.channel === 'email' && s.templateId,
+        )?.templateId;
+        const smsTemplateId = sequence.find((s) => s.channel === 'sms' && s.templateId)?.templateId;
+        const whatsappTemplateId = sequence.find(
+          (s) => s.channel === 'whatsapp' && s.templateId,
+        )?.templateId;
+        const channelOrder = sequence
+          .filter((s) => s.channel !== 'manual' && s.templateId)
+          .map((s, i) => ({
+            channel: s.channel,
+            templateId: s.templateId as string,
+            delayMs: i === 0 ? 0 : toDelayMs(s.delayValue, s.delayUnit),
+          }));
         await createCampaign({
           name: value.name,
           description: value.description,
           source: selectedFileData?.source || '',
           fileId: selectedFile,
           configurationId: config.id,
+          emailTemplateId,
+          smsTemplateId,
+          whatsappTemplateId,
+          channelOrder,
         });
         router.push('/campaigns/list');
       } catch (err) {
