@@ -184,6 +184,7 @@ export interface CampaignContactData {
   email: ChannelStatus;
   sms: ChannelStatus;
   whatsapp: ChannelStatus;
+  calling?: ChannelStatus;
   lead?: {
     id: string;
     interestedAt: string;
@@ -217,6 +218,7 @@ export interface CampaignContactsResponse {
   data: CampaignContactData[];
   meta: CampaignContactsMeta;
   stats: CampaignContactsStats;
+  channelOrder?: ChannelOrderItem[];
 }
 
 // Campaign Timeline Types
@@ -259,9 +261,10 @@ export interface ConfigTemplate {
 }
 
 export interface ChannelOrderItem {
-  channel: 'email' | 'sms' | 'whatsapp';
+  channel: 'email' | 'sms' | 'whatsapp' | 'calling' | string;
   delayMs: number;
   enabled: boolean;
+  templateId?: string;
 }
 
 export type ManualAction = 'call' | 'manual_whatsapp' | 'manual_email' | 'visit';

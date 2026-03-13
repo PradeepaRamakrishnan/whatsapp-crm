@@ -305,7 +305,7 @@ export function CampaignsTable() {
       columnHelper.accessor('totalContacts', {
         header: 'Contacts',
         cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-sm text-center text-muted-foreground tabular-nums">
             {getValue()?.toLocaleString() ?? '—'}
           </span>
         ),

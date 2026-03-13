@@ -354,7 +354,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
+                          className="h-7 w-7  transition-opacity group-hover:opacity-100 hover:opacity-100"
                           onClick={() => setRecordToEdit(record)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -362,7 +362,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-destructive/60 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100 hover:text-destructive"
+                          className="h-7 w-7 text-destructive/60  transition-opacity group-hover:opacity-100 hover:opacity-100 hover:text-destructive"
                           onClick={() => setRecordToDelete(record)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
