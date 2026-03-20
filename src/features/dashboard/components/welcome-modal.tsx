@@ -22,7 +22,7 @@ const STEPS = [
     color: 'bg-blue-500',
     title: 'Add Recipients',
     desc: 'Upload a CSV file, import from WhatsApp contacts, or enter recipients manually.',
-    href: '/files/upload',
+    href: '/recipients/upload',
     action: 'Upload File',
   },
   {

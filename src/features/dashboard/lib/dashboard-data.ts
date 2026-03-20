@@ -51,7 +51,7 @@ export const dashboardData = {
           icon: Briefcase,
           items: [
             { title: 'All Campaigns', url: '/campaigns/list' },
-            { title: 'Recipients', url: '/files/list' },
+            { title: 'Recipients', url: '/recipients/list' },
           ],
         },
         {

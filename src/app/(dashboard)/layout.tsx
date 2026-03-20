@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { DynamicBreadcrumb } from '@/components/shared/dynamic-breadcrumb';
 import { ThemeModeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/ui/notification-bell';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <DynamicBreadcrumb />
           </div>
           <div className="flex items-center gap-3 px-4">
             <ThemeModeToggle />

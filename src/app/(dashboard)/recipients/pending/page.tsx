@@ -4,8 +4,8 @@ import { PendingFilesList } from '@/features/files/components/pending-files-list
 import { getAllFiles } from '@/features/files/services';
 
 export const metadata: Metadata = {
-  title: 'Pending Review Files',
-  description: 'View all files pending review.',
+  title: 'Pending Recipients',
+  description: 'View all recipient lists pending review.',
 };
 
 const PendingFilesPage = async () => {

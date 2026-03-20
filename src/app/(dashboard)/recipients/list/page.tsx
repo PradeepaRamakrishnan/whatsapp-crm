@@ -5,8 +5,8 @@ import { FilesList } from '@/features/files/components/files-list';
 import { getAllFiles } from '@/features/files/services';
 
 export const metadata: Metadata = {
-  title: 'File Management',
-  description: 'Manage and view all uploaded borrower files for your campaigns.',
+  title: 'Recipients',
+  description: 'Manage and view all recipient lists for your campaigns.',
 };
 
 type PageProps = {

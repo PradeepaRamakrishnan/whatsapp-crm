@@ -61,13 +61,11 @@ export interface CampaignReference {
 export interface FileRecord {
   id: string;
   customerName: string;
-  settlementAmount: number;
-  mobileNumber: string;
-  emailId: string;
+  mobileNumber: string | null;
+  emailId: string | null;
   contactStatus?: 'interested' | 'not_interested' | null;
   additionalData: Record<string, string | number>;
   isValid: boolean;
-  isExcluded: boolean;
   validationErrors: string[] | null;
   campaigns: CampaignReference[];
   active: boolean;
@@ -90,9 +88,6 @@ export interface FileContents {
 export interface FileStats {
   totalRecords: number;
   totalInvalidRecords: number;
-  duplicateEmailInCampaign: number;
-  duplicateMobileInCampaign: number;
-  excludedCount: number;
 }
 
 export interface FileDetailData extends FileData {

@@ -316,7 +316,7 @@ export function FilesTable() {
                     key={row.id}
                     onClick={() =>
                       router.push(
-                        `/files/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
+                        `/recipients/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
                       )
                     }
                     className="cursor-pointer hover:bg-muted/50"

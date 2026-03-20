@@ -53,7 +53,7 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
     toast.success('List created!', { id: 'create-list' });
     setOpen(false);
     setName('');
-    router.push(`/files/${slugify(result.data.name, { lower: true })}/${result.data.id}`);
+    router.push(`/recipients/${slugify(result.data.name, { lower: true })}/${result.data.id}`);
   };
 
   return (

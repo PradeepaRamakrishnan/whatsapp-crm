@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import { FileCreatePage } from '@/features/files/components/file-create-page';
 
 export const metadata: Metadata = {
-  title: 'Upload File | Samatva CRM',
-  description: 'Upload a new borrower file for your campaigns',
+  title: 'Add Recipients | Samatva CRM',
+  description: 'Upload or add recipients for your campaigns',
 };
 
 const CampaignFilesUploadPage = () => {
