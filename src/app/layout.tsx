@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import NextTopLoader from 'nextjs-toploader';
 import { cn } from '@/lib/utils';
 import Providers from './providers';
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: {
@@ -71,9 +71,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn('font-sans', 'font-sans', geist.variable)}
+      className={cn('font-sans', 'font-sans', 'font-sans', inter.variable)}
     >
-      <body className={`${geist.variable} antialiased`}>
+      <body className={`${inter.variable} antialiased`}>
         <Providers>
           <NextTopLoader />
           {children}
