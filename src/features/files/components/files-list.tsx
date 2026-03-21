@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -74,7 +73,7 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
           </DialogDescription>
         </DialogHeader>
 
-        <DialogBody>
+        <div className="px-6">
           <form id="create-list-form" onSubmit={handleCreate}>
             <label htmlFor="list-name-input" className="mb-1.5 block text-sm font-medium">
               List Name
@@ -88,7 +87,7 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
               disabled={isCreating}
             />
           </form>
-        </DialogBody>
+        </div>
 
         <DialogFooter>
           <Button
