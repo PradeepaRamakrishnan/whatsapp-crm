@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  MinusCircle,
   Pencil,
   Search,
   Trash2,
@@ -38,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { deleteFileRecord, getFileById } from '../services';
+import { deleteRecord, fetchFileById } from '../services/client';
 import { useFileFilterStore } from '../store/file-filter-store';
 import type { FileRecord } from '../types/file.types';
 import { FileRecordDetailsSheet } from './file-record-details-sheet';
@@ -67,15 +66,7 @@ function SkeletonTableRow({ cols }: { cols: number }) {
 
 // ─── Status badge ──────────────────────────────────────────────────────────────
 
-function RecordStatusBadge({ isValid, isExcluded }: { isValid: boolean; isExcluded: boolean }) {
-  if (isExcluded) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-        <MinusCircle className="h-2.5 w-2.5" />
-        Excluded
-      </span>
-    );
-  }
+function RecordStatusBadge({ isValid }: { isValid: boolean }) {
   if (isValid) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
@@ -152,7 +143,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteFileRecord(fileId, recordToDelete?.id || ''),
+    mutationFn: () => deleteRecord(fileId, recordToDelete?.id || ''),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['file', fileId] });
       setRecordToDelete(null);
@@ -193,7 +184,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     isFetching,
   } = useQuery({
     queryKey: ['file', fileId, { page, limit: pageSize, filter: urlFilter }],
-    queryFn: () => getFileById(fileId, page, pageSize, urlFilter),
+    queryFn: () => fetchFileById(fileId, page, pageSize, urlFilter),
     placeholderData: (previousData) => previousData,
   });
 
@@ -209,7 +200,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
     return records.filter(
       (r) =>
         r.customerName.toLowerCase().includes(q) ||
-        r.mobileNumber.includes(q) ||
+        r.mobileNumber?.includes(q) ||
         r.emailId?.toLowerCase().includes(q),
     );
   }, [records, searchQuery]);
@@ -244,8 +235,6 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
             <SelectContent>
               <SelectItem value="all">All Records</SelectItem>
               <SelectItem value="invalid">Invalid Only</SelectItem>
-              <SelectItem value="duplicate_email">Duplicates</SelectItem>
-              <SelectItem value="excluded">Excluded</SelectItem>
             </SelectContent>
           </Select>
 
@@ -312,13 +301,11 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
                     key={record.id}
                     onClick={() => setSelectedRecord(record)}
                     className={`group cursor-pointer border-b border-border/30 transition-colors last:border-0 hover:bg-muted/20 ${
-                      record.isExcluded
-                        ? 'bg-amber-50/30 hover:bg-amber-50/50 dark:bg-amber-950/10 dark:hover:bg-amber-950/20'
-                        : !record.isValid
-                          ? 'bg-red-50/20 hover:bg-red-50/40 dark:bg-red-950/10 dark:hover:bg-red-950/20'
-                          : i % 2 !== 0
-                            ? 'bg-muted/10'
-                            : ''
+                      !record.isValid
+                        ? 'bg-red-50/20 hover:bg-red-50/40 dark:bg-red-950/10 dark:hover:bg-red-950/20'
+                        : i % 2 !== 0
+                          ? 'bg-muted/10'
+                          : ''
                     }`}
                   >
                     {/* Customer name */}
@@ -345,7 +332,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
 
                     {/* Status */}
                     <td className="px-4 py-3 text-center">
-                      <RecordStatusBadge isValid={record.isValid} isExcluded={record.isExcluded} />
+                      <RecordStatusBadge isValid={record.isValid} />
                     </td>
 
                     {/* Actions */}

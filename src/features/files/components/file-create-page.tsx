@@ -644,7 +644,7 @@ export function FileCreatePage() {
   const defaultName = searchParams.get('name') ?? '';
 
   const handleCreated = (id: string, name: string) => {
-    router.push(`/files/${slugify(name, { lower: true })}/${id}`);
+    router.push(`/recipients/${slugify(name, { lower: true })}/${id}`);
   };
 
   return (

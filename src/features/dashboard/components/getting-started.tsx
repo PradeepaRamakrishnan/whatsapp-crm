@@ -26,7 +26,7 @@ const CHECKLIST = [
     doneBg: 'bg-blue-500',
     title: 'Add Recipients',
     desc: 'Upload a file, import WhatsApp contacts, or enter manually',
-    href: '/files/upload',
+    href: '/recipients/upload',
     isDone: (counts: { totalFiles: number }) => counts.totalFiles > 0,
   },
   {

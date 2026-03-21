@@ -270,7 +270,7 @@ export function PendingFilesTable() {
                   className="cursor-pointer"
                   onClick={() =>
                     router.push(
-                      `/files/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
+                      `/recipients/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
                     )
                   }
                 >

@@ -702,9 +702,6 @@ export function CreateCampaignForm() {
                             fileDetail?.stats ?? {
                               totalRecords: 0,
                               totalInvalidRecords: 0,
-                              duplicateEmailInCampaign: 0,
-                              duplicateMobileInCampaign: 0,
-                              excludedCount: 0,
                             }
                           }
                           isLoading={fileDetailLoading}

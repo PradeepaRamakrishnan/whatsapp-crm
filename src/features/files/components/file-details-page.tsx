@@ -5,11 +5,11 @@ import {
   ArrowLeft,
   Calendar,
   CheckCircle2,
+  ChevronRight,
   Database,
   FileSpreadsheet,
   FileText,
   MessageCircle,
-  MinusCircle,
   Pencil,
   Plus,
   Search,
@@ -27,7 +27,8 @@ import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { getAllAccounts, getUniqueConversations } from '@/features/whatsapp/services';
 import { cn } from '@/lib/utils';
-import { addContactsToFile, getFileById } from '../services';
+import { addContactsToFile } from '../services';
+import { addContact, fetchFileById } from '../services/client';
 import type { FileDetailData } from '../types/file.types';
 import { FileActions } from './file-actions';
 import { FileRecordsTable } from './file-records-table';
@@ -83,7 +84,7 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
       for (const f of files) formData.append('files', f);
       toast.loading('Uploading contacts...', { id: 'add-upload' });
       await addContactsToFile(fileId, formData);
-      await queryClient.invalidateQueries({ queryKey: ['file', fileId] });
+      queryClient.invalidateQueries({ queryKey: ['file', fileId] });
       toast.success('Contact added successfully!', { id: 'add-upload' });
       setFiles([]);
       onSuccess();
@@ -95,12 +96,13 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
       setIsSubmitting(false);
     }
   };
+
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/60 bg-muted/20">
-          <h3 className="text-sm font-semibold text-foreground">Upload CSV File</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-border bg-muted/30">
+          <h3 className="text-base font-semibold text-foreground">Upload CSV File</h3>
+          <p className="text-sm text-muted-foreground mt-1">
             Import contacts from a spreadsheet file
           </p>
         </div>
@@ -116,36 +118,30 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
                   'relative rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer group block',
                   isDragging
                     ? 'border-primary bg-primary/5 scale-[1.01]'
-                    : 'border-border/60 hover:border-primary/40 hover:bg-muted/30',
+                    : 'border-border hover:border-primary/50 hover:bg-muted/30',
                   fileError ? 'border-destructive/50 bg-destructive/5' : '',
                 )}
               >
-                <div className="flex flex-col items-center gap-4 px-6 py-12 text-center">
+                <div className="flex flex-col items-center gap-4 px-6 py-14 text-center">
                   <div
                     className={cn(
-                      'flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200',
+                      'flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-200',
                       isDragging
                         ? 'bg-primary text-primary-foreground scale-110'
-                        : 'bg-muted/60 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary',
+                        : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary',
                     )}
                   >
-                    <Upload className="h-6 w-6" />
+                    <Upload className="h-7 w-7" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <p className="text-sm font-semibold text-foreground">
                       {isDragging ? 'Release to upload' : 'Drag & drop your files here'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       Supports CSV, XLS, XLSX · Up to 10 MB per file
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="h-8 text-xs font-medium"
-                  >
+                  <Button type="button" variant="outline" size="sm" asChild>
                     <label htmlFor="add-file-input" className="cursor-pointer">
                       Browse Files
                       <input
@@ -166,27 +162,27 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
                 </div>
               </label>
               {files.length > 0 && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-4 space-y-2">
                   {files.map((file, idx) => (
                     <div
                       key={`${file.name}-${file.size}-${idx}`}
-                      className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5"
+                      className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                         <FileSpreadsheet className="h-4 w-4 text-primary" />
                       </div>
                       <span className="flex-1 truncate text-sm font-medium text-foreground">
                         {file.name}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
+                      <span className="text-sm text-muted-foreground tabular-nums shrink-0">
                         {(file.size / 1024).toFixed(1)} KB
                       </span>
                       <button
                         type="button"
                         onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
-                        className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -194,15 +190,11 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
               )}
               <FieldError>{fileError}</FieldError>
             </Field>
-            <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-9 min-w-[130px] text-sm font-medium"
-              >
+            <div className="flex justify-end pt-1">
+              <Button type="submit" disabled={isSubmitting} className="min-w-[140px]">
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Uploading...
                   </span>
                 ) : (
@@ -213,31 +205,31 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
           </form>
         </div>
       </div>
-      <div className="rounded-2xl border border-blue-200/70 bg-blue-50/80 dark:border-blue-900/40 dark:bg-blue-950/20 overflow-hidden self-start">
-        <div className="px-4 py-3 border-b border-blue-200/50 dark:border-blue-900/30">
-          <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 uppercase tracking-wider">
-            Required Columns
-          </p>
+
+      {/* Required columns info */}
+      <div className="rounded-xl border border-blue-200/70 bg-blue-50/80 dark:border-blue-900/40 dark:bg-blue-950/20 overflow-hidden self-start">
+        <div className="px-5 py-4 border-b border-blue-200/50 dark:border-blue-900/30">
+          <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Required Columns</p>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-5 space-y-4">
           {[
             { col: 'Customer Name', alt: 'or: Customer', required: true },
             { col: 'Mobile Number', alt: 'or: Mobile No', required: true },
             { col: 'Email ID', alt: 'or: Email', required: false },
           ].map(({ col, alt, required }) => (
-            <div key={col} className="flex items-start gap-2.5">
+            <div key={col} className="flex items-start gap-3">
               <span
                 className={cn(
-                  'mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full',
+                  'mt-2 h-2 w-2 shrink-0 rounded-full',
                   required ? 'bg-blue-500' : 'bg-blue-300 dark:bg-blue-600',
                 )}
               />
               <div>
-                <p className="text-xs font-semibold text-blue-800 dark:text-blue-200">
+                <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
                   {col}
                   {required && <span className="ml-1 text-red-500">*</span>}
                 </p>
-                <p className="text-[11px] text-blue-600/70 dark:text-blue-400/70 mt-0.5">{alt}</p>
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-0.5">{alt}</p>
               </div>
             </div>
           ))}
@@ -306,7 +298,7 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
       await addContactsToFile(fileId, formData);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['file', fileId] });
+      queryClient.invalidateQueries({ queryKey: ['file', fileId] });
       toast.success('WhatsApp contacts added!');
       setSelected(new Set());
       onSuccess();
@@ -325,63 +317,60 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
     });
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/60 bg-muted/20 flex items-center justify-between gap-3">
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-border bg-muted/30 flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold">Import from WhatsApp</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h3 className="text-base font-semibold">Import from WhatsApp</h3>
+            <p className="text-sm text-muted-foreground mt-1">
               Select contacts from your conversations
             </p>
           </div>
           {contacts.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleAll}
-              className="h-8 text-xs font-medium shrink-0"
-            >
+            <Button variant="outline" size="sm" onClick={toggleAll} className="shrink-0">
               {selected.size === contacts.length ? 'Deselect All' : 'Select All'}
             </Button>
           )}
         </div>
         <div className="px-4 py-3 border-b border-border/40">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search by phone number..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm bg-muted/30 border-border/50"
+              className="pl-10 bg-muted/30"
             />
           </div>
         </div>
-        <div className="max-h-[300px] overflow-y-auto divide-y divide-border/40">
+        <div className="max-h-[320px] overflow-y-auto divide-y divide-border/40">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="flex flex-col items-center justify-center gap-3 py-14">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <p className="text-sm text-muted-foreground">Loading contacts...</p>
             </div>
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12 px-6 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 dark:bg-rose-950/40">
-                <MessageCircle className="h-6 w-6 text-rose-500" />
+            <div className="flex flex-col items-center justify-center gap-3 py-14 px-6 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 dark:bg-rose-950/40">
+                <MessageCircle className="h-7 w-7 text-rose-500" />
               </div>
-              <p className="text-sm font-semibold mt-1">
-                {isAuthError ? 'Session expired' : 'Could not load contacts'}
-              </p>
-              <p className="text-xs text-muted-foreground max-w-xs">
-                {isAuthError
-                  ? 'Please log out and back in, then try again.'
-                  : error instanceof Error
-                    ? error.message
-                    : 'An error occurred.'}
-              </p>
+              <div>
+                <p className="text-sm font-semibold">
+                  {isAuthError ? 'Session expired' : 'Could not load contacts'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                  {isAuthError
+                    ? 'Please log out and back in, then try again.'
+                    : error instanceof Error
+                      ? error.message
+                      : 'An error occurred.'}
+                </p>
+              </div>
             </div>
           ) : contacts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
-                <MessageCircle className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center gap-3 py-14">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <MessageCircle className="h-7 w-7 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">No contacts found</p>
             </div>
@@ -390,7 +379,7 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
               <label
                 key={contact.id}
                 className={cn(
-                  'flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30',
+                  'flex cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30',
                   selected.has(contact.id) ? 'bg-primary/5' : '',
                 )}
               >
@@ -402,7 +391,7 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
                 />
                 <div
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors',
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
                     selected.has(contact.id)
                       ? 'bg-emerald-500 text-white'
                       : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
@@ -421,19 +410,19 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
             ))
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-4 py-3">
-          <p className="text-xs text-muted-foreground">
+        <div className="flex items-center justify-between border-t border-border bg-muted/30 px-5 py-4">
+          <p className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground tabular-nums">{selected.size}</span> of{' '}
             <span className="tabular-nums">{contacts.length}</span> selected
           </p>
           <Button
             onClick={() => doImport()}
             disabled={selected.size === 0 || isPending}
-            className="h-8 min-w-[110px] text-sm font-medium"
+            className="min-w-[120px]"
           >
             {isPending ? (
               <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 Adding...
               </span>
             ) : (
@@ -442,21 +431,23 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
           </Button>
         </div>
       </div>
-      <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-900/40 dark:bg-emerald-950/20 overflow-hidden self-start">
-        <div className="px-4 py-3 border-b border-emerald-200/50 dark:border-emerald-900/30">
-          <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+
+      {/* How it works */}
+      <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-900/40 dark:bg-emerald-950/20 overflow-hidden self-start">
+        <div className="px-5 py-4 border-b border-emerald-200/50 dark:border-emerald-900/30">
+          <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
             How it works
           </p>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-5 space-y-4">
           {[
             'Selected contacts are added to this recipient list.',
             'Contacts without a phone number are skipped.',
             'Duplicates will be handled by the backend.',
           ].map((text) => (
-            <div key={text} className="flex items-start gap-2.5">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-              <p className="text-[11.5px] text-emerald-800 dark:text-emerald-200 leading-relaxed">
+            <div key={text} className="flex items-start gap-3">
+              <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+              <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">
                 {text}
               </p>
             </div>
@@ -469,131 +460,164 @@ function AddWhatsAppTab({ fileId, onSuccess }: { fileId: string; onSuccess: () =
 
 // ─── Manual Entry Tab ──────────────────────────────────────────────────────────
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateEmail(email: string): string {
+  if (!email.trim()) return '';
+  return EMAIL_REGEX.test(email.trim()) ? '' : 'Invalid email address';
+}
+
 function AddManualTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => void }) {
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<ManualRow[]>([
     { id: crypto.randomUUID(), name: '', phone: '', email: '' },
   ]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [emailErrors, setEmailErrors] = useState<Record<string, string>>({});
 
   const addRow = () =>
     setRows((prev) => [...prev, { id: crypto.randomUUID(), name: '', phone: '', email: '' }]);
-  const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
-  const updateRow = (id: string, key: keyof Omit<ManualRow, 'id'>, value: string) =>
+  const removeRow = (id: string) => {
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setEmailErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+  const updateRow = (id: string, key: keyof Omit<ManualRow, 'id'>, value: string) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)));
+    if (key === 'email') {
+      setEmailErrors((prev) => ({ ...prev, [id]: validateEmail(value) }));
+    }
+  };
+  const hasEmailErrors = Object.values(emailErrors).some(Boolean);
   const validRows = rows.filter((r) => r.name.trim() && r.phone.trim());
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const csvRows = ['Customer Name,Mobile Number,Email ID'];
-      for (const r of validRows)
-        csvRows.push(`${r.name.trim()},${r.phone.trim()},${r.email.trim()}`);
-      const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-      const csvFile = new File([csvBlob], `manual-${Date.now()}.csv`, { type: 'text/csv' });
-      const formData = new FormData();
-      formData.append('files', csvFile);
-      toast.loading('Adding contacts...', { id: 'add-manual' });
-      await addContactsToFile(fileId, formData);
-      await queryClient.invalidateQueries({ queryKey: ['file', fileId] });
-      toast.success('Contacts added!', { id: 'add-manual' });
+  const mutation = useMutation({
+    mutationFn: (contacts: ManualRow[]) =>
+      Promise.all(
+        contacts.map((r) =>
+          addContact(fileId, {
+            customerName: r.name.trim(),
+            mobileNumber: r.phone.trim() || undefined,
+            emailId: r.email.trim() || undefined,
+          }),
+        ),
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['file', fileId] });
+      toast.success('Contacts added!');
       setRows([{ id: crypto.randomUUID(), name: '', phone: '', email: '' }]);
       onSuccess();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add contacts', {
-        id: 'add-manual',
-      });
-    } finally {
-      setIsSaving(false);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to add contacts');
+    },
+  });
+
+  const handleSave = () => {
+    if (hasEmailErrors) {
+      toast.error('Please fix the invalid email addresses before saving.');
+      return;
     }
+    mutation.mutate(validRows);
   };
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-border/60 bg-muted/20 flex items-center justify-between gap-3">
+    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-border bg-muted/30 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold">Add Contacts Manually</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Enter contact details one by one</p>
+          <h3 className="text-base font-semibold">Add Contacts Manually</h3>
+          <p className="text-sm text-muted-foreground mt-1">Enter contact details one by one</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addRow}
-          className="h-8 text-xs font-medium shrink-0"
-        >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+        <Button type="button" variant="outline" size="sm" onClick={addRow} className="shrink-0">
+          <Plus className="mr-1.5 h-4 w-4" />
           Add Row
         </Button>
       </div>
-      <div className="grid grid-cols-[32px_1fr_1fr_1fr_32px] items-center gap-3 border-b border-border/40 bg-muted/30 px-5 py-2.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 text-center">
+
+      {/* Column headers */}
+      <div className="grid grid-cols-[40px_1fr_1fr_1fr_44px] items-center gap-3 border-b border-border/40 bg-muted/20 px-5 py-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
           #
         </span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Full Name <span className="text-destructive">*</span>
         </span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Phone <span className="text-destructive">*</span>
         </span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Email
         </span>
         <span />
       </div>
-      <div className="max-h-[300px] overflow-y-auto divide-y divide-border/30">
+
+      {/* Rows */}
+      <div className="max-h-[360px] overflow-y-auto divide-y divide-border/30">
         {rows.map((row, idx) => {
           const isValid = row.name.trim() && row.phone.trim();
           return (
             <div
               key={row.id}
               className={cn(
-                'grid grid-cols-[32px_1fr_1fr_1fr_32px] items-center gap-3 px-5 py-2.5 transition-colors',
+                'grid grid-cols-[40px_1fr_1fr_1fr_44px] gap-3 px-5 py-3 transition-colors',
+                emailErrors[row.id] ? 'items-start pt-3.5' : 'items-center',
                 isValid ? 'bg-transparent' : 'bg-muted/10',
               )}
             >
-              <span className="text-center text-[11px] font-medium text-muted-foreground/60 tabular-nums">
+              <span className="text-center text-sm font-medium text-muted-foreground tabular-nums">
                 {idx + 1}
               </span>
               <Input
                 placeholder="John Smith"
                 value={row.name}
                 onChange={(e) => updateRow(row.id, 'name', e.target.value)}
-                className="h-8 text-sm bg-background"
               />
               <Input
                 placeholder="+91 98765 43210"
                 value={row.phone}
                 onChange={(e) => updateRow(row.id, 'phone', e.target.value)}
-                className="h-8 text-sm bg-background"
               />
-              <Input
-                placeholder="email@example.com"
-                value={row.email}
-                onChange={(e) => updateRow(row.id, 'email', e.target.value)}
-                className="h-8 text-sm bg-background"
-              />
-              <button
-                type="button"
-                onClick={() => removeRow(row.id)}
-                disabled={rows.length === 1}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              <div className="flex flex-col gap-1">
+                <Input
+                  placeholder="email@example.com"
+                  value={row.email}
+                  onChange={(e) => updateRow(row.id, 'email', e.target.value)}
+                  className={cn(
+                    emailErrors[row.id] ? 'border-destructive focus-visible:ring-destructive' : '',
+                  )}
+                />
+                {emailErrors[row.id] && (
+                  <span className="text-xs text-destructive">{emailErrors[row.id]}</span>
+                )}
+              </div>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => removeRow(row.id)}
+                  disabled={rows.length === 1}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           );
         })}
       </div>
-      <div className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-5 py-3">
-        <div className="flex items-center gap-2">
+
+      {/* Footer */}
+      <div className="flex items-center justify-between border-t border-border bg-muted/30 px-5 py-4">
+        <div className="flex items-center gap-2.5">
           <div
             className={cn(
-              'h-2 w-2 rounded-full transition-colors',
+              'h-2.5 w-2.5 rounded-full transition-colors',
               validRows.length > 0 ? 'bg-emerald-500' : 'bg-muted-foreground/30',
             )}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground tabular-nums">{validRows.length}</span>{' '}
             of <span className="tabular-nums">{rows.length}</span>{' '}
             {rows.length === 1 ? 'row' : 'rows'} valid
@@ -601,12 +625,12 @@ function AddManualTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
         </div>
         <Button
           onClick={handleSave}
-          disabled={validRows.length === 0 || isSaving}
-          className="h-8 min-w-[130px] text-sm font-medium"
+          disabled={validRows.length === 0 || mutation.isPending || hasEmailErrors}
+          className="min-w-[140px]"
         >
-          {isSaving ? (
+          {mutation.isPending ? (
             <span className="flex items-center gap-2">
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               Adding...
             </span>
           ) : (
@@ -639,7 +663,7 @@ const ADD_METHODS = [
       'Columns are mapped automatically',
       'Duplicates handled by the system',
     ],
-    stepColor: 'text-orange-500/70 dark:text-orange-400/60',
+    stepColor: 'text-orange-500/80 dark:text-orange-400/70',
     ctaColor: 'text-orange-500 group-hover:text-orange-600 dark:text-orange-400',
     supportText: 'Supports CSV · XLS · XLSX · up to 10 MB',
   },
@@ -661,7 +685,7 @@ const ADD_METHODS = [
       'Select one or multiple contacts',
       'Phone numbers imported instantly',
     ],
-    stepColor: 'text-sky-500/70 dark:text-sky-400/60',
+    stepColor: 'text-sky-500/80 dark:text-sky-400/70',
     ctaColor: 'text-sky-500 group-hover:text-sky-600 dark:text-sky-400',
     supportText: 'Requires active WhatsApp connection',
   },
@@ -683,7 +707,7 @@ const ADD_METHODS = [
       'Email address is optional',
       'Add as many rows as needed',
     ],
-    stepColor: 'text-emerald-500/70 dark:text-emerald-400/60',
+    stepColor: 'text-emerald-500/80 dark:text-emerald-400/70',
     ctaColor: 'text-emerald-500 group-hover:text-emerald-600 dark:text-emerald-400',
     supportText: 'Name and phone number required',
   },
@@ -695,15 +719,15 @@ function AddContactsMethodPicker({
   onSelect: (view: 'upload' | 'whatsapp' | 'manual') => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/8 border border-primary/15">
-          <Plus className="h-4 w-4 text-primary" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
+          <Plus className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Add New Contacts</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h2 className="text-base font-semibold text-foreground">Add New Contacts</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Choose an import method to get started
           </p>
         </div>
@@ -734,7 +758,7 @@ function AddContactsMethodPicker({
               type="button"
               onClick={() => onSelect(view)}
               className={cn(
-                'group relative flex flex-col rounded-xl border border-l-[3px] text-left overflow-hidden',
+                'group relative flex flex-col rounded-xl border border-l-4 text-left overflow-hidden',
                 'transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 cardBg,
                 border,
@@ -746,7 +770,7 @@ function AddContactsMethodPicker({
                 <div className="flex items-start justify-between gap-2">
                   <div
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-xl shrink-0',
+                      'flex h-11 w-11 items-center justify-center rounded-xl shrink-0',
                       iconBg,
                     )}
                   >
@@ -754,7 +778,7 @@ function AddContactsMethodPicker({
                   </div>
                   <span
                     className={cn(
-                      'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide mt-0.5',
+                      'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold mt-0.5',
                       badgeColor,
                     )}
                   >
@@ -765,34 +789,32 @@ function AddContactsMethodPicker({
                 {/* Title + description */}
                 <div>
                   <p className="text-sm font-semibold text-foreground">{label}</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">{desc}</p>
+                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
 
                 {/* Steps */}
-                <div className="space-y-2 border-t border-border/30 pt-3">
+                <div className="space-y-2.5 border-t border-border/30 pt-4">
                   {steps.map((step, i) => (
-                    <div key={step} className="flex items-start gap-2">
+                    <div key={step} className="flex items-start gap-2.5">
                       <span
                         className={cn(
-                          'mt-px text-[10px] font-bold tabular-nums w-3 shrink-0',
+                          'mt-px text-xs font-bold tabular-nums w-4 shrink-0',
                           stepColor,
                         )}
                       >
                         {i + 1}.
                       </span>
-                      <p className={cn('text-[11px] leading-relaxed', stepColor)}>{step}</p>
+                      <p className={cn('text-xs leading-relaxed', stepColor)}>{step}</p>
                     </div>
                   ))}
                 </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between border-t border-border/20 pt-3 mt-auto">
-                  <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                    {supportText}
-                  </p>
+                  <p className="text-xs text-muted-foreground/70 leading-relaxed">{supportText}</p>
                   <span
                     className={cn(
-                      'text-[11px] font-semibold transition-all duration-150 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5',
+                      'text-xs font-semibold transition-all duration-150 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5',
                       ctaColor,
                     )}
                   >
@@ -812,10 +834,16 @@ function AddContactsMethodPicker({
 
 export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
   const [addView, setAddView] = useState<'select' | 'upload' | 'whatsapp' | 'manual' | null>(null);
+  const [contactsAdded, setContactsAdded] = useState(false);
+
+  const handleAddSuccess = () => {
+    setContactsAdded(true);
+    setAddView(null);
+  };
 
   const { data: file, isLoading } = useQuery<FileDetailData>({
     queryKey: ['file', fileId, { page: 1, limit: 10 }],
-    queryFn: () => getFileById(fileId, 1, 10),
+    queryFn: () => fetchFileById(fileId, 1, 10),
     refetchOnWindowFocus: false,
   });
 
@@ -823,10 +851,7 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <div className="text-center">
-          <p className="text-sm font-medium">Loading file details</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Just a moment...</p>
-        </div>
+        <p className="text-sm text-muted-foreground">Loading…</p>
       </div>
     );
   }
@@ -834,8 +859,8 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
   if (!file) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-          <FileText className="h-8 w-8 text-muted-foreground" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+          <FileText className="h-7 w-7 text-muted-foreground" />
         </div>
         <div className="text-center">
           <h2 className="text-base font-semibold">File not found</h2>
@@ -844,9 +869,9 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link href="/files/list">
+          <Link href="/recipients/list">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to Files
+            Back to Recipients
           </Link>
         </Button>
       </div>
@@ -889,33 +914,36 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
 
   const statusConfig = getStatusConfig(file.status);
   const totalRecords = file.stats?.totalRecords ?? file.contents.meta.total;
+  const validRecords = file.stats ? file.stats.totalRecords - file.stats.totalInvalidRecords : null;
+  const invalidRecords = file.stats?.totalInvalidRecords ?? null;
 
   return (
     <div className="flex flex-1 flex-col gap-5 p-5 min-w-0">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            href="/files/list"
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-medium shrink-0"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Recipients
-          </Link>
-          <span className="text-border text-xs">/</span>
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
-            <h1 className="text-sm font-bold tracking-tight truncate max-w-48">{file.name}</h1>
-            <span
-              className={cn(
-                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0',
-                statusConfig.className,
-              )}
-            >
-              {statusConfig.label}
-            </span>
-            <div className="flex items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
+      {/* ── Header — back button + title + badge + actions ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-start gap-3">
+          <Button variant="outline" size="icon" asChild className="shrink-0 mt-0.5">
+            <Link href="/recipients/list">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl font-bold tracking-tight">{file.name}</h1>
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium shrink-0',
+                  statusConfig.className,
+                )}
+              >
+                {statusConfig.label}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
                 {new Date(file.createdAt).toLocaleDateString('en-IN', {
                   day: 'numeric',
                   month: 'short',
@@ -925,28 +953,46 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
               {file.source && (
                 <>
                   <span className="text-border">·</span>
-                  <span className="flex items-center gap-1">
-                    <Database className="h-3 w-3" />
+                  <span className="flex items-center gap-1.5">
+                    <Database className="h-3.5 w-3.5" />
                     {file.source}
                   </span>
                 </>
               )}
-              <span className="text-border">·</span>
-              <span className="flex items-center gap-1 font-medium text-foreground/70">
-                <FileText className="h-3 w-3" />
-                {totalRecords.toLocaleString()} {totalRecords === 1 ? 'contact' : 'contacts'}
-              </span>
+              {file.stats && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    {totalRecords.toLocaleString()} total
+                  </span>
+                  {validRecords !== null && (
+                    <>
+                      <span className="text-border">·</span>
+                      <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {validRecords.toLocaleString()} valid
+                      </span>
+                    </>
+                  )}
+                  {invalidRecords !== null && invalidRecords > 0 && (
+                    <>
+                      <span className="text-border">·</span>
+                      <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+                        <XCircle className="h-3.5 w-3.5" />
+                        {invalidRecords.toLocaleString()} invalid
+                      </span>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setAddView('select')}
-            className="h-8 text-xs font-medium"
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Button variant="outline" onClick={() => setAddView('select')}>
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Contacts
           </Button>
           <FileActions
@@ -958,89 +1004,23 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
         </div>
       </div>
 
-      {/* ── Stats bar ── */}
-      {file.stats && (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {[
-            {
-              label: 'Total',
-              value: file.stats.totalRecords,
-              icon: Users,
-              iconClass: 'text-blue-500',
-              iconBg: 'bg-blue-500/10',
-              border: 'border-border/50',
-            },
-            {
-              label: 'Valid',
-              value: file.stats.totalRecords - file.stats.totalInvalidRecords,
-              icon: CheckCircle2,
-              iconClass: 'text-emerald-500',
-              iconBg: 'bg-emerald-500/10',
-              border: 'border-emerald-200/60 dark:border-emerald-800/40',
-              textClass: 'text-emerald-700 dark:text-emerald-400',
-            },
-            {
-              label: 'Invalid',
-              value: file.stats.totalInvalidRecords,
-              icon: XCircle,
-              iconClass: 'text-red-500',
-              iconBg: 'bg-red-500/10',
-              border: 'border-red-200/60 dark:border-red-800/40',
-              textClass: file.stats.totalInvalidRecords > 0 ? 'text-red-600 dark:text-red-400' : '',
-            },
-            {
-              label: 'Excluded',
-              value: file.stats.excludedCount,
-              icon: MinusCircle,
-              iconClass: 'text-amber-500',
-              iconBg: 'bg-amber-500/10',
-              border: 'border-amber-200/60 dark:border-amber-800/40',
-              textClass: file.stats.excludedCount > 0 ? 'text-amber-600 dark:text-amber-400' : '',
-            },
-          ].map(({ label, value, icon: Icon, iconClass, iconBg, border, textClass }) => (
-            <div
-              key={label}
-              className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm ${border}`}
-            >
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-              >
-                <Icon className={`h-4 w-4 ${iconClass}`} />
-              </div>
-              <div>
-                <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/60">
-                  {label}
-                </p>
-                <p
-                  className={`text-[18px] font-bold leading-tight tabular-nums ${textClass ?? 'text-foreground'}`}
-                >
-                  {value.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* ── Contacts section ── */}
       <div>
-        {/* Add contacts flow */}
         {addView !== null && (
           <div className="space-y-4">
-            {/* Breadcrumb back nav */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setAddView(addView === 'select' ? null : 'select')}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
               >
-                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
                 {addView === 'select' ? 'Back to Contacts' : 'Change Method'}
               </button>
               {addView !== 'select' && (
                 <>
-                  <span className="text-border text-xs">/</span>
-                  <span className="text-xs font-semibold text-foreground">
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                  <span className="text-sm font-semibold text-foreground">
                     {addView === 'upload'
                       ? 'Upload CSV'
                       : addView === 'whatsapp'
@@ -1052,45 +1032,27 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
             </div>
 
             {addView === 'select' && <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />}
-            {addView === 'upload' && (
-              <AddUploadTab fileId={fileId} onSuccess={() => setAddView(null)} />
-            )}
+            {addView === 'upload' && <AddUploadTab fileId={fileId} onSuccess={handleAddSuccess} />}
             {addView === 'whatsapp' && (
-              <AddWhatsAppTab fileId={fileId} onSuccess={() => setAddView(null)} />
+              <AddWhatsAppTab fileId={fileId} onSuccess={handleAddSuccess} />
             )}
-            {addView === 'manual' && (
-              <AddManualTab fileId={fileId} onSuccess={() => setAddView(null)} />
-            )}
+            {addView === 'manual' && <AddManualTab fileId={fileId} onSuccess={handleAddSuccess} />}
           </div>
         )}
 
-        {/* Normal contacts / empty state */}
         {addView === null &&
-          (totalRecords === 0 ? (
+          (totalRecords === 0 && !contactsAdded ? (
             <AddContactsMethodPicker onSelect={(v) => setAddView(v)} />
           ) : (
-            <>
-              <div className="flex items-center justify-end mb-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setAddView('select')}
-                  className="h-8 text-xs font-medium"
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add Contacts
-                </Button>
-              </div>
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center p-10 text-sm text-muted-foreground">
-                    Loading contacts...
-                  </div>
-                }
-              >
-                <FileRecordsTable fileId={fileId} />
-              </Suspense>
-            </>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center p-10 text-sm text-muted-foreground">
+                  Loading contacts...
+                </div>
+              }
+            >
+              <FileRecordsTable fileId={fileId} />
+            </Suspense>
           ))}
       </div>
     </div>

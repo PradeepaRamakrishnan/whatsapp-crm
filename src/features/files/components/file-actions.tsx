@@ -78,7 +78,7 @@ export function FileActions({
       setShowDeleteDialog(false);
       onSuccess?.();
       if (redirectOnDelete) {
-        router.push('/files/list');
+        router.push('/recipients/list');
       }
     },
     onError: (error) => {

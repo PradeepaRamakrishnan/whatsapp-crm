@@ -2,7 +2,6 @@
 
 import dayjs from 'dayjs';
 import {
-  AlertCircle,
   CheckCircle2,
   Copy,
   Mail,
@@ -12,7 +11,6 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -67,26 +65,6 @@ export function FileRecordDetailsSheet({ record, onOpenChange }: FileRecordDetai
 
         {record && (
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 mt-4 pb-4">
-            {record.isExcluded && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Excluded Record</AlertTitle>
-                <AlertDescription className="space-y-3 mt-2">
-                  <p>This record has been excluded and will not be included in campaigns.</p>
-
-                  <Separator className="bg-destructive/20" />
-
-                  <div className="pt-1">
-                    <p className="font-semibold mb-1.5">Reason:</p>
-                    <p>
-                      This record has previously shown interest, indicated no interest, or entered
-                      the consent process in a previous campaign.
-                    </p>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div>
               <h4 className="my-6 text-sm font-bold text-muted-foreground  ">Campaign History</h4>
               {record.campaigns && record.campaigns.length > 0 ? (
