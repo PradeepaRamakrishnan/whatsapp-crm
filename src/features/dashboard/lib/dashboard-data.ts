@@ -1,6 +1,7 @@
 /** biome-ignore-all assist/source/organizeImports: <> */
 import {
   Briefcase,
+  CalendarClock,
   Instagram,
   LayoutDashboard,
   Mail,
@@ -39,6 +40,12 @@ export const dashboardData = {
             { title: 'Search & Add', url: '/business-leads/search' },
             { title: 'All Leads', url: '/business-leads/list' },
           ],
+        },
+        {
+          title: 'Schedulers',
+          url: '/leads/schedulers',
+          icon: CalendarClock,
+          items: [{ title: 'All Schedulers', url: '/leads/schedulers' }],
         },
       ],
     },
