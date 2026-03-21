@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: click handlers on card sections are intentional */
+/** biome-ignore-all lint/performance/noImgElement: <> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: click handlers on card sections are intentional */
 'use client';
 

@@ -66,7 +66,10 @@ export function NavUser({
       <SidebarMenu>
         <SidebarMenuItem>
           <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
-            <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            <div
+              className="shrink-0 animate-pulse rounded-lg bg-muted"
+              style={{ width: 32, height: 32 }}
+            />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{fullName}</span>
               <span className="truncate text-xs">{user.email}</span>
@@ -90,7 +93,10 @@ export function NavUser({
               />
             }
           >
-            <div className="h-8 w-8 rounded-lg overflow-hidden">
+            <div
+              className="shrink-0 overflow-hidden rounded-lg [&_svg]:!size-full"
+              style={{ width: 32, height: 32 }}
+            >
               <Avatar
                 size={32}
                 name={fullName}
@@ -112,7 +118,10 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <div className="h-8 w-8 rounded-lg overflow-hidden">
+                <div
+                  className="shrink-0 overflow-hidden rounded-lg [&_svg]:!size-full"
+                  style={{ width: 32, height: 32 }}
+                >
                   <Avatar
                     size={32}
                     name={fullName}
