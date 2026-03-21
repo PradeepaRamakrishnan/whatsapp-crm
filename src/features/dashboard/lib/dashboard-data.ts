@@ -51,7 +51,7 @@ export const dashboardData = {
           icon: Briefcase,
           items: [
             { title: 'All Campaigns', url: '/campaigns/list' },
-            { title: 'Recipients', url: '/files/list' },
+            { title: 'Recipients', url: '/recipients/list' },
           ],
         },
         {
@@ -101,11 +101,7 @@ export const dashboardData = {
           title: 'Settings',
           url: '/settings/financial-institutions',
           icon: Settings,
-          items: [
-            { title: 'Financial Institutions', url: '/settings/financial-institutions' },
-            { title: 'Campaign Templates', url: '/settings/campaign-templates' },
-            { title: 'NBFC', url: '/settings/nbfc' },
-          ],
+          items: [{ title: 'Campaign Templates', url: '/settings/campaign-templates' }],
         },
       ],
     },

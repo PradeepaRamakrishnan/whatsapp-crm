@@ -364,11 +364,9 @@ export function CampaignConversation({ campaignId, contactId }: CampaignConversa
 
         {activeTab === 'call' && (
           <Dialog open={isLogCallOpen} onOpenChange={setIsLogCallOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="ml-auto gap-2">
-                <Plus className="w-4 h-4" />
-                Log Call
-              </Button>
+            <DialogTrigger render={<Button size="sm" className="ml-auto gap-2" />}>
+              <Plus className="w-4 h-4" />
+              Log Call
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

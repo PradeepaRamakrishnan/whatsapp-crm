@@ -149,8 +149,10 @@ export const InterestedDetailsForm = () => {
               <Select
                 value={field.state.value}
                 onValueChange={(value) => {
-                  field.handleChange(value);
-                  field.handleBlur();
+                  if (value) {
+                    field.handleChange(value);
+                    field.handleBlur();
+                  }
                 }}
               >
                 <SelectTrigger id={field.name}>
@@ -254,8 +256,10 @@ export const InterestedDetailsForm = () => {
               <Select
                 value={field.state.value}
                 onValueChange={(value) => {
-                  field.handleChange(value);
-                  field.handleBlur();
+                  if (value) {
+                    field.handleChange(value);
+                    field.handleBlur();
+                  }
                 }}
               >
                 <SelectTrigger id={field.name}>

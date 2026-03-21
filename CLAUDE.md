@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Samatva CRM** is a Next.js 16 customer relationship management system for managing campaigns, leads, and file records. The application uses a microservices architecture with separate backend services for authentication, users, files, and campaigns.
+**Samatva CRM** is a Next.js 16 customer relationship management system for managing campaigns, leads, recipients, and messaging channels (WhatsApp, Instagram, Email). The application uses a microservices architecture.
 
 ### Tech Stack
 
@@ -15,7 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **Styling** | Tailwind CSS 4, shadcn/ui components |
 | **Linting** | Biome 2.3.11 |
 | **Compiler** | React Compiler (babel-plugin-react-compiler) |
-| **State Management** | TanStack Query v5 with persistence |
+| **Server State** | TanStack Query v5 with persistence |
+| **Client State** | Zustand (e.g., `useFileFilterStore`) |
 | **Forms** | TanStack Form with Zod validation |
 | **Tables** | TanStack Table |
 | **UI Components** | Radix UI primitives |
@@ -24,28 +25,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-**Package Manager**: This project uses `pnpm`. Install with `npm install -g pnpm` if needed.
+**Package Manager**: `pnpm`
 
-### Development
 ```bash
 pnpm dev          # Start development server on localhost:3000
 pnpm build        # Production build
 pnpm start        # Start production server
-```
-
-### Code Quality
-```bash
 pnpm lint         # Check code with Biome
 pnpm lint:fix     # Auto-fix issues with Biome
-pnpm type-check   # Check TypeScript types without emitting files
+pnpm type-check   # Check TypeScript types
+pnpm test                    # Run all tests once
+pnpm test:watch              # Watch mode
+pnpm test:ui                 # Visual UI for tests
+pnpm test:coverage           # Generate coverage report
+pnpm test -- path/to/file.test.ts  # Run a single test file
 ```
-
-### Git Hooks
-Pre-commit hook runs `lint-staged` which automatically formats and checks staged files with Biome.
 
 ## Environment Setup
 
-The application requires 6 microservices to run locally. Set environment variables in `.env`:
+The simplest config is a single base URL that auto-derives all service paths:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+```
+
+This resolves to `{BASE}/auth`, `{BASE}/users`, `{BASE}/files`, etc. via `src/lib/api-urls.ts`.
+
+Individual services can be overridden:
 
 ```env
 NEXT_PUBLIC_AUTH_API_URL=http://localhost:3001/auth
@@ -54,90 +60,109 @@ NEXT_PUBLIC_FILES_API_URL=http://localhost:3003/files
 NEXT_PUBLIC_CAMPAIGNS_API_URL=http://localhost:3004/campaigns
 NEXT_PUBLIC_SETTINGS_API_URL=http://localhost:3005/settings
 NEXT_PUBLIC_LEADS_API_URL=http://localhost:3006/leads
+NEXT_PUBLIC_WHATSAPP_API_URL=http://localhost:3007/business-whatsapp
+NEXT_PUBLIC_INSTAGRAM_API_URL=http://localhost:3008/instagram
+NEXT_PUBLIC_EMAIL_API_URL=http://localhost:3009/email-business
 ```
 
-For production builds, create `.env.production` with the actual service URLs (e.g., `https://api.example.com/auth`). This file is not in version control and must be provided during deployment.
+All `NEXT_PUBLIC_` variables are safe to expose to the browser. For production, create `.env.production` (not in repo).
 
-**Optional:**
-- `NEXT_PUBLIC_APP_URL` - Used for metadata base URL (defaults to `http://localhost:3000` if not set)
+**Optional:** `NEXT_PUBLIC_APP_URL` — used for metadata base URL.
 
-All variables use the `NEXT_PUBLIC_` prefix and are safe to expose to the browser.
+## Architecture
 
-### Testing
-```bash
-pnpm test                    # Run all tests once
-pnpm test:watch              # Watch mode (recommended for development)
-pnpm test:ui                 # Visual UI for tests
-pnpm test:coverage           # Generate coverage report
-pnpm test -- file.test.ts    # Run a single test file
+### Route Groups
+
+- `(auth)` — Authentication pages (login)
+- `(dashboard)` — Main app pages with sidebar navigation; includes recipients, campaigns, leads, business-leads, settings, email, instagram, phone, overview
+- `(leads)` — Public-facing lead capture forms
+- `(whatsapp)` — WhatsApp connection and template pages
+
+### Feature-Based Organization
+
+Code is organized in `src/features/`:
+
+| Feature | Purpose |
+|---------|---------|
+| **auth** | Login, token management, password change |
+| **campaigns** | Campaign CRUD and templates |
+| **dashboard** | Sidebar navigation and overview |
+| **files** | File/recipient list uploads and management |
+| **leads** | Lead tracking and follow-up |
+| **business-leads** | External business lead search |
+| **settings** | Campaign templates, NBFC, financial institutions |
+| **whatsapp** | WhatsApp channel integration |
+| **instagram** | Instagram account and inbox integration |
+| **email** | Email account and inbox integration |
+| **phone** | Phone channel service |
+
+Each feature contains: `components/`, `services/`, `types/`, `lib/`.
+
+### API Integration
+
+All service URLs are resolved through `src/lib/api-urls.ts` which exports `API_URLS`. It derives a base URL from `NEXT_PUBLIC_API_BASE_URL` (or falls back to stripping the path from `NEXT_PUBLIC_AUTH_API_URL`), then constructs each service URL as `{BASE}/{service}`.
+
+**Auth flow:** Authentication is cookie-based. All axios clients use `withCredentials: true` so the browser automatically sends the session cookie. Server Actions read cookies via `cookies()` from `next/headers` and forward them as a `Cookie` header to the backend. `src/proxy.ts` is the Next.js middleware file but currently passes all requests through without auth validation.
+
+### Files Feature: Server vs. Client Services
+
+The files feature has **two separate service files**:
+
+- `src/features/files/services/index.ts` — **Server Actions** (`'use server'`). Used in Server Components. Reads cookies via `next/headers` and passes them as `Cookie` header to the backend.
+- `src/features/files/services/client.ts` — **Client-side service**. Used in React Query hooks and Client Components. Uses `getAuthHeaders()` (localStorage JWT).
+
+Choose the right one based on where the call is made. Never import the server-action file from a Client Component.
+
+### State Management
+
+- **TanStack Query** — all server state; persistent cache via localStorage; stale time 60s; configured in `src/app/providers.tsx`
+- **Auth Context** (`src/context/auth-context.tsx`) — global current user state
+- **Zustand** — lightweight UI state (e.g., `useFileFilterStore` for recipient list filters)
+
+### Sheet/Modal Pattern
+
+When displaying detail views from table row clicks, use the shadcn `Sheet` component:
+
+```typescript
+const [selectedRecord, setSelectedRecord] = React.useState<RecordType | null>(null);
+
+<TableRow className="cursor-pointer" onClick={() => setSelectedRecord(row.original)}>
+
+<Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
+  <SheetContent className="flex flex-col sm:max-w-md">
+    <SheetHeader>...</SheetHeader>
+    {selectedRecord && (
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+        {/* Content */}
+      </div>
+    )}
+  </SheetContent>
+</Sheet>
 ```
+
+### Key Linting Rules
+
+- **No `console.log`** (error) — only `console.error`, `console.warn`, `console.info`, `console.assert` allowed
+- **No array index keys** in React (error)
+- Arrow functions enforced over function expressions
+- 2-space indent, 100-char line width, single quotes in TS, double quotes in JSX, semicolons always, trailing commas required
+- Biome auto-organizes imports on save
+
+### Component Library
+
+shadcn/ui (New York style) with components in `src/components/ui/` (excluded from Biome linting). Shared components in `src/components/shared/`. Path alias: `@/` → `src/`.
 
 ## Testing
 
-### Framework & Tools
+Uses **Vitest** + **Testing Library** + **jsdom**. Setup in `vitest.config.mts` and `vitest.setup.ts`.
 
-| Tool | Purpose |
-|------|---------|
-| **Vitest** | Test runner (fast, Vite-powered) |
-| **Testing Library** | React component testing utilities |
-| **jsdom** | Browser environment simulation |
-| **@vitest/ui** | Visual test interface |
-| **@vitest/coverage-v8** | Code coverage reports |
-
-### Configuration
-
-**vitest.config.mts:**
-- Uses `jsdom` environment for React testing
-- Configured with `@vitejs/plugin-react` for JSX support
-- Path aliases via `vite-tsconfig-paths` (supports `@/` imports)
-- Global test utilities enabled
-- Setup file: `vitest.setup.ts` (imports `@testing-library/jest-dom`)
-
-### Test Types
-
-1. **Unit Tests** - Pure functions, utilities, validation logic
-   - Example: `src/features/auth/lib/validation.test.ts`
-   - Tests Zod schemas for email/password validation
-   - Fast, isolated, no dependencies
-
-2. **Integration Tests** - API services with mocked HTTP calls
-   - Example: `src/features/auth/services/index.test.ts`
-   - Mocks axios using `vi.mock()`
-   - Tests login, getCurrentUser, logout flows
-   - Verifies error handling
-
-3. **Component Tests** - React components with user interactions
-   - Uses `@testing-library/react` for rendering
-   - Uses `@testing-library/user-event` for interactions
-   - Tests forms, validation, user workflows
-
-### Testing Patterns
-
-**Arrange-Act-Assert:**
 ```typescript
-it('should validate email correctly', () => {
-  // Arrange: Set up test data
-  const input = { email: 'test@example.com', password: 'pass123' };
-  
-  // Act: Execute the code
-  const result = loginSchema.safeParse(input);
-  
-  // Assert: Verify the outcome
-  expect(result.success).toBe(true);
-});
-```
-
-**Mocking Axios:**
-```typescript
+// Mocking axios
 vi.mock('axios', () => ({
-  default: Object.assign(vi.fn(), {
-    create: vi.fn(() => vi.fn()),
-  }),
+  default: Object.assign(vi.fn(), { create: vi.fn(() => vi.fn()) }),
 }));
-```
 
-**Testing Async Functions:**
-```typescript
+// Async test pattern
 it('should fetch user data', async () => {
   vi.mocked(axios).mockResolvedValueOnce({ data: mockUser });
   const result = await getCurrentUser();
@@ -145,227 +170,30 @@ it('should fetch user data', async () => {
 });
 ```
 
-### Test Coverage
+Current coverage: `src/features/auth/lib/validation.ts` and `src/features/auth/services/index.ts`. Tests are co-located with source files (`.test.ts` next to the file).
 
-Current coverage focuses on the **auth** feature:
-- ✅ `validation.ts` - Email/password validation schemas
-- ✅ `services/index.ts` - Login, getCurrentUser, logout APIs
-- 🚧 Component tests - Planned for login form
+## Known Tech Debt (Fix These)
 
-**Priority for new tests:**
-1. Files feature (validation, services)
-2. Campaigns feature (CRUD operations)
-3. Critical user flows (file upload, lead submission)
+- [ ] **`src/proxy.ts` is a no-op** — middleware just calls `NextResponse.next()`, no auth validation. Should enforce authentication and redirect unauthenticated users. Also rename to `src/middleware.ts` per Next.js conventions.
 
-### Best Practices
+- [ ] **localStorage token storage must be removed** — `src/features/auth/services/index.ts` saves access/refresh tokens to localStorage on login. `src/lib/auth-headers.ts` reads them back. Auth should be purely cookie-based (`withCredentials: true`). Removing requires fixing the two issues below first.
 
-- **Co-locate tests** - Place `.test.ts` files next to source files
-- **Descriptive names** - Use `it('should reject invalid email')` not `it('test1')`
-- **Test behavior, not implementation** - Focus on what code does, not how
-- **Mock external dependencies** - APIs, third-party libraries
-- **Don't mock everything** - Test real logic, mock only boundaries
-- **One assertion per test** - Makes failures easier to diagnose
+- [ ] **`src/features/whatsapp/services/index.ts` requires localStorage token** — uses raw `fetch` and throws `'App auth token missing'` if `localStorage.getItem('crm_access_token')` is empty. Must be migrated to cookie auth (`credentials: 'include'` only, remove the guard) or switched to axios.
 
-### Running Specific Tests
+- [ ] **`src/features/email/services/index.ts` requires localStorage token** — same problem as whatsapp: raw `fetch`, reads token from localStorage, sends `Authorization: Bearer <token>`. Needs migration to cookie auth.
 
-```bash
-# Run a single test file
-pnpm test -- src/features/auth/lib/validation.test.ts
+- [ ] **`ACCESS_TOKEN_KEY = 'crm_access_token'` duplicated in 4 files** — defined independently in `auth/services/index.ts`, `auth-headers.ts`, `whatsapp/services/index.ts`, `email/services/index.ts`. Should be one shared constant.
 
-# Run tests matching a pattern
-pnpm test -- validation
+- [ ] **`getAuthHeaders()` spread across 50+ call sites** — imported and spread in campaigns, settings, leads, business-leads, dashboard, and files/client services. Since those axios clients already use `withCredentials: true`, this is redundant. Once localStorage is removed, all these spreads become no-ops and the function + all imports should be deleted.
 
-# Run in watch mode for a specific file
-pnpm test:watch -- validation.test.ts
-```
+- [ ] **`deleteFile` uses `PATCH`, not `DELETE`** — `src/features/files/services/index.ts` `deleteFile()` sends `PATCH /{id}` with `{ active: false }`. Naming doesn't match HTTP method; either rename the function or use the correct verb.
 
-## Architecture
+- [ ] **`extractLoginPayload` handles too many response shapes** — the function in `auth/services/index.ts` has deeply nested fallbacks to cope with many different backend response structures. The backend response shape should be standardised so this complexity can be removed.
 
-### Route Groups
+- [ ] **Inconsistent HTTP client** — most features use axios, but `whatsapp` and `email` use raw `fetch`. Everything should use axios for consistent error handling, interceptors, and `withCredentials`.
 
-The application uses Next.js App Router with the following route group structure:
-
-- `(auth)` - Authentication pages (login) - minimal layout
-- `(dashboard)` - Main application pages with sidebar navigation
-- `(leads)` - Public-facing lead capture forms
-
-### Feature-Based Organization
-
-Code is organized by feature modules in `src/features/`:
-
-| Feature | Purpose |
-|---------|---------|
-| **auth** | Authentication, login, password management |
-| **campaigns** | Campaign management and templates |
-| **dashboard** | Sidebar navigation and dashboard layout |
-| **files** | File uploads, records management, pending files |
-| **leads** | Lead tracking and interested contacts |
-| **settings** | Campaign templates, NBFC, financial institutions |
-
-Each feature typically contains:
-- `components/` - React components specific to the feature
-- `services/` - API calls and data fetching (server actions for files)
-- `types/` - TypeScript type definitions
-- `lib/` - Utility functions and helpers
-
-### API Integration
-
-The app connects to **4 microservices** defined in `.env`:
-
-```
-NEXT_PUBLIC_AUTH_API_URL       # Authentication service
-NEXT_PUBLIC_USERS_API_URL      # User management service
-NEXT_PUBLIC_FILES_API_URL      # File upload/management service
-NEXT_PUBLIC_CAMPAIGNS_API_URL  # Campaign management service
-```
-
-**Authentication Flow:**
-- Middleware (`src/proxy.ts`) intercepts all routes
-- Validates session via `/me` endpoint on users service
-- Uses cookie-based authentication (`withCredentials: true`)
-- Public routes: `/interested`, `/interested-form`
-- Redirects unauthenticated users to `/login`
-- Redirects authenticated users away from `/login` to `/dashboard`
-
-### State Management
-
-**TanStack Query** handles all server state with:
-- Persistent cache using localStorage
-- Default stale time: 60 seconds
-- DevTools enabled in development
-- Client configured in `src/app/providers.tsx`
-
-**Auth Context** (`src/context/auth-context.tsx`) manages user authentication state globally.
-
-### Component Library
-
-Uses **shadcn/ui** (New York style) with:
-- Components in `src/components/ui/` (ignored by Biome linting)
-- Custom shared components in `src/components/shared/`
-- Theme provider with light/dark mode support
-- Path alias: `@/` maps to `src/`
-
-### Styling Guidelines
-
-From `biome.json`:
-- 2-space indentation
-- 100 character line width
-- Single quotes for JS/TS, double quotes for JSX
-- Semicolons always required
-- Trailing commas required
-- Arrow functions enforced over function expressions
-- Naming conventions: camelCase, PascalCase, CONSTANT_CASE, snake_case allowed
-
-### Key Linting Rules
-
-- **No console.log** (error) - only allow `console.error`, `console.warn`, `console.info`, `console.assert`
-- **No array index keys** in React (error)
-- **No unused imports/variables** (error)
-- **Exhaustive dependencies** in hooks (error)
-- Auto-organize imports on save
-
-### File Services Pattern
-
-Files feature uses **Next.js Server Actions** (marked with `'use server'`) instead of client-side API calls. This pattern passes cookies from server context.
-
-Example from `src/features/files/services/index.ts`:
-```typescript
-'use server';
-import { cookies } from 'next/headers';
-
-export async function getAllFiles(page: number, limit: number) {
-  const cookieStore = await cookies();
-  const response = await axiosClient({
-    headers: { Cookie: cookieStore.toString() }
-  });
-  return response.data;
-}
-```
-
-### Sheet/Modal Pattern
-
-When displaying detail views (e.g., clicking a table row to show record details), use the **shadcn Sheet** component with this pattern:
-
-```typescript
-// 1. State for selected item
-const [selectedRecord, setSelectedRecord] = React.useState<RecordType | null>(null);
-
-// 2. Table row click handler
-<TableRow
-  className="cursor-pointer"
-  onClick={() => setSelectedRecord(row.original)}
->
-
-// 3. Sheet component structure (scrollable)
-<Sheet open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
-  <SheetContent className="flex flex-col sm:max-w-md">
-    <SheetHeader>
-      <SheetTitle>Title</SheetTitle>
-      <SheetDescription>Description</SheetDescription>
-    </SheetHeader>
-
-    {selectedRecord && (
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
-        {/* Content here */}
-      </div>
-    )}
-  </SheetContent>
-</Sheet>
-```
-
-**Key points:**
-- `SheetContent` needs `flex flex-col` for proper layout
-- Content wrapper needs `flex-1 overflow-y-auto` for scrolling
-- Use `open={!!selectedRecord}` to control visibility
-- Reset state on close: `onOpenChange={(open) => !open && setSelectedRecord(null)}`
-
-### Middleware
-
-`src/proxy.ts` (should be `middleware.ts` per Next.js conventions) handles:
-- Authentication validation on every request
-- Public route exceptions
-- Auto-redirect logic for authenticated/unauthenticated users
-- TODO comment indicates future role-based access control planned
-
-## Development Workflow
-
-### Common Development Tasks
-
-**Debug a failing test:**
-```bash
-pnpm test:ui              # Visual test runner, easier to debug
-pnpm test:watch           # Re-run on file changes
-```
-
-**Check all code quality issues:**
-```bash
-pnpm lint && pnpm type-check    # Biome + TypeScript checks
-```
-
-**Fix formatting before commit:**
-```bash
-pnpm lint:fix             # Auto-fixes Biome issues
-```
-
-### Data Flow Patterns
-
-1. **Server Actions (Files feature)** - Use Next.js server actions with `'use server'` directive to handle file operations with cookie context
-2. **API Services (Other features)** - Standard axios clients for login, campaigns, leads, settings; services are client-side
-3. **State Management** - TanStack Query caches API responses; Auth Context manages current user state globally
-4. **Client-Side Validation** - Zod schemas validate forms before submission; server endpoints also validate
-
-### Debugging Tips
-
-- **Check auth issues**: Verify session via middleware (`src/proxy.ts`) and Auth Context state
-- **API connection problems**: Ensure `.env` contains correct microservice URLs and services are running on specified ports
-- **Styling issues**: Check Tailwind classes in Biome config (100 char line width, specific class formats)
-- **Type errors**: Run `pnpm type-check` to catch TypeScript issues before runtime
-- **Test failures**: Use `pnpm test:ui` for interactive debugging, check mock setup in test files
+- [ ] **`src/features/files/services/client.ts` comment is stale** — says "uses localStorage token via getAuthHeaders()" which will be wrong once localStorage is removed. Update the comment.
 
 ## Deployment
 
-GitLab CI/CD pipeline (`.gitlab-ci.yml`):
-1. **Build stage**: Copies production env, installs deps with pnpm, builds app
-2. **Deploy stage**: Copies artifacts to `/home/gitlab-runner/frontend/samatva-crm`, manages with PM2
-
-**Important**: Uses `.env.production` file copied from server during build (not in repo).
+GitLab CI/CD (`.gitlab-ci.yml`): copies `.env.production` from server, installs with pnpm, builds, deploys to `/home/gitlab-runner/frontend/samatva-crm`, managed with PM2.

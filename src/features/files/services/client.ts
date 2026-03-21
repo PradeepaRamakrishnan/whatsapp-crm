@@ -6,7 +6,7 @@
 import axios, { AxiosError } from 'axios';
 import { API_URLS } from '@/lib/api-urls';
 import { getAuthHeaders } from '@/lib/auth-headers';
-import type { FilesResponse } from '../types/file.types';
+import type { FileDetailData, FileRecord, FilesResponse } from '../types/file.types';
 
 const FILES_API_URL = API_URLS.files;
 
@@ -15,6 +15,82 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
   withCredentials: true,
 });
+
+export async function addContact(
+  fileId: string,
+  contact: {
+    customerName: string;
+    mobileNumber?: string;
+    emailId?: string;
+    additionalData?: Record<string, string | number>;
+  },
+): Promise<FileRecord> {
+  try {
+    const response = await client.post(`/${fileId}/contacts`, contact, {
+      headers: getAuthHeaders(),
+    });
+    return response.data?.data ?? response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to add contact');
+    }
+    throw error;
+  }
+}
+
+export async function fetchFileById(
+  fileId: string,
+  page: number,
+  limit: number,
+  filter?: string,
+): Promise<FileDetailData> {
+  try {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filter) params.append('filter', filter);
+
+    const response = await client.get(`/${fileId}?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+
+    return response.data?.data ?? response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch file');
+    }
+    throw error;
+  }
+}
+
+export async function deleteRecord(fileId: string, recordId: string): Promise<void> {
+  try {
+    await client.delete(`/${fileId}/contents/${recordId}`, {
+      headers: getAuthHeaders(),
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete record');
+    }
+    throw error;
+  }
+}
+
+export async function updateRecord(
+  fileId: string,
+  recordId: string,
+  data: Partial<FileRecord>,
+): Promise<FileRecord> {
+  try {
+    const response = await client.patch(`/${fileId}/contents/${recordId}`, data, {
+      headers: getAuthHeaders(),
+    });
+    return response.data?.data ?? response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to update record');
+    }
+    throw error;
+  }
+}
 
 export async function fetchFiles(
   page: number,

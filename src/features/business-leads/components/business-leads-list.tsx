@@ -85,11 +85,12 @@ function LeadActions({ lead }: { lead: BusinessLead }) {
   return (
     <>
       <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+        <DropdownMenuTrigger
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md p-0 hover:bg-muted"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
@@ -475,11 +476,9 @@ export function BusinessLeadsList() {
             </SelectContent>
           </Select>
 
-          <Button asChild size="sm" className="h-8">
-            <Link href="/business-leads/search">
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Add Leads
-            </Link>
+          <Button size="sm" className="h-8" render={<Link href="/business-leads/search" />}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Add Leads
           </Button>
         </div>
       </div>

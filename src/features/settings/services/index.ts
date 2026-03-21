@@ -2,13 +2,7 @@ import axios, { AxiosError } from 'axios';
 import type { Configuration, ConfigurationResponse } from '@/features/campaigns/types';
 import { API_URLS } from '@/lib/api-urls';
 import { getAuthHeaders } from '@/lib/auth-headers';
-import type {
-  FinancialInstitution,
-  FinancialInstitutionsResponse,
-  Template,
-  TemplatesResponse,
-  WhatsAppTemplatesResponse,
-} from '../types';
+import type { Template, TemplatesResponse, WhatsAppTemplatesResponse } from '../types';
 
 const SETTINGS_API_URL = API_URLS.settings;
 
@@ -20,96 +14,6 @@ const axiosClient = axios.create({
   },
   withCredentials: true,
 });
-
-export async function getAllFinancialInstitutions(
-  page: number,
-  limit: number,
-): Promise<FinancialInstitutionsResponse> {
-  try {
-    const response = await axiosClient({
-      method: 'GET',
-      url: `/financial-institutions?page=${page}&limit=${limit}`,
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(
-        error.response?.data?.message || 'Failed to fetch get all financial institutions',
-      );
-    }
-    throw error;
-  }
-}
-
-export async function getAllFinancialInstitutionsName(): Promise<FinancialInstitutionsResponse> {
-  try {
-    const response = await axiosClient({
-      method: 'GET',
-      url: `/financial-institutions/names/list`,
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(
-        error.response?.data?.message || 'Failed to fetch get all financial institutions',
-      );
-    }
-    throw error;
-  }
-}
-
-export async function createFinancialInstitution(
-  data: Record<string, unknown>,
-): Promise<FinancialInstitution> {
-  try {
-    const response = await axiosClient({
-      method: 'POST',
-      url: `/financial-institutions`,
-      data,
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to create financial institution');
-    }
-    throw error;
-  }
-}
-
-export async function updateFinancialInstitution(
-  id: string,
-  data: Record<string, unknown>,
-): Promise<FinancialInstitution> {
-  try {
-    const response = await axiosClient({
-      method: 'PATCH',
-      url: `/financial-institutions/${id}`,
-      data,
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || 'Failed to update financial institution');
-    }
-    throw error;
-  }
-}
 
 export async function getAllConfiguration(): Promise<ConfigurationResponse> {
   try {

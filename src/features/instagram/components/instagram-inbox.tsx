@@ -544,15 +544,17 @@ export function InstagramInbox() {
             <div className="p-4 bg-white border-t">
               <div className="flex items-end gap-3 max-w-4xl mx-auto border rounded-xl p-2 bg-zinc-50/50 shadow-inner focus-within:ring-2 focus-within:ring-purple-500/10 focus-within:border-purple-200 transition-all">
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-10 w-10 shrink-0 text-muted-foreground hover:text-purple-600 hover:bg-purple-50"
-                      title="Templates"
-                    >
-                      <FileText className="h-5 w-5" />
-                    </Button>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 text-muted-foreground hover:text-purple-600 hover:bg-purple-50"
+                        title="Templates"
+                      />
+                    }
+                  >
+                    <FileText className="h-5 w-5" />
                   </PopoverTrigger>
                   <PopoverContent
                     align="start"

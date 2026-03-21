@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  AlertCircle,
-  CheckCircle2,
-  Filter,
-  Loader2,
-  MinusCircle,
-  Search,
-  Users,
-  XCircle,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Filter, Loader2, Search, Users, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,20 +30,16 @@ type RecordSelectionTableProps = {
 
 export function RecordSelectionTable({ records, stats, isLoading }: RecordSelectionTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [amountFilter, setAmountFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [tempAmountFilter, setTempAmountFilter] = useState('all');
   const [tempStatusFilter, setTempStatusFilter] = useState('all');
 
   const handleEditSelection = () => {
-    setTempAmountFilter(amountFilter);
     setTempStatusFilter(statusFilter);
     setIsEditDialogOpen(true);
   };
 
   const handleApplyFilters = () => {
-    setAmountFilter(tempAmountFilter);
     setStatusFilter(tempStatusFilter);
     setIsEditDialogOpen(false);
   };
@@ -62,24 +49,13 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
       if (searchQuery && !r.customerName.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      if (amountFilter !== 'all') {
-        if (amountFilter.endsWith('+')) {
-          if (r.settlementAmount < Number(amountFilter.replace('+', ''))) return false;
-        } else {
-          const [minStr, maxStr] = amountFilter.split('-');
-          const min = Number(minStr);
-          const max = Number(maxStr);
-          if (r.settlementAmount < min || r.settlementAmount > max) return false;
-        }
-      }
-      if (statusFilter === 'valid' && (!r.isValid || r.isExcluded)) return false;
+      if (statusFilter === 'valid' && !r.isValid) return false;
       if (statusFilter === 'invalid' && r.isValid) return false;
-      if (statusFilter === 'excluded' && !r.isExcluded) return false;
       return true;
     });
-  }, [records, searchQuery, amountFilter, statusFilter]);
+  }, [records, searchQuery, statusFilter]);
 
-  const validCount = records.filter((r) => r.isValid && !r.isExcluded).length;
+  const validCount = records.filter((r) => r.isValid).length;
 
   if (isLoading) {
     return (
@@ -90,8 +66,7 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
     );
   }
 
-  const hasActiveFilters =
-    amountFilter !== 'all' || statusFilter !== 'all' || searchQuery.length > 0;
+  const hasActiveFilters = statusFilter !== 'all' || searchQuery.length > 0;
 
   return (
     <>
@@ -134,20 +109,6 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
               </p>
               <p className="text-[14px] font-bold leading-tight text-red-600 dark:text-red-400">
                 {stats.totalInvalidRecords.toLocaleString()}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 rounded-lg border border-amber-200/60 bg-amber-50/50 px-3 py-2.5 dark:border-amber-800/40 dark:bg-amber-950/20">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/10">
-              <MinusCircle className="h-3.5 w-3.5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-medium text-amber-600/70 dark:text-amber-400/60">
-                Excluded
-              </p>
-              <p className="text-[14px] font-bold leading-tight text-amber-600 dark:text-amber-400">
-                {stats.excludedCount.toLocaleString()}
               </p>
             </div>
           </div>
@@ -197,7 +158,6 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
                   className="mt-1 h-7 text-[11px]"
                   onClick={() => {
                     setSearchQuery('');
-                    setAmountFilter('all');
                     setStatusFilter('all');
                   }}
                 >
@@ -220,9 +180,6 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
                       <th className="hidden px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
                         Email
                       </th>
-                      <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                        Amount
-                      </th>
                       <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                         Status
                       </th>
@@ -243,16 +200,8 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
                         <td className="hidden px-3 py-2 text-[11px] text-muted-foreground sm:table-cell">
                           {record.emailId || <span className="text-muted-foreground/30">—</span>}
                         </td>
-                        <td className="px-3 py-2 text-right text-[12px] font-semibold">
-                          ₹{record.settlementAmount.toLocaleString('en-IN')}
-                        </td>
                         <td className="px-3 py-2 text-center">
-                          {record.isExcluded ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-                              <MinusCircle className="h-2.5 w-2.5" />
-                              Excluded
-                            </span>
-                          ) : record.isValid ? (
+                          {record.isValid ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                               <CheckCircle2 className="h-2.5 w-2.5" />
                               Valid
@@ -293,28 +242,10 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="amount-filter" className="text-[12px] font-semibold">
-                Settlement Amount
-              </Label>
-              <Select value={tempAmountFilter} onValueChange={setTempAmountFilter}>
-                <SelectTrigger id="amount-filter" className="h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Amounts</SelectItem>
-                  <SelectItem value="0-25000">Below ₹25,000</SelectItem>
-                  <SelectItem value="25000-50000">₹25,000 – ₹50,000</SelectItem>
-                  <SelectItem value="50000-100000">₹50,000 – ₹1,00,000</SelectItem>
-                  <SelectItem value="100000+">Above ₹1,00,000</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
               <Label htmlFor="status-filter" className="text-[12px] font-semibold">
                 Record Status
               </Label>
-              <Select value={tempStatusFilter} onValueChange={setTempStatusFilter}>
+              <Select value={tempStatusFilter} onValueChange={(v) => v && setTempStatusFilter(v)}>
                 <SelectTrigger id="status-filter" className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -322,7 +253,6 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
                   <SelectItem value="all">All Records</SelectItem>
                   <SelectItem value="valid">Valid only</SelectItem>
                   <SelectItem value="invalid">Invalid only</SelectItem>
-                  <SelectItem value="excluded">Excluded only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -334,7 +264,6 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
               size="sm"
               className="text-xs"
               onClick={() => {
-                setTempAmountFilter('all');
                 setTempStatusFilter('all');
               }}
             >

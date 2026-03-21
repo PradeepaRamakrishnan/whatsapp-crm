@@ -129,8 +129,8 @@ export function CampaignContactsTable({ campaignId, campaignStatus }: CampaignCo
     updateParams({ page: newPage });
   };
 
-  const handlePageSizeChange = (newPageSize: string) => {
-    updateParams({ page: 1, pageSize: Number(newPageSize) });
+  const handlePageSizeChange = (newPageSize: string | null) => {
+    if (newPageSize) updateParams({ page: 1, pageSize: Number(newPageSize) });
   };
 
   if (isLoading) {

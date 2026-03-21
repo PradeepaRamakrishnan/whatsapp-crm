@@ -15,17 +15,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { updateFileRecord } from '../services';
+import { updateRecord } from '../services/client';
 import type { FileRecord } from '../types/file.types';
 
 const recordSchema = z.object({
   customerName: z.string().min(2, 'Name must be at least 2 characters'),
-  emailId: z.string().email('Invalid email address').or(z.literal('')),
-  mobileNumber: z.string().min(10, 'Mobile number must be at least 10 digits'),
-  settlementAmount: z.preprocess(
-    (val) => Number(val),
-    z.number().min(0, 'Amount must be a positive number'),
-  ),
+  emailId: z.string().email('Invalid email address').or(z.literal('')).nullable(),
+  mobileNumber: z.string().min(10, 'Mobile number must be at least 10 digits').nullable(),
 });
 
 interface FileRecordEditProps {
@@ -40,7 +36,7 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
   const updateMutation = useMutation({
     mutationFn: (values: z.infer<typeof recordSchema>) => {
       if (!record) throw new Error('No record selected');
-      return updateFileRecord(fileId, record.id, values);
+      return updateRecord(fileId, record.id, values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['file', fileId] });
@@ -55,9 +51,8 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
   const form = useForm({
     defaultValues: {
       customerName: record?.customerName || '',
-      emailId: record?.emailId || '',
-      mobileNumber: record?.mobileNumber || '',
-      settlementAmount: record?.settlementAmount || 0,
+      emailId: record?.emailId ?? '',
+      mobileNumber: record?.mobileNumber ?? '',
     },
     onSubmit: async ({ value }) => {
       updateMutation.mutate(value);
@@ -155,34 +150,6 @@ export function FileRecordEdit({ fileId, record, onOpenChange }: FileRecordEditP
                   placeholder="Enter mobile number"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  className="h-10"
-                />
-                <FieldError>{field.state.meta.errors[0]}</FieldError>
-              </Field>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="settlementAmount"
-            validators={{
-              onChange: ({ value }) => {
-                const result = recordSchema.shape.settlementAmount.safeParse(value);
-                return result.success ? undefined : result.error.errors[0].message;
-              },
-            }}
-          >
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor="settlementAmount" className="text-sm font-semibold mb-1.5">
-                  Settlement Amount
-                </FieldLabel>
-                <Input
-                  id="settlementAmount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(Number(e.target.value))}
                   onBlur={field.handleBlur}
                   className="h-10"
                 />

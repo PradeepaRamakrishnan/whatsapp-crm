@@ -1,9 +1,9 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { MoonIcon, SunIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useTheme } from 'next-themes';
 
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +16,20 @@ export function ThemeModeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+      <DropdownMenuTrigger
+        className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline-none"
+        aria-label="Toggle theme"
+      >
+        <HugeiconsIcon
+          icon={SunIcon}
+          size={16}
+          className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90 dark:hidden"
+        />
+        <HugeiconsIcon
+          icon={MoonIcon}
+          size={16}
+          className="hidden scale-0 rotate-90 transition-all dark:block dark:scale-100 dark:rotate-0"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')}>Light</DropdownMenuItem>

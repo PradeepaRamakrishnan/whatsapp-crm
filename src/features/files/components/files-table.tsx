@@ -252,7 +252,7 @@ export function FilesTable() {
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
             <SelectTrigger size="sm" className="w-[155px]">
               <SelectValue placeholder="All status" />
             </SelectTrigger>
@@ -316,7 +316,7 @@ export function FilesTable() {
                     key={row.id}
                     onClick={() =>
                       router.push(
-                        `/files/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
+                        `/recipients/${slugify(row.original.name, { lower: true })}/${row.original.id}`,
                       )
                     }
                     className="cursor-pointer hover:bg-muted/50"
