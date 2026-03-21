@@ -146,7 +146,7 @@ export function EmailInbox() {
             <Select
               value={selectedAccount}
               onValueChange={(v) => {
-                setSelectedAccount(v);
+                if (v) setSelectedAccount(v);
                 setSelectedContact(null);
               }}
             >

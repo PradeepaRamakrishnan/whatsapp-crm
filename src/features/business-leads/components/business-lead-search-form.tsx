@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: click handlers on card sections are intentional */
+/** biome-ignore-all lint/performance/noImgElement: <> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: click handlers on card sections are intentional */
 'use client';
 
@@ -256,7 +257,9 @@ export function BusinessLeadSearchForm() {
                     <FieldLabel>Country (optional)</FieldLabel>
                     <Select
                       value={field.state.value}
-                      onValueChange={(v) => field.handleChange(v === '__none__' ? '' : v)}
+                      onValueChange={(v) =>
+                        field.handleChange((v ?? '') === '__none__' ? '' : (v ?? ''))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select country..." />

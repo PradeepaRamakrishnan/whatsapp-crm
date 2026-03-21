@@ -185,31 +185,34 @@ export const InterestedForm = () => {
                     Date of Birth <span className="ml-0.5 text-destructive">*</span>
                   </FieldLabel>
                   <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal h-10',
-                          !field.state.value && 'text-muted-foreground',
-                          field.state.meta.errors.length > 0 &&
-                            field.state.meta.isTouched &&
-                            'border-destructive focus-visible:ring-destructive',
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.state.value ? (
-                          dayjs(field.state.value).format('MMMM D, YYYY')
-                        ) : (
-                          <span>Select date</span>
-                        )}
-                      </Button>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal h-10',
+                            !field.state.value && 'text-muted-foreground',
+                            field.state.meta.errors.length > 0 &&
+                              field.state.meta.isTouched &&
+                              'border-destructive focus-visible:ring-destructive',
+                          )}
+                        />
+                      }
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.state.value ? (
+                        dayjs(field.state.value).format('MMMM D, YYYY')
+                      ) : (
+                        <span>Select date</span>
+                      )}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <div className="flex items-center gap-2 p-3 border-b">
                         <Select
                           value={String(calendarMonth.getMonth())}
                           onValueChange={(value) => {
+                            if (!value) return;
                             const newMonth = new Date(calendarMonth);
                             newMonth.setMonth(Number.parseInt(value, 10));
                             setCalendarMonth(newMonth);
@@ -229,6 +232,7 @@ export const InterestedForm = () => {
                         <Select
                           value={String(calendarMonth.getFullYear())}
                           onValueChange={(value) => {
+                            if (!value) return;
                             const newMonth = new Date(calendarMonth);
                             newMonth.setFullYear(Number.parseInt(value, 10));
                             setCalendarMonth(newMonth);

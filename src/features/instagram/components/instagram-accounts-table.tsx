@@ -5,7 +5,6 @@ import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tan
 import { format } from 'date-fns';
 import { CheckCircle, Loader2, MoreHorizontal, RefreshCw, WifiOff, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,15 +71,16 @@ function ActionCell({ account }: { account: InstagramAccount }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isActionLoading}>
-          {isActionLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <MoreHorizontal className="h-4 w-4" />
-          )}
-          <span className="sr-only">Open menu</span>
-        </Button>
+      <DropdownMenuTrigger
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md p-0 hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+        disabled={isActionLoading}
+      >
+        {isActionLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <MoreHorizontal className="h-4 w-4" />
+        )}
+        <span className="sr-only">Open menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>

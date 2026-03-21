@@ -26,14 +26,10 @@ export const LoginForm = () => {
         router.replace('/dashboard');
       } catch (error) {
         if (error instanceof Error) {
-          toast.error(error.message, {
-            id: 'login',
-          });
+          toast.error(error.message, { id: 'login' });
           return;
         }
-        toast.error(`${error}`, {
-          id: 'login',
-        });
+        toast.error(`${error}`, { id: 'login' });
       }
     },
   });
@@ -45,7 +41,7 @@ export const LoginForm = () => {
         form.handleSubmit();
         return false;
       }}
-      className="space-y-4"
+      className="space-y-5"
     >
       <form.Field
         name="email"
@@ -57,8 +53,10 @@ export const LoginForm = () => {
         }}
       >
         {(field) => (
-          <Field data-invalid={field.state.meta.errors.length > 0}>
-            <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+          <Field data-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}>
+            <FieldLabel htmlFor={field.name} className="text-foreground">
+              Email address
+            </FieldLabel>
             <Input
               id={field.name}
               name={field.name}
@@ -68,6 +66,7 @@ export const LoginForm = () => {
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
+              className="h-11 px-4 py-3 text-sm"
             />
             <FieldError>
               {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -88,8 +87,10 @@ export const LoginForm = () => {
         }}
       >
         {(field) => (
-          <Field data-invalid={field.state.meta.errors.length > 0}>
-            <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+          <Field data-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}>
+            <FieldLabel htmlFor={field.name} className="text-foreground">
+              Password
+            </FieldLabel>
             <Input
               id={field.name}
               name={field.name}
@@ -99,6 +100,7 @@ export const LoginForm = () => {
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
+              className="h-11 px-4 py-3 text-sm"
             />
             <FieldError>
               {field.state.meta.isTouched && field.state.meta.errors.length > 0
@@ -109,8 +111,12 @@ export const LoginForm = () => {
         )}
       </form.Field>
 
-      <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-        {form.state.isSubmitting ? 'Signing in...' : 'Sign In'}
+      <Button
+        type="submit"
+        disabled={form.state.isSubmitting}
+        className="mt-2 h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+      >
+        {form.state.isSubmitting ? 'Signing in...' : 'Sign In →'}
       </Button>
     </form>
   );

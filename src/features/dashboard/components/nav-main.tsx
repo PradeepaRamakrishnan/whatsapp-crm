@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -43,6 +43,7 @@ function NavGroupSection({
   openItems: Set<string>;
   onToggle: (title: string, isOpen: boolean) => void;
 }) {
+  const router = useRouter();
   return (
     <SidebarGroup>
       {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
@@ -58,47 +59,48 @@ function NavGroupSection({
           if (!hasSubItems) {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                  <a href={item.url}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                  </a>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  isActive={isActive}
+                  onClick={() => router.push(item.url)}
+                >
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           }
 
           return (
-            <Collapsible
-              key={item.title}
-              asChild
-              open={openItems.has(item.title)}
-              onOpenChange={(isOpen) => onToggle(item.title, isOpen)}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title} isActive={isActive}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
+            <SidebarMenuItem key={item.title}>
+              <Collapsible
+                open={openItems.has(item.title)}
+                onOpenChange={(isOpen) => onToggle(item.title, isOpen)}
+                className="group/collapsible w-full"
+              >
+                <CollapsibleTrigger
+                  render={<SidebarMenuButton tooltip={item.title} isActive={isActive} />}
+                >
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild isActive={subItem.url === pathname}>
-                          <a href={subItem.url}>
-                            <span>{subItem.title}</span>
-                          </a>
+                        <SidebarMenuSubButton
+                          isActive={subItem.url === pathname}
+                          onClick={() => router.push(subItem.url)}
+                        >
+                          <span>{subItem.title}</span>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+              </Collapsible>
+            </SidebarMenuItem>
           );
         })}
       </SidebarMenu>

@@ -313,7 +313,7 @@ export function AddComplianceSheet({
                 </Label>
                 <Select
                   value={formData.phone}
-                  onValueChange={(val) => setFormData({ ...formData, phone: val })}
+                  onValueChange={(val) => val && setFormData({ ...formData, phone: val })}
                   disabled={isNumbersLoading}
                 >
                   <SelectTrigger className="border-slate-300 h-11 rounded-lg bg-slate-50/50">

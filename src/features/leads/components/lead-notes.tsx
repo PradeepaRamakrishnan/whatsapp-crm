@@ -97,11 +97,16 @@ export function LeadNotes({ leadId, initialNotes, timeline }: LeadNotesProps) {
           </p>
         </div>
         <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2 h-9 px-4 rounded-lg shadow-sm font-bold text-[11px]">
-              <Plus className="w-4 h-4" />
-              Add Note
-            </Button>
+          <DialogTrigger
+            render={
+              <Button
+                size="sm"
+                className="gap-2 h-9 px-4 rounded-lg shadow-sm font-bold text-[11px]"
+              />
+            }
+          >
+            <Plus className="w-4 h-4" />
+            Add Note
           </DialogTrigger>
           <DialogContent className="max-w-[450px] rounded-xl">
             <DialogHeader>

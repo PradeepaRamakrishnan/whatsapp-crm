@@ -39,8 +39,6 @@ const SUB_LABELS: Record<string, string> = {
   accounts: 'Accounts',
   inbox: 'Inbox',
   'campaign-templates': 'Campaign Templates',
-  'financial-institutions': 'Financial Institutions',
-  nbfc: 'NBFC',
 };
 
 export function DynamicBreadcrumb() {
@@ -95,8 +93,8 @@ export function DynamicBreadcrumb() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/recipients/list">{sectionLabel}</Link>
+            <BreadcrumbLink render={<Link href="/recipients/list" />}>
+              {sectionLabel}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -126,9 +124,7 @@ export function DynamicBreadcrumb() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href={listPath}>{sectionLabel}</Link>
-            </BreadcrumbLink>
+            <BreadcrumbLink render={<Link href={listPath} />}>{sectionLabel}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

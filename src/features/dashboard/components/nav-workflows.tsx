@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -29,6 +29,7 @@ export function NavWorkflows({
   }[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Find which workflow contains the active path
   const getActiveWorkflow = useCallback(() => {
@@ -67,53 +68,54 @@ export function NavWorkflows({
           if (!hasSubItems) {
             return (
               <SidebarMenuItem key={workflow.name}>
-                <SidebarMenuButton asChild tooltip={workflow.name} isActive={isActive}>
-                  <a href={workflow.url}>
-                    {workflow.icon && <workflow.icon />}
-                    <span>{workflow.name}</span>
-                  </a>
+                <SidebarMenuButton
+                  tooltip={workflow.name}
+                  isActive={isActive}
+                  onClick={() => router.push(workflow.url)}
+                >
+                  {workflow.icon && <workflow.icon />}
+                  <span>{workflow.name}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           }
 
           return (
-            <Collapsible
-              key={workflow.name}
-              asChild
-              open={openWorkflow === workflow.name}
-              onOpenChange={(isOpen) => {
-                setOpenWorkflow(isOpen ? workflow.name : null);
-              }}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={workflow.name} isActive={isActive}>
-                    {workflow.icon && <workflow.icon />}
-                    <span>{workflow.name}</span>
-                    {workflow.items && workflow.items.length > 0 && (
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    )}
-                  </SidebarMenuButton>
+            <SidebarMenuItem key={workflow.name}>
+              <Collapsible
+                open={openWorkflow === workflow.name}
+                onOpenChange={(isOpen) => {
+                  setOpenWorkflow(isOpen ? workflow.name : null);
+                }}
+                className="group/collapsible w-full"
+              >
+                <CollapsibleTrigger
+                  render={<SidebarMenuButton tooltip={workflow.name} isActive={isActive} />}
+                >
+                  {workflow.icon && <workflow.icon />}
+                  <span>{workflow.name}</span>
+                  {workflow.items && workflow.items.length > 0 && (
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  )}
                 </CollapsibleTrigger>
                 {workflow.items && workflow.items.length > 0 && (
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {workflow.items.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild isActive={subItem.url === pathname}>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
+                          <SidebarMenuSubButton
+                            isActive={subItem.url === pathname}
+                            onClick={() => router.push(subItem.url)}
+                          >
+                            <span>{subItem.title}</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 )}
-              </SidebarMenuItem>
-            </Collapsible>
+              </Collapsible>
+            </SidebarMenuItem>
           );
         })}
       </SidebarMenu>

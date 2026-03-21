@@ -66,7 +66,10 @@ export function NavUser({
       <SidebarMenu>
         <SidebarMenuItem>
           <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
-            <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            <div
+              className="shrink-0 animate-pulse rounded-lg bg-muted"
+              style={{ width: 32, height: 32 }}
+            />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{fullName}</span>
               <span className="truncate text-xs">{user.email}</span>
@@ -82,25 +85,30 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <div
+              className="shrink-0 overflow-hidden rounded-lg [&_svg]:!size-full"
+              style={{ width: 32, height: 32 }}
             >
-              <div className="h-8 w-8 rounded-lg overflow-hidden">
-                <Avatar
-                  size={32}
-                  name={fullName}
-                  variant="beam"
-                  colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
-                />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{fullName}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+              <Avatar
+                size={32}
+                name={fullName}
+                variant="beam"
+                colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+              />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{fullName}</span>
+              <span className="truncate text-xs">{user.email}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -108,22 +116,27 @@ export function NavUser({
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <div className="h-8 w-8 rounded-lg overflow-hidden">
-                  <Avatar
-                    size={32}
-                    name={fullName}
-                    variant="beam"
-                    colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
-                  />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <div
+                    className="shrink-0 overflow-hidden rounded-lg [&_svg]:!size-full"
+                    style={{ width: 32, height: 32 }}
+                  >
+                    <Avatar
+                      size={32}
+                      name={fullName}
+                      variant="beam"
+                      colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                    />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{fullName}</span>
+                    <span className="truncate text-xs">{user.email}</span>
+                  </div>
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{fullName}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>

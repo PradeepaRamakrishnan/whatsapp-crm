@@ -164,7 +164,7 @@ const Channel = ({
 
               <Field>
                 <FieldLabel>Frequency</FieldLabel>
-                <Select value={frequency} onValueChange={setFrequency}>
+                <Select value={frequency} onValueChange={(v) => v && setFrequency(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>

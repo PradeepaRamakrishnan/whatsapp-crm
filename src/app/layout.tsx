@@ -2,14 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import NextTopLoader from 'nextjs-toploader';
+import { cn } from '@/lib/utils';
 import Providers from './providers';
 
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: {
@@ -72,7 +68,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn('font-sans', 'font-sans', 'font-sans', inter.variable)}
+    >
       <body className={`${inter.variable} antialiased`}>
         <Providers>
           <NextTopLoader />

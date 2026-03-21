@@ -22,7 +22,7 @@ import {
 import Link from 'next/link';
 import { Suspense, useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { getAllAccounts, getUniqueConversations } from '@/features/whatsapp/services';
@@ -141,24 +141,26 @@ function AddUploadTab({ fileId, onSuccess }: { fileId: string; onSuccess: () => 
                       Supports CSV, XLS, XLSX · Up to 10 MB per file
                     </p>
                   </div>
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <label htmlFor="add-file-input" className="cursor-pointer">
-                      Browse Files
-                      <input
-                        id="add-file-input"
-                        type="file"
-                        className="hidden"
-                        multiple
-                        accept=".csv,.xlsx,.xls"
-                        onChange={(e) => {
-                          if (e.target.files?.length) {
-                            setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])]);
-                            setFileError('');
-                          }
-                        }}
-                      />
-                    </label>
-                  </Button>
+                  <label
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'cursor-pointer',
+                    )}
+                  >
+                    Browse Files
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(e) => {
+                        if (e.target.files?.length) {
+                          setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])]);
+                          setFileError('');
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
               </label>
               {files.length > 0 && (
@@ -868,11 +870,9 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
             This file doesn't exist or has been removed.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/recipients/list">
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to Recipients
-          </Link>
+        <Button variant="outline" size="sm" render={<Link href="/recipients/list" />}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
+          Back to Recipients
         </Button>
       </div>
     );
@@ -922,10 +922,13 @@ export function FileDetailsPage({ fileId }: FileDetailsPageProps) {
       {/* ── Header — back button + title + badge + actions ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3">
-          <Button variant="outline" size="icon" asChild className="shrink-0 mt-0.5">
-            <Link href="/recipients/list">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0 mt-0.5"
+            render={<Link href="/recipients/list" />}
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Button>
 
           <div className="space-y-1">
