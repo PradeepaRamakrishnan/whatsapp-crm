@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import slugify from 'slugify';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -159,23 +159,26 @@ function UploadTab({
                       Supports CSV, XLS, XLSX — up to 10 MB
                     </p>
                   </div>
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <label className="cursor-pointer">
-                      Browse Files
-                      <input
-                        type="file"
-                        className="hidden"
-                        multiple
-                        accept=".csv,.xlsx,.xls"
-                        onChange={(e) => {
-                          if (e.target.files?.length) {
-                            setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])]);
-                            setErrors((prev) => ({ ...prev, files: '' }));
-                          }
-                        }}
-                      />
-                    </label>
-                  </Button>
+                  <label
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'cursor-pointer',
+                    )}
+                  >
+                    Browse Files
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(e) => {
+                        if (e.target.files?.length) {
+                          setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])]);
+                          setErrors((prev) => ({ ...prev, files: '' }));
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
               </section>
 

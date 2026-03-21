@@ -123,7 +123,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
             <SelectTrigger className="w-[160px] h-10 bg-muted/50 border-none">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
@@ -137,7 +137,7 @@ export function InstagramTemplatesList({ accounts }: InstagramTemplatesListProps
           </Select>
 
           {accounts.length > 1 && (
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+            <Select value={selectedAccountId} onValueChange={(v) => v && setSelectedAccountId(v)}>
               <SelectTrigger className="w-[200px] h-10 bg-muted/50 border-none">
                 <SelectValue placeholder="Select Account" />
               </SelectTrigger>

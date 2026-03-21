@@ -862,7 +862,8 @@ export function CreateCampaignForm() {
                               <FieldLabel>Channel</FieldLabel>
                               <Select
                                 value={s.channel}
-                                onValueChange={(val: CampaignSequenceStep['channel']) =>
+                                onValueChange={(val: CampaignSequenceStep['channel'] | null) =>
+                                  val &&
                                   updateSeqStep(s.id, {
                                     channel: val,
                                     templateId: '',
@@ -907,8 +908,8 @@ export function CreateCampaignForm() {
                                 <FieldLabel>Action Type</FieldLabel>
                                 <Select
                                   value={s.manualAction ?? 'call'}
-                                  onValueChange={(val: ManualAction) =>
-                                    updateSeqStep(s.id, { manualAction: val })
+                                  onValueChange={(val: ManualAction | null) =>
+                                    val && updateSeqStep(s.id, { manualAction: val })
                                   }
                                 >
                                   <SelectTrigger className="h-9 text-sm">
@@ -927,7 +928,9 @@ export function CreateCampaignForm() {
                                 <FieldLabel>Template</FieldLabel>
                                 <Select
                                   value={s.templateId}
-                                  onValueChange={(val) => updateSeqStep(s.id, { templateId: val })}
+                                  onValueChange={(val) =>
+                                    updateSeqStep(s.id, { templateId: val ?? '' })
+                                  }
                                   disabled={tplLoading}
                                 >
                                   <SelectTrigger className="h-9 text-sm">
@@ -971,9 +974,9 @@ export function CreateCampaignForm() {
                                   />
                                   <Select
                                     value={s.delayUnit}
-                                    onValueChange={(val: CampaignSequenceStep['delayUnit']) =>
-                                      updateSeqStep(s.id, { delayUnit: val })
-                                    }
+                                    onValueChange={(
+                                      val: CampaignSequenceStep['delayUnit'] | null,
+                                    ) => val && updateSeqStep(s.id, { delayUnit: val })}
                                   >
                                     <SelectTrigger className="h-9 w-32 text-sm">
                                       <SelectValue />

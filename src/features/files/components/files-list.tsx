@@ -65,7 +65,7 @@ function CreateListDialog({ children }: { children: React.ReactNode }) {
         if (!v) setName('');
       }}
     >
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children as React.ReactElement} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create recipient list</DialogTitle>

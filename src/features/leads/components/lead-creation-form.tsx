@@ -99,8 +99,8 @@ export function LeadCreationForm() {
                       Lead Type <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Select
-                      value={field.state.value}
-                      onValueChange={(val) => field.handleChange(val as LeadType)}
+                      value={field.state.value as string}
+                      onValueChange={(val) => val && field.handleChange(val as LeadType)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />

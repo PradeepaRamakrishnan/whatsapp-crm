@@ -6,6 +6,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { useState } from 'react';
 import { ThemeProvider } from '@/components/shared/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/context';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
@@ -27,7 +28,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     >
       <AuthProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="bottom-right" richColors={true} toastOptions={{ duration: 5000 }} />
         </ThemeProvider>
       </AuthProvider>

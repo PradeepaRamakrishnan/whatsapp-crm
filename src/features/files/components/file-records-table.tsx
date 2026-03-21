@@ -223,7 +223,7 @@ export function FileRecordsTable({ fileId }: FileRecordsTableProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Select value={urlFilter} onValueChange={(val) => updateParams({ filter: val })}>
+          <Select value={urlFilter} onValueChange={(val) => updateParams({ filter: val ?? 'all' })}>
             <SelectTrigger
               className={`h-9 w-[160px] text-sm ${urlFilter !== 'all' ? 'border-primary/40 bg-primary/5 text-primary' : ''}`}
             >

@@ -977,7 +977,7 @@ function ConversationsTable({
                       </Badge>
                     ) : (
                       <Badge
-                        variant="soft"
+                        variant="secondary"
                         className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                       >
                         Inbound
@@ -1655,7 +1655,7 @@ function ConnectWabaDialog({
                 <Select
                   name="sys-account"
                   value={systemForm.accountId}
-                  onValueChange={(v) => setSystemForm((f) => ({ ...f, accountId: v }))}
+                  onValueChange={(v) => v && setSystemForm((f) => ({ ...f, accountId: v }))}
                 >
                   <SelectTrigger id="sys-account">
                     <SelectValue placeholder="Select an account" />
@@ -1688,7 +1688,7 @@ function ConnectWabaDialog({
                 ) : (
                   <Select
                     value={systemForm.phoneNumber}
-                    onValueChange={(v) => setSystemForm((f) => ({ ...f, phoneNumber: v }))}
+                    onValueChange={(v) => v && setSystemForm((f) => ({ ...f, phoneNumber: v }))}
                     name="sys-phone"
                   >
                     <SelectTrigger>
@@ -1787,7 +1787,7 @@ function ConnectWabaDialog({
                 <Select
                   name="sys-category"
                   value={systemForm.category}
-                  onValueChange={(v) => setSystemForm((f) => ({ ...f, category: v }))}
+                  onValueChange={(v) => v && setSystemForm((f) => ({ ...f, category: v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />

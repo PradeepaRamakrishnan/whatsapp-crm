@@ -309,7 +309,9 @@ export function BusinessLeadSearchForm() {
                     <FieldLabel>Country (optional)</FieldLabel>
                     <Select
                       value={field.state.value}
-                      onValueChange={(v) => field.handleChange(v === '__none__' ? '' : v)}
+                      onValueChange={(v) =>
+                        field.handleChange((v ?? '') === '__none__' ? '' : (v ?? ''))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select country..." />

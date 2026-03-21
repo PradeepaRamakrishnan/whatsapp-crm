@@ -167,15 +167,13 @@ export function OverviewCharts() {
                   {/* Action */}
                   {s.href ? (
                     <Button
-                      asChild
                       size="sm"
                       variant="outline"
                       className={`h-8 w-fit gap-1.5 border-current/20 text-xs font-semibold ${s.color}`}
+                      render={<Link href={s.href} />}
                     >
-                      <Link href={s.href}>
-                        {s.action}
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
+                      {s.action}
+                      <ArrowRight className="h-3 w-3" />
                     </Button>
                   ) : (
                     <div
@@ -264,10 +262,13 @@ export function OverviewCharts() {
                   Channel breakdown appears after your first campaign
                 </p>
               </div>
-              <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
-                <Link href="/campaigns/create">
-                  Create Campaign <ArrowRight className="h-3 w-3" />
-                </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 text-xs"
+                render={<Link href="/campaigns/create" />}
+              >
+                Create Campaign <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
           )}

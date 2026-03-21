@@ -245,7 +245,7 @@ export function RecordSelectionTable({ records, stats, isLoading }: RecordSelect
               <Label htmlFor="status-filter" className="text-[12px] font-semibold">
                 Record Status
               </Label>
-              <Select value={tempStatusFilter} onValueChange={setTempStatusFilter}>
+              <Select value={tempStatusFilter} onValueChange={(v) => v && setTempStatusFilter(v)}>
                 <SelectTrigger id="status-filter" className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>

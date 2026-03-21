@@ -86,10 +86,10 @@ export function MessageDeliveryStatus({
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center justify-center text-muted-foreground">
-            {currentStatus.icon}
-          </div>
+        <TooltipTrigger
+          render={<div className="flex items-center justify-center text-muted-foreground" />}
+        >
+          {currentStatus.icon}
         </TooltipTrigger>
         <TooltipContent>{tooltipContent}</TooltipContent>
       </Tooltip>

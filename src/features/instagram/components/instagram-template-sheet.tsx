@@ -605,15 +605,17 @@ export function InstagramTemplateSheet({
                   </h3>
                   {buttons.length < 3 && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          Add Button
-                        </Button>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          />
+                        }
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Button
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuItem onClick={() => addButton('URL')} className="gap-2">

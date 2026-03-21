@@ -36,7 +36,7 @@ export function NumberSearchForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="type">Type</Label>
-          <Select value={type} onValueChange={setType}>
+          <Select value={type} onValueChange={(v) => v && setType(v)}>
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
             </SelectTrigger>

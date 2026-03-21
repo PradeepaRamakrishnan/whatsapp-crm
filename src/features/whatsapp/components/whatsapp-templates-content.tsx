@@ -965,7 +965,7 @@ export function WhatsAppTemplatesContent() {
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
             <SelectTrigger className="w-full md:w-40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -979,7 +979,7 @@ export function WhatsAppTemplatesContent() {
             </SelectContent>
           </Select>
 
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <Select value={categoryFilter} onValueChange={(v) => v && setCategoryFilter(v)}>
             <SelectTrigger className="w-full md:w-44">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -1121,19 +1121,21 @@ export function WhatsAppTemplatesContent() {
                         WhatsApp Business Account <span className="text-rose-500">*</span>
                       </Label>
                       <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={accountPopoverOpen}
-                            className="h-10 w-full justify-between font-normal text-slate-700"
-                          >
-                            {form.accountId
-                              ? (accounts.find((a) => a.id === form.accountId)?.wabaName ??
-                                'Select WhatsApp Business Account')
-                              : 'Select WhatsApp Business Account'}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
-                          </Button>
+                        <PopoverTrigger
+                          render={
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={accountPopoverOpen}
+                              className="h-10 w-full justify-between font-normal text-slate-700"
+                            />
+                          }
+                        >
+                          {form.accountId
+                            ? (accounts.find((a) => a.id === form.accountId)?.wabaName ??
+                              'Select WhatsApp Business Account')
+                            : 'Select WhatsApp Business Account'}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
                         </PopoverTrigger>
                         <PopoverContent
                           className="w-[--radix-popover-trigger-width] p-0"
@@ -1191,7 +1193,7 @@ export function WhatsAppTemplatesContent() {
                       </Label>
                       <Select
                         value={form.language}
-                        onValueChange={(v) => setForm((prev) => ({ ...prev, language: v }))}
+                        onValueChange={(v) => v && setForm((prev) => ({ ...prev, language: v }))}
                       >
                         <SelectTrigger className="h-10">
                           <SelectValue />
@@ -1451,17 +1453,19 @@ export function WhatsAppTemplatesContent() {
                       </h3>
 
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={form.buttons.length >= 3}
-                            className="h-8 gap-1.5 text-xs"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            Add Button
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={form.buttons.length >= 3}
+                              className="h-8 gap-1.5 text-xs"
+                            />
+                          }
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add Button
+                          <ChevronDown className="h-3 w-3" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => addButton('QUICK_REPLY')}>

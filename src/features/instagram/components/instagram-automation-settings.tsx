@@ -86,7 +86,7 @@ export function InstagramAutomationSettings({ accounts }: InstagramAutomationSet
               </div>
             </div>
             {accounts.length > 1 && (
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <Select value={selectedAccountId} onValueChange={(v) => v && setSelectedAccountId(v)}>
                 <SelectTrigger className="w-[200px] h-9 bg-white border">
                   <SelectValue placeholder="Select Account" />
                 </SelectTrigger>
@@ -127,7 +127,7 @@ export function InstagramAutomationSettings({ accounts }: InstagramAutomationSet
                 Select Reply Template
                 <Info className="h-3 w-3 text-muted-foreground" />
               </label>
-              <Select value={templateId} onValueChange={setTemplateId}>
+              <Select value={templateId} onValueChange={(v) => v && setTemplateId(v)}>
                 <SelectTrigger id="auto-reply-template" className="w-full h-10 bg-white">
                   <SelectValue
                     placeholder={isLoadingTemplates ? 'Loading templates...' : 'Pick a template'}
