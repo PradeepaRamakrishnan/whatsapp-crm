@@ -41,28 +41,6 @@ import { COUNTRIES } from '../lib/countries';
 import { bulkCreateBusinessLeads, createBusinessLead, searchBusinessLeads } from '../services';
 import type { SearchResult } from '../types';
 
-// ─── Quick-select type suggestions ────────────────────────────────────────────
-
-const TYPE_SUGGESTIONS: { category: string; types: string[] }[] = [
-  {
-    category: 'Pet Care',
-    types: [
-      'Veterinarian',
-      'Veterinary Clinic',
-      'Animal Hospital',
-      'Pet Hospital',
-      'Pet Doctor',
-      'Pet Grooming',
-      'Pet Boarding',
-      'Pet Daycare',
-      'Pet Store',
-      'Animal Shelter',
-      'Pet Pharmacy',
-      'Exotic Animal Vet',
-    ],
-  },
-];
-
 export function BusinessLeadSearchForm() {
   const router = useRouter();
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -192,37 +170,6 @@ export function BusinessLeadSearchForm() {
             }}
             className="space-y-4"
           >
-            {/* Quick-select type chips */}
-            <div className="space-y-2">
-              {TYPE_SUGGESTIONS.map((group) => (
-                <div key={group.category}>
-                  <p className="text-muted-foreground mb-1.5 text-xs font-medium">
-                    {group.category} — quick select:
-                  </p>
-                  <form.Subscribe selector={(s) => s.values.type}>
-                    {(currentType) => (
-                      <div className="flex flex-wrap gap-1.5">
-                        {group.types.map((t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => form.setFieldValue('type', t)}
-                            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                              currentType === t
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </form.Subscribe>
-                </div>
-              ))}
-            </div>
-
             <div className="grid gap-4 sm:grid-cols-2">
               <form.Field
                 name="type"

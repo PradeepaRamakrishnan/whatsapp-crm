@@ -209,6 +209,8 @@ export function BusinessLeadsList() {
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
   const urlSearch = searchParams.get('search') || '';
+  const urlType = searchParams.get('type') || '';
+  const urlCity = searchParams.get('city') || '';
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: page - 1,
@@ -216,21 +218,33 @@ export function BusinessLeadsList() {
   });
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState(urlSearch);
+  const [typeFilter, setTypeFilter] = useState(urlType);
+  const [cityFilter, setCityFilter] = useState(urlCity);
   const [selectedLead, setSelectedLead] = useState<BusinessLead | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const updateParams = useCallback(
-    (updates: { page?: number; pageSize?: number; search?: string }) => {
+    (updates: {
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      type?: string;
+      city?: string;
+    }) => {
       const params = new URLSearchParams(searchParams.toString());
       if (updates.page !== undefined) params.set('page', String(updates.page));
       if (updates.pageSize !== undefined) params.set('pageSize', String(updates.pageSize));
       if (updates.search !== undefined) {
-        if (updates.search) {
-          params.set('search', updates.search);
-          params.set('page', '1');
-        } else {
-          params.delete('search');
-        }
+        updates.search ? params.set('search', updates.search) : params.delete('search');
+        params.set('page', '1');
+      }
+      if (updates.type !== undefined) {
+        updates.type ? params.set('type', updates.type) : params.delete('type');
+        params.set('page', '1');
+      }
+      if (updates.city !== undefined) {
+        updates.city ? params.set('city', updates.city) : params.delete('city');
+        params.set('page', '1');
       }
       router.replace(`?${params.toString()}`);
     },
@@ -245,9 +259,40 @@ export function BusinessLeadsList() {
     return () => clearTimeout(id);
   }, [globalFilter, urlSearch, updateParams]);
 
-  const { data: leadsResponse, isLoading } = useQuery({
-    queryKey: ['business-leads', { page, limit: pageSize, search: urlSearch }],
-    queryFn: () => getBusinessLeads({ page, limit: pageSize, search: urlSearch || undefined }),
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (typeFilter === urlType) return;
+      updateParams({ type: typeFilter });
+    }, 500);
+    return () => clearTimeout(id);
+  }, [typeFilter, urlType, updateParams]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (cityFilter === urlCity) return;
+      updateParams({ city: cityFilter });
+    }, 500);
+    return () => clearTimeout(id);
+  }, [cityFilter, urlCity, updateParams]);
+
+  const {
+    data: leadsResponse,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [
+      'business-leads',
+      { page, limit: pageSize, search: urlSearch, type: urlType, city: urlCity },
+    ],
+    queryFn: () =>
+      getBusinessLeads({
+        page,
+        limit: pageSize,
+        search: urlSearch || undefined,
+        type: urlType || undefined,
+        city: urlCity || undefined,
+      }),
   });
 
   const handleExportCsv = useCallback(async () => {
@@ -262,6 +307,8 @@ export function BusinessLeadsList() {
         page: 1,
         limit: total,
         search: urlSearch || undefined,
+        type: urlType || undefined,
+        city: urlCity || undefined,
       });
       const leads = allData.data;
 
@@ -306,7 +353,7 @@ export function BusinessLeadsList() {
     } finally {
       setIsExporting(false);
     }
-  }, [leadsResponse?.meta?.total, urlSearch]);
+  }, [leadsResponse?.meta?.total, urlSearch, urlType, urlCity]);
 
   const columnHelper = createColumnHelper<BusinessLead>();
 
@@ -428,15 +475,35 @@ export function BusinessLeadsList() {
     <div className="w-full">
       {/* ── Toolbar ── */}
       <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
-        <div className="flex flex-1 items-center gap-2">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
           <Input
-            className="h-8 w-full sm:w-60"
+            className="h-8 w-full sm:w-56"
             value={globalFilter}
             onChange={(e) => {
               setGlobalFilter(e.target.value);
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
             placeholder="Search name, email, phone…"
+            type="text"
+          />
+          <Input
+            className="h-8 w-full sm:w-44"
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+            }}
+            placeholder="Filter by type…"
+            type="text"
+          />
+          <Input
+            className="h-8 w-full sm:w-36"
+            value={cityFilter}
+            onChange={(e) => {
+              setCityFilter(e.target.value);
+              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+            }}
+            placeholder="Filter by city…"
             type="text"
           />
         </div>
@@ -486,7 +553,14 @@ export function BusinessLeadsList() {
 
       {/* ── Table ── */}
       <div className="overflow-hidden rounded-lg border">
-        {isLoading ? (
+        {isError ? (
+          <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
+            <p className="text-sm font-medium text-destructive">Failed to load leads</p>
+            <p className="text-xs text-muted-foreground">
+              {(error as Error)?.message || 'Unknown error'}
+            </p>
+          </div>
+        ) : isLoading ? (
           <div className="flex h-64 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
