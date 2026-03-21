@@ -14,10 +14,6 @@ const STEPS = [
   {
     num: '01',
     icon: Upload01Icon,
-    color: '#a78bfa',
-    glow: 'rgba(124,58,237,0.25)',
-    gradFrom: '#7c3aed',
-    gradTo: '#3b82f6',
     title: 'Upload your contacts',
     body: 'Import your full audience in seconds. Paste a CSV, drag-and-drop a spreadsheet, or connect via API. Our smart validation engine catches duplicates, invalid numbers, and formatting issues automatically — so your list is clean before the first send.',
     visual: (
@@ -37,7 +33,7 @@ const STEPS = [
         >
           <div
             className="h-full rounded-full"
-            style={{ width: '92%', background: 'linear-gradient(to right, #7c3aed, #22d3ee)' }}
+            style={{ width: '92%', background: 'var(--foreground)' }}
           />
         </div>
         <div className="flex justify-between text-xs">
@@ -68,10 +64,6 @@ const STEPS = [
   {
     num: '02',
     icon: FlashIcon,
-    color: '#60a5fa',
-    glow: 'rgba(59,130,246,0.25)',
-    gradFrom: '#3b82f6',
-    gradTo: '#22d3ee',
     title: 'Build your campaign',
     body: 'Choose WhatsApp, SMS, or Email. Write your message with dynamic variables like {{name}}, {{amount}} and personalise at scale. Set your send time, configure drip sequences, and add follow-up triggers — all from one clean interface. No coding required.',
     visual: (
@@ -88,28 +80,31 @@ const STEPS = [
         <div
           className="mb-3 rounded-xl rounded-tl-none p-3 text-xs"
           style={{
-            background: 'rgba(124,58,237,0.12)',
-            border: '1px solid rgba(124,58,237,0.2)',
+            background: 'var(--ls-card)',
+            border: '1px solid var(--ls-card-border)',
             color: 'var(--ls-muted)',
             lineHeight: '1.6',
           }}
         >
-          Hi <span style={{ color: '#a78bfa', fontWeight: 700 }}>{'{{name}}'}</span>, your
-          outstanding amount of{' '}
-          <span style={{ color: '#a78bfa', fontWeight: 700 }}>{'{{amount}}'}</span> is due on{' '}
-          <span style={{ color: '#a78bfa', fontWeight: 700 }}>{'{{due_date}}'}</span>. Reply YES to
-          confirm receipt.
+          Hi <span className="font-bold text-foreground">{'{{name}}'}</span>, your outstanding
+          amount of <span className="font-bold text-foreground">{'{{amount}}'}</span> is due on{' '}
+          <span className="font-bold text-foreground">{'{{due_date}}'}</span>. Reply YES to confirm
+          receipt.
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { ch: 'WhatsApp', c: '#34d399' },
-            { ch: 'SMS', c: '#60a5fa' },
-            { ch: 'Email', c: '#a78bfa' },
+            { ch: 'WhatsApp', color: '#34d399' },
+            { ch: 'SMS', color: 'var(--ls-muted)' },
+            { ch: 'Email', color: 'var(--ls-muted)' },
           ].map((item) => (
             <div
               key={item.ch}
               className="rounded-lg py-2 text-center text-[11px] font-semibold"
-              style={{ background: `${item.c}12`, color: item.c, border: `1px solid ${item.c}25` }}
+              style={{
+                background: 'var(--ls-card)',
+                color: item.color,
+                border: '1px solid var(--ls-card-border)',
+              }}
             >
               {item.ch}
             </div>
@@ -121,10 +116,6 @@ const STEPS = [
   {
     num: '03',
     icon: Analytics01Icon,
-    color: '#22d3ee',
-    glow: 'rgba(34,211,238,0.25)',
-    gradFrom: '#22d3ee',
-    gradTo: '#a78bfa',
     title: 'Track & optimise',
     body: "Watch your campaign come to life in real-time. Monitor delivery rates, open rates, and reply rates as they happen. Our AI-powered insights surface what's working and flag underperforming segments — so you can tweak mid-flight and make every send better than the last.",
     visual: (
@@ -140,16 +131,16 @@ const STEPS = [
         </p>
         <div className="mb-4 grid grid-cols-3 gap-2">
           {[
-            { l: 'Delivered', v: '94.2%', c: '#34d399' },
-            { l: 'Opened', v: '61.8%', c: '#22d3ee' },
-            { l: 'Replied', v: '6.8%', c: '#a78bfa' },
+            { l: 'Delivered', v: '94.2%', color: '#34d399' },
+            { l: 'Opened', v: '61.8%', color: 'var(--foreground)' },
+            { l: 'Replied', v: '6.8%', color: 'var(--ls-muted)' },
           ].map((m) => (
             <div
               key={m.l}
               className="rounded-lg p-2 text-center"
               style={{ background: 'var(--ls-card)' }}
             >
-              <p className="text-sm font-black" style={{ color: m.c }}>
+              <p className="text-sm font-black" style={{ color: m.color }}>
                 {m.v}
               </p>
               <p className="text-[9px]" style={{ color: 'var(--ls-subtle)' }}>
@@ -165,8 +156,7 @@ const STEPS = [
               className="flex-1 rounded-t"
               style={{
                 height: `${h}%`,
-                background:
-                  i >= 7 ? 'linear-gradient(to top, #22d3ee, #22d3ee66)' : 'rgba(34,211,238,0.2)',
+                background: i >= 7 ? 'var(--foreground)' : 'var(--ls-card-border)',
               }}
             />
           ))}
@@ -212,7 +202,7 @@ export const LandingHowItWorks = () => {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(59,130,246,0.05) 0%, transparent 70%)',
+            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,0,0,0.02) 0%, transparent 70%)',
         }}
         aria-hidden="true"
       />
@@ -222,7 +212,7 @@ export const LandingHowItWorks = () => {
         <div className="hiw-heading mb-20 text-center">
           <p
             className="mb-4 font-mono text-[10px] font-semibold uppercase tracking-[0.4em]"
-            style={{ color: '#7c3aed' }}
+            style={{ color: 'var(--ls-subtle)' }}
           >
             How it works
           </p>
@@ -230,17 +220,7 @@ export const LandingHowItWorks = () => {
             className="font-black tracking-tighter text-foreground"
             style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
           >
-            Launch in{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #60a5fa, #22d3ee)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              three steps
-            </span>
+            Launch in <span className="text-foreground/60">three steps</span>
           </h2>
           <p
             className="mx-auto mt-4 max-w-lg text-base leading-relaxed"
@@ -257,8 +237,7 @@ export const LandingHowItWorks = () => {
           <div
             className="hiw-connector pointer-events-none absolute top-16 bottom-16 left-1/2 hidden w-px -translate-x-1/2 lg:block"
             style={{
-              background:
-                'linear-gradient(to bottom, rgba(124,58,237,0.5), rgba(59,130,246,0.4), rgba(34,211,238,0.5))',
+              background: 'linear-gradient(to bottom, var(--ls-card-border), var(--ls-hairline))',
             }}
             aria-hidden="true"
           />
@@ -272,16 +251,15 @@ export const LandingHowItWorks = () => {
               >
                 {/* Text side */}
                 <div className={isEven ? 'lg:order-1' : 'lg:order-2'}>
-                  {/* Step badge */}
                   <div className="mb-5 flex items-center gap-4">
                     <div
-                      className="flex size-14 shrink-0 items-center justify-center rounded-2xl shadow-lg"
+                      className="flex size-14 shrink-0 items-center justify-center rounded-2xl"
                       style={{
-                        background: `linear-gradient(135deg, ${step.gradFrom}, ${step.gradTo})`,
-                        boxShadow: `0 0 24px ${step.glow}`,
+                        background: 'var(--foreground)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
                       }}
                     >
-                      <HugeiconsIcon icon={step.icon} size={26} color="#fff" />
+                      <HugeiconsIcon icon={step.icon} size={26} color="var(--background)" />
                     </div>
                     <span
                       className="font-mono text-5xl font-black leading-none tracking-tighter"
@@ -304,7 +282,7 @@ export const LandingHowItWorks = () => {
                   <a
                     href="/login"
                     className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-70"
-                    style={{ color: step.color }}
+                    style={{ color: 'var(--foreground)' }}
                   >
                     Learn more →
                   </a>
@@ -312,10 +290,9 @@ export const LandingHowItWorks = () => {
 
                 {/* Visual side */}
                 <div className={`relative ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
-                  {/* Glow behind visual */}
                   <div
                     className="pointer-events-none absolute inset-0 rounded-2xl blur-2xl"
-                    style={{ background: step.glow, opacity: 0.4 }}
+                    style={{ background: 'rgba(0,0,0,0.04)', opacity: 0.4 }}
                     aria-hidden="true"
                   />
                   <div className="relative">{step.visual}</div>
@@ -324,10 +301,7 @@ export const LandingHowItWorks = () => {
                 {/* Center dot on connector (desktop) */}
                 <div
                   className="pointer-events-none absolute top-7 left-1/2 hidden size-4 -translate-x-1/2 rounded-full ring-4 ring-[var(--ls-bg)] lg:block"
-                  style={{
-                    background: `linear-gradient(135deg, ${step.gradFrom}, ${step.gradTo})`,
-                    boxShadow: `0 0 16px ${step.glow}`,
-                  }}
+                  style={{ background: 'var(--foreground)' }}
                   aria-hidden="true"
                 />
               </div>

@@ -171,6 +171,7 @@ export function OverviewCharts() {
                       variant="outline"
                       className={`h-8 w-fit gap-1.5 border-current/20 text-xs font-semibold ${s.color}`}
                       render={<Link href={s.href} />}
+                      nativeButton={false}
                     >
                       {s.action}
                       <ArrowRight className="h-3 w-3" />
@@ -267,6 +268,7 @@ export function OverviewCharts() {
                 variant="outline"
                 className="h-8 gap-1.5 text-xs"
                 render={<Link href="/campaigns/create" />}
+                nativeButton={false}
               >
                 Create Campaign <ArrowRight className="h-3 w-3" />
               </Button>

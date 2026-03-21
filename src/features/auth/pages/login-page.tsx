@@ -88,9 +88,18 @@ export const LoginPage = () => {
         />
 
         {/* Orbs */}
-        <div className="orb-a absolute -top-56 -left-56 size-[750px] rounded-full bg-primary/20 blur-[130px]" />
-        <div className="orb-b absolute -right-40 -bottom-40 size-[650px] rounded-full bg-primary/15 blur-[150px]" />
-        <div className="orb-c absolute top-1/2 left-1/3 size-[350px] -translate-y-1/2 rounded-full bg-primary/8 blur-[80px]" />
+        <div
+          className="orb-a absolute -top-56 -left-56 size-[750px] rounded-full blur-[130px]"
+          style={{ background: 'color-mix(in oklch, var(--foreground) 8%, transparent)' }}
+        />
+        <div
+          className="orb-b absolute -right-40 -bottom-40 size-[650px] rounded-full blur-[150px]"
+          style={{ background: 'color-mix(in oklch, var(--foreground) 6%, transparent)' }}
+        />
+        <div
+          className="orb-c absolute top-1/2 left-1/3 size-[350px] -translate-y-1/2 rounded-full blur-[80px]"
+          style={{ background: 'color-mix(in oklch, var(--foreground) 4%, transparent)' }}
+        />
 
         {/* Vignette — darkens edges slightly */}
         <div
@@ -170,12 +179,15 @@ export const LoginPage = () => {
           </p>
 
           {/* Glow behind card */}
-          <div className="absolute inset-x-8 top-1/2 h-40 -translate-y-1/2 rounded-full bg-primary/20 blur-[60px]" />
+          <div
+            className="absolute inset-x-8 top-1/2 h-40 -translate-y-1/2 rounded-full blur-[60px]"
+            style={{ background: 'color-mix(in oklch, var(--foreground) 6%, transparent)' }}
+          />
 
           {/* Card */}
           <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/70 px-10 py-10 shadow-2xl backdrop-blur-xl">
             {/* Subtle inner top highlight */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">

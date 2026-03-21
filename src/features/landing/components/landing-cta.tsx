@@ -46,8 +46,7 @@ export const LandingCta = () => {
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
         style={{
-          background:
-            'linear-gradient(to right, transparent, rgba(124,58,237,0.4), rgba(34,211,238,0.3), transparent)',
+          background: 'linear-gradient(to right, transparent, var(--ls-card-border), transparent)',
         }}
         aria-hidden="true"
       />
@@ -62,31 +61,10 @@ export const LandingCta = () => {
             backdropFilter: 'blur(24px)',
           }}
         >
-          {/* Card inner glow orb */}
+          {/* Subtle inner glow */}
           <div
             className="cta-orb pointer-events-none absolute top-1/2 left-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(124,58,237,0.2) 0%, rgba(59,130,246,0.1) 50%, transparent 70%)',
-            }}
-            aria-hidden="true"
-          />
-          {/* Top-left accent corner */}
-          <div
-            className="pointer-events-none absolute top-0 left-0 size-48 rounded-3xl"
-            style={{
-              background:
-                'radial-gradient(circle at 0% 0%, rgba(124,58,237,0.12) 0%, transparent 70%)',
-            }}
-            aria-hidden="true"
-          />
-          {/* Bottom-right accent */}
-          <div
-            className="pointer-events-none absolute right-0 bottom-0 size-48 rounded-3xl"
-            style={{
-              background:
-                'radial-gradient(circle at 100% 100%, rgba(34,211,238,0.1) 0%, transparent 70%)',
-            }}
+            style={{ background: 'rgba(0,0,0,0.03)' }}
             aria-hidden="true"
           />
           {/* Gradient top border */}
@@ -94,7 +72,7 @@ export const LandingCta = () => {
             className="pointer-events-none absolute inset-x-0 top-0 h-px"
             style={{
               background:
-                'linear-gradient(to right, transparent, rgba(124,58,237,0.6) 30%, rgba(34,211,238,0.4) 70%, transparent)',
+                'linear-gradient(to right, transparent, var(--ls-card-border) 40%, var(--ls-card-border) 60%, transparent)',
             }}
             aria-hidden="true"
           />
@@ -104,15 +82,12 @@ export const LandingCta = () => {
             <div
               className="cta-badge mx-auto mb-8 inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold"
               style={{
-                background: 'rgba(124,58,237,0.12)',
-                border: '1px solid rgba(124,58,237,0.3)',
-                color: '#a78bfa',
+                background: 'var(--ls-card)',
+                border: '1px solid var(--ls-card-border)',
+                color: 'var(--ls-muted)',
               }}
             >
-              <span
-                className="size-1.5 animate-pulse rounded-full"
-                style={{ background: '#7c3aed' }}
-              />
+              <span className="size-1.5 animate-pulse rounded-full bg-foreground/40" />
               No credit card required · Free forever plan
             </div>
 
@@ -120,17 +95,7 @@ export const LandingCta = () => {
               className="cta-title mx-auto mb-6 max-w-3xl font-black leading-tight tracking-tighter text-foreground"
               style={{ fontSize: 'clamp(2.2rem, 5vw, 4.5rem)' }}
             >
-              Ready to grow your{' '}
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                campaigns?
-              </span>
+              Ready to grow your <span className="text-foreground/60">campaigns?</span>
             </h2>
 
             <p
@@ -145,10 +110,11 @@ export const LandingCta = () => {
             <div className="cta-buttons mb-10 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2.5 rounded-xl px-8 py-4 text-sm font-bold text-white transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2.5 rounded-xl px-8 py-4 text-sm font-bold transition-all duration-200 hover:opacity-80 hover:-translate-y-0.5"
                 style={{
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-                  boxShadow: '0 0 40px rgba(124,58,237,0.5), 0 4px 24px rgba(0,0,0,0.4)',
+                  background: 'var(--foreground)',
+                  color: 'var(--background)',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
                 }}
               >
                 Get started free
@@ -156,7 +122,7 @@ export const LandingCta = () => {
               </Link>
               <a
                 href="mailto:sales@example.com"
-                className="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-black/5"
                 style={{
                   background: 'var(--ls-card)',
                   border: '1px solid var(--ls-card-border)',
@@ -195,18 +161,10 @@ export const LandingCta = () => {
               </span>
               <span
                 className="h-3.5 w-px"
-                style={{ background: 'linear-gradient(to bottom, #7c3aed, #3b82f6)' }}
+                style={{ background: 'var(--ls-card-border)' }}
                 aria-hidden="true"
               />
-              <span
-                className="font-mono text-sm font-black tracking-widest uppercase"
-                style={{
-                  background: 'linear-gradient(to right, #7c3aed, #3b82f6)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
+              <span className="font-mono text-sm font-black tracking-widest text-foreground uppercase">
                 {siteConfig.brand.line2}
               </span>
             </div>

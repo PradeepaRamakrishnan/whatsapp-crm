@@ -50,10 +50,10 @@ export const LandingFeatures = () => {
       className="relative overflow-hidden px-4 py-28 sm:px-6 lg:px-8"
       style={{ background: 'var(--ls-bg)' }}
     >
-      {/* Subtle section orb */}
+      {/* Subtle section tint */}
       <div
         className="pointer-events-none absolute top-1/2 left-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[160px]"
-        style={{ background: 'rgba(124,58,237,0.07)' }}
+        style={{ background: 'rgba(0,0,0,0.03)' }}
         aria-hidden="true"
       />
 
@@ -62,7 +62,7 @@ export const LandingFeatures = () => {
         <div className="feat-heading mb-16 text-center">
           <p
             className="mb-4 font-mono text-[10px] font-semibold uppercase tracking-[0.4em]"
-            style={{ color: '#7c3aed' }}
+            style={{ color: 'var(--ls-subtle)' }}
           >
             Features
           </p>
@@ -70,17 +70,7 @@ export const LandingFeatures = () => {
             className="font-black leading-[1.08] tracking-tighter text-foreground"
             style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
           >
-            Everything in{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #a78bfa, #22d3ee)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              one place
-            </span>
+            Everything in <span className="text-foreground/60">one place</span>
           </h2>
           <p
             className="mx-auto mt-4 max-w-xl text-base leading-relaxed"
@@ -93,45 +83,36 @@ export const LandingFeatures = () => {
 
         {/* Bento grid */}
         <div className="feat-bento grid gap-4 lg:grid-cols-3">
-          {/* Row 1: 2 large cards */}
           {/* Card 1: Multi-channel Messaging */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
-            {/* Background accent */}
             <div
               className="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full blur-[60px]"
-              style={{ background: 'rgba(124,58,237,0.15)' }}
+              style={{ background: 'rgba(0,0,0,0.03)' }}
               aria-hidden="true"
             />
             <div
               className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(59,130,246,0.2))',
-                border: '1px solid rgba(124,58,237,0.25)',
-              }}
+              style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
-              <HugeiconsIcon icon={Message01Icon} size={22} color="#a78bfa" />
+              <HugeiconsIcon icon={Message01Icon} size={22} color="currentColor" />
             </div>
             <h3 className="mb-2.5 text-lg font-bold text-foreground">Multi-channel Messaging</h3>
             <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
               WhatsApp, SMS, Email — reach your audience on every channel from one unified
               dashboard. No switching tools.
             </p>
-            {/* Channel pills */}
             <div className="flex flex-wrap gap-2">
               {['WhatsApp', 'SMS', 'Email'].map((ch) => (
                 <span
                   key={ch}
                   className="rounded-full px-3 py-1 text-[11px] font-semibold"
                   style={{
-                    background: 'rgba(124,58,237,0.12)',
-                    color: '#a78bfa',
-                    border: '1px solid rgba(124,58,237,0.2)',
+                    background: 'var(--ls-card)',
+                    color: 'var(--ls-muted)',
+                    border: '1px solid var(--ls-card-border)',
                   }}
                 >
                   {ch}
@@ -143,31 +124,25 @@ export const LandingFeatures = () => {
           {/* Card 2: Real-time Analytics */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
             <div
               className="pointer-events-none absolute -top-12 -left-12 size-40 rounded-full blur-[60px]"
-              style={{ background: 'rgba(34,211,238,0.1)' }}
+              style={{ background: 'rgba(0,0,0,0.03)' }}
               aria-hidden="true"
             />
             <div
               className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(59,130,246,0.2))',
-                border: '1px solid rgba(34,211,238,0.2)',
-              }}
+              style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
-              <HugeiconsIcon icon={Analytics01Icon} size={22} color="#22d3ee" />
+              <HugeiconsIcon icon={Analytics01Icon} size={22} color="currentColor" />
             </div>
             <h3 className="mb-2.5 text-lg font-bold text-foreground">Real-time Analytics</h3>
             <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
               Live delivery rates, open rates and response tracking. Know exactly how every campaign
               performs, the moment it happens.
             </p>
-            {/* Fake mini sparkline */}
+            {/* Sparkline */}
             <div className="flex h-10 items-end gap-1">
               {[30, 55, 40, 70, 60, 85, 72, 90, 78, 95].map((h, i) => (
                 <div
@@ -175,50 +150,39 @@ export const LandingFeatures = () => {
                   className="flex-1 rounded-sm"
                   style={{
                     height: `${h}%`,
-                    background:
-                      i >= 7
-                        ? 'linear-gradient(to top, #22d3ee, #22d3ee88)'
-                        : 'rgba(34,211,238,0.25)',
+                    background: i >= 7 ? 'var(--foreground)' : 'var(--ls-card-border)',
                   }}
                 />
               ))}
             </div>
           </div>
 
-          {/* Card 3: Lead Management (right column, spans 1) */}
+          {/* Card 3: Lead Management (spans 2 rows) */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300 lg:row-span-2"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
             <div
               className="pointer-events-none absolute -bottom-16 -right-16 size-56 rounded-full blur-[80px]"
-              style={{ background: 'rgba(124,58,237,0.12)' }}
+              style={{ background: 'rgba(0,0,0,0.03)' }}
               aria-hidden="true"
             />
             <div
               className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(59,130,246,0.2))',
-                border: '1px solid rgba(124,58,237,0.25)',
-              }}
+              style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
-              <HugeiconsIcon icon={UserGroupIcon} size={22} color="#a78bfa" />
+              <HugeiconsIcon icon={UserGroupIcon} size={22} color="currentColor" />
             </div>
             <h3 className="mb-2.5 text-lg font-bold text-foreground">Lead Management</h3>
             <p className="mb-6 text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
               Capture, qualify and nurture leads with a built-in pipeline tied to every campaign.
               Never lose a prospect.
             </p>
-
-            {/* Fake lead pipeline */}
             <div className="flex flex-col gap-3">
               {[
-                { name: 'Priya S.', stage: 'Qualified', color: '#22d3ee' },
-                { name: 'Amit K.', stage: 'In Progress', color: '#a78bfa' },
-                { name: 'Sneha R.', stage: 'New', color: '#60a5fa' },
+                { name: 'Priya S.', stage: 'Qualified', color: '#34d399' },
+                { name: 'Amit K.', stage: 'In Progress', color: 'var(--ls-muted)' },
+                { name: 'Sneha R.', stage: 'New', color: 'var(--ls-muted)' },
                 { name: 'Rohan M.', stage: 'Converted', color: '#34d399' },
               ].map((lead) => (
                 <div
@@ -232,7 +196,7 @@ export const LandingFeatures = () => {
                   <div className="flex items-center gap-3">
                     <div
                       className="flex size-7 items-center justify-center rounded-full text-[11px] font-bold text-foreground"
-                      style={{ background: `${lead.color}30`, border: `1px solid ${lead.color}40` }}
+                      style={{ background: 'var(--ls-card-border)' }}
                     >
                       {lead.name[0]}
                     </div>
@@ -240,15 +204,17 @@ export const LandingFeatures = () => {
                   </div>
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                    style={{ background: `${lead.color}18`, color: lead.color }}
+                    style={{
+                      background: 'var(--ls-card)',
+                      border: '1px solid var(--ls-card-border)',
+                      color: lead.color,
+                    }}
                   >
                     {lead.stage}
                   </span>
                 </div>
               ))}
             </div>
-
-            {/* Stats below */}
             <div
               className="mt-6 grid grid-cols-2 gap-3 rounded-xl p-4"
               style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-hairline)' }}
@@ -270,17 +236,14 @@ export const LandingFeatures = () => {
             </div>
           </div>
 
-          {/* Row 2: Wide automation card (col-span-2) */}
+          {/* Smart Automation (col-span-2) */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300 lg:col-span-2"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
             <div
               className="pointer-events-none absolute top-0 right-0 size-64 rounded-full blur-[100px]"
-              style={{ background: 'rgba(59,130,246,0.1)' }}
+              style={{ background: 'rgba(0,0,0,0.02)' }}
               aria-hidden="true"
             />
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
@@ -288,12 +251,11 @@ export const LandingFeatures = () => {
                 <div
                   className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
                   style={{
-                    background:
-                      'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(124,58,237,0.2))',
-                    border: '1px solid rgba(59,130,246,0.25)',
+                    background: 'var(--ls-card)',
+                    border: '1px solid var(--ls-card-border)',
                   }}
                 >
-                  <HugeiconsIcon icon={FlashIcon} size={22} color="#60a5fa" />
+                  <HugeiconsIcon icon={FlashIcon} size={22} color="currentColor" />
                 </div>
                 <h3 className="mb-2.5 text-lg font-bold text-foreground">Smart Automation</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
@@ -301,8 +263,6 @@ export const LandingFeatures = () => {
                   automatically reacting to every interaction.
                 </p>
               </div>
-
-              {/* Automation timeline visual */}
               <div
                 className="flex-1 rounded-xl p-4"
                 style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
@@ -314,10 +274,9 @@ export const LandingFeatures = () => {
                   Automation flow
                 </p>
                 <div className="relative flex flex-col gap-4">
-                  {/* Vertical connecting line */}
                   <div
                     className="absolute top-3 bottom-3 left-[11px] w-px"
-                    style={{ background: 'linear-gradient(to bottom, #7c3aed44, #3b82f644)' }}
+                    style={{ background: 'var(--ls-card-border)' }}
                     aria-hidden="true"
                   />
                   {AUTOMATION_STEPS.map((step) => (
@@ -325,13 +284,11 @@ export const LandingFeatures = () => {
                       <div
                         className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
                         style={{
-                          background: step.done
-                            ? 'linear-gradient(135deg, #7c3aed, #3b82f6)'
-                            : 'var(--ls-hairline)',
+                          background: step.done ? 'var(--foreground)' : 'var(--ls-hairline)',
                           border: step.done
-                            ? '1px solid rgba(124,58,237,0.6)'
+                            ? '1px solid var(--foreground)'
                             : '1px solid var(--ls-card-border)',
-                          color: step.done ? '#fff' : 'var(--ls-faint)',
+                          color: step.done ? 'var(--background)' : 'var(--ls-faint)',
                         }}
                       >
                         {step.done ? '✓' : '·'}
@@ -349,36 +306,29 @@ export const LandingFeatures = () => {
             </div>
           </div>
 
-          {/* Row 3: Bulk Upload */}
+          {/* Bulk Upload */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
             <div
               className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(124,58,237,0.15))',
-                border: '1px solid rgba(34,211,238,0.2)',
-              }}
+              style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
-              <HugeiconsIcon icon={Upload01Icon} size={22} color="#22d3ee" />
+              <HugeiconsIcon icon={Upload01Icon} size={22} color="currentColor" />
             </div>
             <h3 className="mb-2.5 text-lg font-bold text-foreground">Bulk Upload</h3>
             <p className="mb-4 text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
               Import thousands of contacts via CSV or API. Smart deduplication keeps your list clean
               automatically.
             </p>
-            {/* Fake upload progress */}
             <div
               className="rounded-xl p-3"
               style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
               <div className="mb-2 flex justify-between text-[11px]">
                 <span className="text-foreground">contacts_q4.csv</span>
-                <span style={{ color: '#22d3ee' }}>12,400 rows</span>
+                <span style={{ color: 'var(--ls-subtle)' }}>12,400 rows</span>
               </div>
               <div
                 className="h-1.5 w-full overflow-hidden rounded-full"
@@ -386,10 +336,7 @@ export const LandingFeatures = () => {
               >
                 <div
                   className="h-full rounded-full"
-                  style={{
-                    width: '85%',
-                    background: 'linear-gradient(to right, #22d3ee, #7c3aed)',
-                  }}
+                  style={{ width: '85%', background: 'var(--foreground)' }}
                 />
               </div>
               <p className="mt-1.5 text-right text-[10px]" style={{ color: 'var(--ls-subtle)' }}>
@@ -398,38 +345,31 @@ export const LandingFeatures = () => {
             </div>
           </div>
 
-          {/* Row 3: Global Reach */}
+          {/* Global Reach */}
           <div
             className="feat-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300"
-            style={{
-              border: '1px solid var(--ls-card-border)',
-              backdropFilter: 'blur(12px)',
-            }}
+            style={{ border: '1px solid var(--ls-card-border)', backdropFilter: 'blur(12px)' }}
           >
             <div
               className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(34,211,238,0.15))',
-                border: '1px solid rgba(59,130,246,0.25)',
-              }}
+              style={{ background: 'var(--ls-card)', border: '1px solid var(--ls-card-border)' }}
             >
-              <HugeiconsIcon icon={Globe02Icon} size={22} color="#60a5fa" />
+              <HugeiconsIcon icon={Globe02Icon} size={22} color="currentColor" />
             </div>
             <h3 className="mb-2.5 text-lg font-bold text-foreground">Global Reach</h3>
             <p className="mb-4 text-sm leading-relaxed" style={{ color: 'var(--ls-muted)' }}>
               Send messages to 190+ countries with local number support and compliance built in from
               day one.
             </p>
-            {/* Country pills */}
             <div className="flex flex-wrap gap-2">
               {['🇮🇳 India', '🇺🇸 USA', '🇬🇧 UK', '🇦🇪 UAE', '+186'].map((c) => (
                 <span
                   key={c}
                   className="rounded-full px-2.5 py-1 text-[10px] font-medium"
                   style={{
-                    background: 'rgba(59,130,246,0.1)',
+                    background: 'var(--ls-card)',
                     color: 'var(--ls-muted)',
-                    border: '1px solid rgba(59,130,246,0.15)',
+                    border: '1px solid var(--ls-card-border)',
                   }}
                 >
                   {c}

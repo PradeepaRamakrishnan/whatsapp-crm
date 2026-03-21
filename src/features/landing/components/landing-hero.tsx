@@ -13,7 +13,7 @@ gsap.registerPlugin(useGSAP as never);
 const TITLE_WORDS = ['Run', 'Campaigns', 'That', 'Actually'];
 
 const BAR_HEIGHTS = [40, 72, 55, 88, 63, 76];
-const BAR_COLORS = ['#7c3aed', '#3b82f6', '#22d3ee', '#7c3aed', '#3b82f6', '#22d3ee'];
+const BAR_COLORS = ['#111', '#222', '#444', '#111', '#222', '#444'];
 
 export const LandingHero = () => {
   const ref = useRef<HTMLElement>(null);
@@ -64,11 +64,11 @@ export const LandingHero = () => {
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div
           className="orb-hero-a absolute -top-48 -left-48 size-[700px] rounded-full blur-[140px]"
-          style={{ background: 'rgba(124,58,237,0.22)' }}
+          style={{ background: 'rgba(0,0,0,0.05)' }}
         />
         <div
           className="orb-hero-b absolute -right-32 bottom-0 size-[560px] rounded-full blur-[160px]"
-          style={{ background: 'rgba(34,211,238,0.12)' }}
+          style={{ background: 'rgba(0,0,0,0.03)' }}
         />
         {/* Noise overlay */}
         <div
@@ -85,7 +85,7 @@ export const LandingHero = () => {
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+              'linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px)',
             backgroundSize: '64px 64px',
           }}
         />
@@ -99,9 +99,9 @@ export const LandingHero = () => {
           <div
             className="hero-badge mb-8 inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold"
             style={{
-              background: 'rgba(124,58,237,0.12)',
-              border: '1px solid rgba(124,58,237,0.35)',
-              color: '#a78bfa',
+              background: 'var(--ls-card)',
+              border: '1px solid var(--ls-card-border)',
+              color: 'var(--ls-muted)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -111,10 +111,10 @@ export const LandingHero = () => {
               className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite]"
               style={{
                 background:
-                  'linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.15) 50%, transparent 100%)',
+                  'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%)',
               }}
             />
-            <span className="relative size-1.5 rounded-full" style={{ background: '#7c3aed' }} />
+            <span className="relative size-1.5 rounded-full bg-foreground/40" />
             <span className="relative">✦ Introducing Campaign Analytics 2.0</span>
           </div>
 
@@ -129,17 +129,7 @@ export const LandingHero = () => {
               </span>
             ))}
             <br className="hidden sm:block" />
-            <span
-              className="hero-word-accent inline-block"
-              style={{
-                background: 'linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              Convert.
-            </span>
+            <span className="hero-word-accent inline-block text-foreground/60">Convert.</span>
           </h1>
 
           {/* Subtitle */}
@@ -155,10 +145,11 @@ export const LandingHero = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
             <Link
               href="/login"
-              className="hero-cta-primary inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+              className="hero-cta-primary inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-bold transition-all duration-200 hover:opacity-80 hover:-translate-y-0.5"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-                boxShadow: '0 0 32px rgba(124,58,237,0.45), 0 4px 24px rgba(0,0,0,0.4)',
+                background: 'var(--foreground)',
+                color: 'var(--background)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
               }}
             >
               Start for free
@@ -169,7 +160,7 @@ export const LandingHero = () => {
               onClick={() =>
                 document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' })
               }
-              className="hero-cta-secondary inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-white/10"
+              className="hero-cta-secondary inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-black/5"
               style={{
                 background: 'var(--ls-card)',
                 border: '1px solid var(--ls-card-border)',
@@ -184,13 +175,17 @@ export const LandingHero = () => {
           <div className="hero-social-proof mt-10 flex flex-wrap items-center gap-2">
             {[
               { label: 'WhatsApp', color: '#34d399' },
-              { label: 'SMS', color: '#60a5fa' },
-              { label: 'Email', color: '#a78bfa' },
+              { label: 'SMS', color: 'var(--ls-muted)' },
+              { label: 'Email', color: 'var(--ls-muted)' },
             ].map(({ label, color }) => (
               <span
                 key={label}
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold"
-                style={{ background: `${color}15`, border: `1px solid ${color}30`, color }}
+                style={{
+                  background: 'var(--ls-card)',
+                  border: '1px solid var(--ls-card-border)',
+                  color,
+                }}
               >
                 <span className="size-1.5 rounded-full" style={{ background: color }} />
                 {label}
@@ -211,8 +206,7 @@ export const LandingHero = () => {
               background: 'var(--ls-card)',
               border: '1px solid var(--ls-card-border)',
               backdropFilter: 'blur(24px)',
-              boxShadow:
-                '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.15), 0 0 60px rgba(124,58,237,0.12)',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
             }}
           >
             {/* Card header */}
@@ -266,8 +260,8 @@ export const LandingHero = () => {
                     className="flex-1 rounded-t-md transition-all duration-300"
                     style={{
                       height: `${h}%`,
-                      background: `linear-gradient(to top, ${BAR_COLORS[i]}, ${BAR_COLORS[i]}88)`,
-                      opacity: i === 4 || i === 5 ? 0.4 : 1,
+                      background: BAR_COLORS[i],
+                      opacity: i === 4 || i === 5 ? 0.3 : 0.7,
                     }}
                   />
                 ))}
@@ -289,7 +283,7 @@ export const LandingHero = () => {
             <div>
               <div className="mb-1.5 flex justify-between text-[10px]">
                 <span style={{ color: 'var(--ls-subtle)' }}>Campaign progress</span>
-                <span style={{ color: '#a78bfa' }}>68%</span>
+                <span style={{ color: 'var(--foreground)' }}>68%</span>
               </div>
               <div
                 className="h-1.5 w-full overflow-hidden rounded-full"
@@ -297,10 +291,7 @@ export const LandingHero = () => {
               >
                 <div
                   className="h-full rounded-full"
-                  style={{
-                    width: '68%',
-                    background: 'linear-gradient(to right, #7c3aed, #22d3ee)',
-                  }}
+                  style={{ width: '68%', background: 'var(--foreground)' }}
                 />
               </div>
             </div>
@@ -313,12 +304,12 @@ export const LandingHero = () => {
               background: 'var(--ls-card-hover)',
               border: '1px solid var(--ls-card-border)',
               backdropFilter: 'blur(16px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             }}
           >
             <div
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}
+              className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+              style={{ background: 'var(--foreground)', color: 'var(--background)' }}
             >
               RM
             </div>
@@ -330,7 +321,7 @@ export const LandingHero = () => {
                 Just now
               </p>
             </div>
-            <span className="size-2 shrink-0 rounded-full" style={{ background: '#22d3ee' }} />
+            <span className="size-2 shrink-0 rounded-full bg-foreground/30" />
           </div>
 
           {/* Floating metric card (bottom-left) */}
@@ -340,14 +331,14 @@ export const LandingHero = () => {
               background: 'var(--ls-card-hover)',
               border: '1px solid var(--ls-card-border)',
               backdropFilter: 'blur(16px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             }}
           >
             <div
               className="flex size-9 items-center justify-center rounded-xl"
-              style={{ background: 'rgba(34,211,238,0.15)' }}
+              style={{ background: 'var(--ls-card)' }}
             >
-              <span style={{ color: '#22d3ee', fontSize: '16px' }}>↑</span>
+              <span style={{ color: 'var(--foreground)', fontSize: '16px' }}>↑</span>
             </div>
             <div>
               <p className="text-base font-black text-foreground">+23.4%</p>

@@ -67,18 +67,10 @@ export const LandingNav = ({ activeSection = '' }: LandingNavProps) => {
           </span>
           <span
             className="h-4 w-px shrink-0"
-            style={{ background: 'linear-gradient(to bottom, #7c3aed, #3b82f6)' }}
+            style={{ background: 'var(--ls-card-border)' }}
             aria-hidden="true"
           />
-          <span
-            className="font-mono text-base font-black tracking-[0.14em] uppercase"
-            style={{
-              background: 'linear-gradient(to right, #7c3aed, #3b82f6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+          <span className="font-mono text-base font-black tracking-[0.14em] text-foreground uppercase">
             {siteConfig.brand.line2}
           </span>
         </Link>
@@ -94,16 +86,16 @@ export const LandingNav = ({ activeSection = '' }: LandingNavProps) => {
                 onClick={() => scrollTo(link.href)}
                 className="relative px-4 py-2 text-sm font-medium transition-all duration-200"
                 style={{
-                  color: isActive ? '#fff' : 'var(--ls-muted)',
+                  color: isActive ? 'var(--foreground)' : 'var(--ls-muted)',
                   borderRadius: '10px',
-                  background: isActive ? 'rgba(124,58,237,0.14)' : 'transparent',
+                  background: isActive ? 'var(--ls-card-hover)' : 'transparent',
                 }}
               >
                 {link.label}
                 {isActive && (
                   <span
                     className="absolute bottom-0.5 left-1/2 h-px w-5 -translate-x-1/2"
-                    style={{ background: 'linear-gradient(to right, #7c3aed, #3b82f6)' }}
+                    style={{ background: 'var(--foreground)' }}
                   />
                 )}
               </button>
@@ -118,10 +110,10 @@ export const LandingNav = ({ activeSection = '' }: LandingNavProps) => {
           </div>
           <Link
             href="/login"
-            className="hidden items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90 hover:-translate-y-px md:inline-flex"
+            className="hidden items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:opacity-80 hover:-translate-y-px md:inline-flex"
             style={{
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
-              boxShadow: '0 0 24px rgba(124,58,237,0.4)',
+              background: 'var(--foreground)',
+              color: 'var(--background)',
             }}
           >
             Get Started
@@ -134,7 +126,7 @@ export const LandingNav = ({ activeSection = '' }: LandingNavProps) => {
             style={{
               border: '1px solid var(--ls-card-border)',
               background: 'var(--ls-card)',
-              color: '#fff',
+              color: 'var(--foreground)',
             }}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle mobile menu"
@@ -170,8 +162,8 @@ export const LandingNav = ({ activeSection = '' }: LandingNavProps) => {
             <ThemeModeToggle />
             <Link
               href="/login"
-              className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}
+              className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-bold"
+              style={{ background: 'var(--foreground)', color: 'var(--background)' }}
             >
               Get Started
             </Link>

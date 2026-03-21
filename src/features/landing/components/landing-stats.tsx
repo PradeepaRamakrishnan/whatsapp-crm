@@ -21,29 +21,21 @@ const CAPABILITIES = [
     icon: MessageMultiple01Icon,
     title: 'Multi-channel',
     body: 'Send campaigns over WhatsApp, SMS, and Email from a single unified inbox — no switching between tools.',
-    color: '#a78bfa',
-    glow: 'rgba(124,58,237,0.2)',
   },
   {
     icon: FlashIcon,
     title: 'Bulk messaging',
     body: 'Upload thousands of contacts via CSV and send personalised messages to each one in a single click.',
-    color: '#60a5fa',
-    glow: 'rgba(59,130,246,0.2)',
   },
   {
     icon: Analytics01Icon,
     title: 'Real-time analytics',
     body: 'Track delivery, open, and reply rates as they happen. Know exactly how your campaign is performing.',
-    color: '#22d3ee',
-    glow: 'rgba(34,211,238,0.2)',
   },
   {
     icon: Globe02Icon,
     title: 'API-first',
     body: 'Integrate with your existing tools via REST API. Trigger campaigns from CRMs, webhooks, or your own app.',
-    color: '#34d399',
-    glow: 'rgba(52,211,153,0.2)',
   },
 ];
 
@@ -74,8 +66,7 @@ export const LandingStats = () => {
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
         style={{
-          background:
-            'linear-gradient(to right, transparent, rgba(124,58,237,0.4), rgba(34,211,238,0.3), transparent)',
+          background: 'linear-gradient(to right, transparent, var(--ls-card-border), transparent)',
         }}
         aria-hidden="true"
       />
@@ -83,17 +74,7 @@ export const LandingStats = () => {
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
         style={{
-          background:
-            'linear-gradient(to right, transparent, rgba(59,130,246,0.3), rgba(124,58,237,0.4), transparent)',
-        }}
-        aria-hidden="true"
-      />
-      {/* Radial glow center */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(124,58,237,0.06) 0%, transparent 70%)',
+          background: 'linear-gradient(to right, transparent, var(--ls-card-border), transparent)',
         }}
         aria-hidden="true"
       />
@@ -103,7 +84,7 @@ export const LandingStats = () => {
         <div className="caps-label mb-16 text-center">
           <p
             className="mb-4 font-mono text-[10px] font-semibold uppercase tracking-[0.4em]"
-            style={{ color: '#7c3aed' }}
+            style={{ color: 'var(--ls-subtle)' }}
           >
             Platform capabilities
           </p>
@@ -111,17 +92,7 @@ export const LandingStats = () => {
             className="font-black tracking-tighter text-foreground"
             style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
           >
-            Everything you need{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #a78bfa, #22d3ee)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              in one place
-            </span>
+            Everything you need <span className="text-foreground/60">in one place</span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-base" style={{ color: 'var(--ls-muted)' }}>
             Built for teams that want to move fast. No bloat, no steep learning curve — just the
@@ -137,17 +108,18 @@ export const LandingStats = () => {
               className="cap-card group relative overflow-hidden rounded-2xl p-7 transition-all duration-300"
               style={
                 {
-                  '--cap-hover-border': `${cap.color}30`,
+                  '--cap-hover-border': 'var(--ls-card-border)',
                   border: '1px solid var(--ls-card-border)',
                   backdropFilter: 'blur(12px)',
                 } as React.CSSProperties
               }
             >
-              {/* Glow on hover */}
+              {/* Subtle hover glow */}
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{
-                  background: `radial-gradient(ellipse at 50% 0%, ${cap.glow} 0%, transparent 70%)`,
+                  background:
+                    'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.04) 0%, transparent 70%)',
                 }}
                 aria-hidden="true"
               />
@@ -156,11 +128,11 @@ export const LandingStats = () => {
               <div
                 className="mb-5 flex size-12 items-center justify-center rounded-xl"
                 style={{
-                  background: `${cap.color}15`,
-                  border: `1px solid ${cap.color}25`,
+                  background: 'var(--ls-card)',
+                  border: '1px solid var(--ls-card-border)',
                 }}
               >
-                <HugeiconsIcon icon={cap.icon} size={22} color={cap.color} />
+                <HugeiconsIcon icon={cap.icon} size={22} color="currentColor" />
               </div>
 
               <h3 className="mb-2 text-base font-bold text-foreground">{cap.title}</h3>
