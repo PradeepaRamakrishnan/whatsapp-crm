@@ -241,7 +241,7 @@ function SchedulerActions({ scheduler }: { scheduler: LeadGenerationScheduler })
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
           <Button
             variant="ghost"
             className="h-7 w-7 p-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
