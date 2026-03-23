@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import {
   Activity,
   AlertCircle,
+  ArrowRight,
   Calendar,
   CheckCircle2,
   Clock,
@@ -34,7 +35,7 @@ import {
   resumeCampaign,
   runCampaign,
 } from '../services';
-import type { CampaignStatus } from '../types';
+import type { CampaignStatus, ChannelOrderStep } from '../types';
 import { CampaignContactsTable } from './campaign-contacts-table';
 
 const statusConfig: Record<string, { label: string; dotClass: string; className: string }> = {
@@ -141,43 +142,111 @@ function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
   );
 }
 
-function ChannelSummaryRow({
+const CHANNEL_META = {
+  email: {
+    icon: Mail,
+    label: 'Email',
+    iconColor: 'text-violet-600',
+    iconBg: 'bg-violet-50 dark:bg-violet-950/30',
+  },
+  whatsapp: {
+    icon: MessageCircle,
+    label: 'WhatsApp',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+  },
+  sms: {
+    icon: MessageSquare,
+    label: 'SMS',
+    iconColor: 'text-sky-600',
+    iconBg: 'bg-sky-50 dark:bg-sky-950/30',
+  },
+} as const;
+
+function ChannelSequence({ steps }: { steps: ChannelOrderStep[] }) {
+  const enabled = steps.filter((s) => s.enabled);
+  if (!enabled.length) return null;
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {enabled.map((step, i) => {
+        const meta = CHANNEL_META[step.channel] ?? CHANNEL_META.sms;
+        const Icon = meta.icon;
+        const delayLabel =
+          step.delayMs === 0
+            ? 'Immediately'
+            : step.delayMs < 3600000
+              ? `+${step.delayMs / 60000}m`
+              : step.delayMs < 86400000
+                ? `+${step.delayMs / 3600000}h`
+                : `+${step.delayMs / 86400000}d`;
+        return (
+          <div key={step.templateId} className="flex items-center gap-2">
+            {i > 0 && (
+              <div className="flex flex-col items-center gap-0.5">
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[9px] text-muted-foreground font-medium">{delayLabel}</span>
+              </div>
+            )}
+            <div className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${meta.iconBg}`}>
+              <Icon className={`h-3.5 w-3.5 ${meta.iconColor}`} />
+              <span className="text-xs font-semibold">{meta.label}</span>
+              {i === 0 && <span className="text-[10px] text-muted-foreground ml-0.5">now</span>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ChannelDeliveryRow({
   icon: Icon,
   iconColor,
   iconBg,
   label,
   sent,
+  pending,
   failed,
-  skipped,
 }: {
   icon: React.ElementType;
   iconColor: string;
   iconBg: string;
   label: string;
   sent: number;
+  pending: number;
   failed: number;
-  skipped: number;
 }) {
+  const total = sent + pending + failed;
+  const pct = total > 0 ? Math.round((sent / total) * 100) : 0;
   return (
     <div className="flex items-center gap-4 rounded-xl border bg-card px-4 py-3">
       <div className={`rounded-lg p-2 ${iconBg}`}>
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold">{label}</p>
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-semibold">{label}</p>
+          <span className="text-[11px] text-muted-foreground">{pct}% sent</span>
+        </div>
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-6 text-center">
+      <div className="flex items-center gap-5 text-center shrink-0">
         <div>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sent</p>
           <p className="text-sm font-bold text-emerald-600">{sent.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Failed</p>
-          <p className="text-sm font-bold text-red-600">{failed.toLocaleString()}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+          <p className="text-sm font-bold text-amber-600">{pending.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Skipped</p>
-          <p className="text-sm font-bold text-amber-600">{skipped.toLocaleString()}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Failed</p>
+          <p className="text-sm font-bold text-red-600">{failed.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -317,10 +386,23 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 year: 'numeric',
               })}
             </span>
-            <span className="flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              {campaign.id}
-            </span>
+            {campaign.file && (
+              <span className="flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                {campaign.file.name}
+              </span>
+            )}
+            {campaign.lastRunAt && (
+              <span className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                Last run{' '}
+                {new Date(campaign.lastRunAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            )}
           </div>
         </div>
 
@@ -440,7 +522,9 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               </div>
               <div>
                 <InfoRow label="Name" value={campaign.name} />
-                <InfoRow label="Description" value={campaign.description || '—'} />
+                {campaign.description && (
+                  <InfoRow label="Description" value={campaign.description} />
+                )}
                 <InfoRow label="Status" value={<StatusPill status={campaign.status} />} />
                 <InfoRow
                   label="Created"
@@ -451,6 +535,14 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                   })}
                 />
               </div>
+              {campaign.channelOrder && campaign.channelOrder.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                    Message Sequence
+                  </p>
+                  <ChannelSequence steps={campaign.channelOrder} />
+                </div>
+              )}
             </div>
 
             {/* File Information */}
@@ -467,11 +559,17 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               {campaign.file && campaign.fileContentStats ? (
                 <>
                   <InfoRow label="File Name" value={campaign.file.name} />
-                  <InfoRow label="Bank" value={campaign.file.bankName?.toUpperCase()} />
-                  <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t">
+                  <InfoRow label="Source" value={campaign.file.source?.toUpperCase()} />
+                  <InfoRow
+                    label="File Status"
+                    value={
+                      <span className="capitalize text-xs font-medium">{campaign.file.status}</span>
+                    }
+                  />
+                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t">
                     {[
                       {
-                        label: 'Total',
+                        label: 'Total Records',
                         value: campaign.fileContentStats.totalRecords ?? 0,
                         color: 'text-blue-600',
                         border: 'border-blue-400',
@@ -483,16 +581,16 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                         border: 'border-red-400',
                       },
                       {
-                        label: 'Dupes',
-                        value: campaign.fileContentStats.duplicateRecords ?? 0,
-                        color: 'text-amber-600',
-                        border: 'border-amber-400',
+                        label: 'Unique Emails',
+                        value: campaign.uniqueEmail ?? 0,
+                        color: 'text-violet-600',
+                        border: 'border-violet-400',
                       },
                       {
-                        label: 'Excluded',
-                        value: campaign.fileContentStats.excludedRecords ?? 0,
-                        color: 'text-slate-500',
-                        border: 'border-slate-400',
+                        label: 'Unique Mobiles',
+                        value: campaign.uniqueMobile ?? 0,
+                        color: 'text-sky-600',
+                        border: 'border-sky-400',
                       },
                     ].map((s) => (
                       <div key={s.label} className={`border-l-2 pl-2.5 py-0.5 ${s.border}`}>
@@ -515,7 +613,7 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
             </div>
           </div>
 
-          {/* Campaign Summary */}
+          {/* Delivery Summary */}
           <div className="rounded-xl border bg-card p-5">
             <div className="flex items-center gap-2 mb-4">
               <div className="rounded-lg bg-orange-50 dark:bg-orange-950/30 p-1.5">
@@ -524,12 +622,54 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
               <div>
                 <p className="text-xs font-semibold">Delivery Summary</p>
                 <p className="text-[11px] text-muted-foreground">
-                  Message delivery across all channels
+                  Message delivery status across all channels
                 </p>
               </div>
             </div>
 
-            {status === 'active' || status === 'pending' || status === 'draft' ? (
+            {campaign.contactMessageSent ? (
+              <div className="space-y-2">
+                {campaign.channelOrder?.find((s) => s.channel === 'email' && s.enabled) && (
+                  <ChannelDeliveryRow
+                    icon={Mail}
+                    iconColor="text-violet-600"
+                    iconBg="bg-violet-50 dark:bg-violet-950/30"
+                    label="Email"
+                    sent={campaign.contactMessageSent.email?.sent ?? 0}
+                    pending={campaign.contactMessageSent.email?.pending ?? 0}
+                    failed={campaign.executionSummary?.failed.email ?? 0}
+                  />
+                )}
+                {campaign.channelOrder?.find((s) => s.channel === 'whatsapp' && s.enabled) && (
+                  <ChannelDeliveryRow
+                    icon={MessageCircle}
+                    iconColor="text-emerald-600"
+                    iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+                    label="WhatsApp"
+                    sent={campaign.contactMessageSent.whatsapp?.sent ?? 0}
+                    pending={campaign.contactMessageSent.whatsapp?.pending ?? 0}
+                    failed={campaign.executionSummary?.failed.whatsapp ?? 0}
+                  />
+                )}
+                {campaign.channelOrder?.find((s) => s.channel === 'sms' && s.enabled) && (
+                  <ChannelDeliveryRow
+                    icon={MessageSquare}
+                    iconColor="text-sky-600"
+                    iconBg="bg-sky-50 dark:bg-sky-950/30"
+                    label="SMS"
+                    sent={campaign.contactMessageSent.sms?.sent ?? 0}
+                    pending={campaign.contactMessageSent.sms?.pending ?? 0}
+                    failed={campaign.executionSummary?.failed.sms ?? 0}
+                  />
+                )}
+                {!campaign.channelOrder?.length && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Zap className="h-6 w-6 text-muted-foreground/40 mb-2" />
+                    <p className="text-xs text-muted-foreground">No channels configured</p>
+                  </div>
+                )}
+              </div>
+            ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <div className="rounded-full bg-muted p-3 mb-3">
                   <Zap className="h-5 w-5 text-muted-foreground" />
@@ -538,53 +678,6 @@ export function CampaignDetailsPage({ campaignId }: CampaignDetailsPageProps) {
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Click <strong>Run</strong> to start sending messages
                 </p>
-              </div>
-            ) : campaign.executionSummary ? (
-              <div className="space-y-2">
-                <ChannelSummaryRow
-                  icon={Mail}
-                  iconColor="text-blue-600"
-                  iconBg="bg-blue-50 dark:bg-blue-950/30"
-                  label="Email"
-                  sent={campaign.executionSummary.successful.email}
-                  failed={campaign.executionSummary.failed.email}
-                  skipped={
-                    campaign.executionSummary.skipped.alreadySent.email +
-                    campaign.executionSummary.skipped.notWhitelisted.email +
-                    campaign.executionSummary.skipped.campaignPaused.email
-                  }
-                />
-                <ChannelSummaryRow
-                  icon={MessageCircle}
-                  iconColor="text-emerald-600"
-                  iconBg="bg-emerald-50 dark:bg-emerald-950/30"
-                  label="WhatsApp"
-                  sent={campaign.executionSummary.successful.whatsapp}
-                  failed={campaign.executionSummary.failed.whatsapp}
-                  skipped={
-                    campaign.executionSummary.skipped.alreadySent.whatsapp +
-                    campaign.executionSummary.skipped.notWhitelisted.whatsapp +
-                    campaign.executionSummary.skipped.campaignPaused.whatsapp
-                  }
-                />
-                <ChannelSummaryRow
-                  icon={MessageSquare}
-                  iconColor="text-purple-600"
-                  iconBg="bg-purple-50 dark:bg-purple-950/30"
-                  label="SMS"
-                  sent={campaign.executionSummary.successful.sms}
-                  failed={campaign.executionSummary.failed.sms}
-                  skipped={
-                    campaign.executionSummary.skipped.alreadySent.sms +
-                    campaign.executionSummary.skipped.notWhitelisted.sms +
-                    campaign.executionSummary.skipped.campaignPaused.sms
-                  }
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <AlertCircle className="h-8 w-8 text-muted-foreground/40" />
-                <p className="mt-2 text-xs text-muted-foreground">No execution summary available</p>
               </div>
             )}
           </div>

@@ -5,7 +5,6 @@ import { Activity, AlertCircle, Pause, Plus, Rocket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { MOCK_CAMPAIGNS_RESPONSE } from '../lib/mock-data';
 import { getAllCampaigns } from '../services';
 import type { CampaignsResponse, CampaignsStats } from '../types';
 import { CampaignsTable } from './campaigns-table';
@@ -23,9 +22,8 @@ export function CampaignsList() {
   const router = useRouter();
 
   const { data: campaignsResponse } = useQuery<CampaignsResponse>({
-    queryKey: ['campaigns', { page: 1, limit: 10 }],
+    queryKey: ['campaigns', { page: 1, limit: 10, search: '' }],
     queryFn: () => getAllCampaigns(1, 10),
-    select: (data) => (data.meta.total === 0 ? MOCK_CAMPAIGNS_RESPONSE : data),
   });
 
   const stats = campaignsResponse?.stats || { active: 0, running: 0, paused: 0, failed: 0 };

@@ -43,7 +43,6 @@ import {
 import { getFileById } from '@/features/files/services';
 import { fetchFiles as getAllFiles } from '@/features/files/services/client';
 import {
-  createConfiguration,
   getAllEmailTemplates,
   getAllSmsTemplates,
   getAllWhatsAppTemplates,
@@ -149,11 +148,6 @@ const toCron = (date: string, time: string) => {
   const [, m, d] = date.split('-');
   const [h, min] = time.split(':');
   return `0 ${+min} ${+h} ${+d} ${+m} *`;
-};
-const nowCron = () => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() + 1);
-  return `0 ${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`;
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -264,44 +258,24 @@ export function CreateCampaignForm() {
       setSubmitError(null);
       setIsSubmitting(true);
       try {
+        const schedulerEnabled = scheduleMode === 'schedule' && !!scheduledDate && !!scheduledTime;
+        const cronPattern = schedulerEnabled ? toCron(scheduledDate, scheduledTime) : null;
         const steps = sequence
-          .filter((s) => s.channel !== 'manual' && s.templateId)
-          .map((s, i) => ({
-            channel: s.channel as 'email' | 'sms' | 'whatsapp',
-            templateId: s.templateId,
-            delayMs: i === 0 ? 0 : toDelayMs(s.delayValue, s.delayUnit),
-          }));
-        const config = await createConfiguration({
-          steps,
-          cronPattern:
-            scheduleMode === 'schedule' && scheduledDate && scheduledTime
-              ? toCron(scheduledDate, scheduledTime)
-              : nowCron(),
-        });
-        const emailTemplateId = sequence.find(
-          (s) => s.channel === 'email' && s.templateId,
-        )?.templateId;
-        const smsTemplateId = sequence.find((s) => s.channel === 'sms' && s.templateId)?.templateId;
-        const whatsappTemplateId = sequence.find(
-          (s) => s.channel === 'whatsapp' && s.templateId,
-        )?.templateId;
-        const channelOrder = sequence
           .filter((s) => s.channel !== 'manual' && s.templateId)
           .map((s, i) => ({
             channel: s.channel,
             templateId: s.templateId as string,
             delayMs: i === 0 ? 0 : toDelayMs(s.delayValue, s.delayUnit),
+            enabled: true,
           }));
         await createCampaign({
           name: value.name,
           description: value.description,
           source: selectedFileData?.source || '',
           fileId: selectedFile,
-          configurationId: config.id,
-          emailTemplateId,
-          smsTemplateId,
-          whatsappTemplateId,
-          channelOrder,
+          schedulerEnabled,
+          cronPattern,
+          steps,
         });
         router.push('/campaigns/list');
       } catch (err) {

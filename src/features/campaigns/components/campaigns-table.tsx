@@ -67,7 +67,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MOCK_CAMPAIGNS_RESPONSE } from '../lib/mock-data';
 import { deleteCampaign, getAllCampaigns } from '../services';
 import type { CampaignData, CampaignStatus, CampaignsResponse } from '../types';
 
@@ -80,7 +79,7 @@ const statusConfig: Record<
   { label: string; icon: React.ElementType; className: string; dotClass: string }
 > = {
   active: {
-    label: 'Active',
+    label: 'Ready to Run',
     icon: PlayCircle,
     className:
       'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-400',
@@ -275,7 +274,6 @@ export function CampaignsTable() {
     queryKey: ['campaigns', { page, limit: pageSize, search: urlSearch }],
     queryFn: () => getAllCampaigns(page, pageSize, urlSearch || undefined),
     placeholderData: (previousData) => previousData,
-    select: (data) => (data.meta.total === 0 ? MOCK_CAMPAIGNS_RESPONSE : data),
   });
 
   const columnHelper = createColumnHelper<CampaignData>();
@@ -285,41 +283,16 @@ export function CampaignsTable() {
       columnHelper.accessor('name', {
         header: 'Campaign',
         cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="cursor-pointer font-medium transition-colors hover:text-blue-600 hover:underline">
-              {row.original.name}
-            </span>
-            {row.original.description && (
-              <span className="line-clamp-1 text-xs text-muted-foreground">
-                {row.original.description}
-              </span>
-            )}
-          </div>
+          <span className="cursor-pointer font-medium transition-colors hover:text-blue-600 hover:underline">
+            {row.original.name}
+          </span>
         ),
         size: 240,
       }),
       columnHelper.accessor('status', {
         header: 'Status',
         cell: ({ getValue }) => <StatusBadge status={getValue()} />,
-        size: 130,
-      }),
-      columnHelper.accessor('totalContacts', {
-        header: 'Contacts',
-        cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {getValue()?.toLocaleString() ?? '—'}
-          </span>
-        ),
-        size: 100,
-      }),
-      columnHelper.accessor('lastRunAt', {
-        header: 'Last Run',
-        cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground">
-            {getValue() ? dayjs.utc(getValue()).format('MMM DD, YYYY HH:mm') : '—'}
-          </span>
-        ),
-        size: 180,
+        size: 150,
       }),
       columnHelper.accessor('createdAt', {
         header: 'Created',

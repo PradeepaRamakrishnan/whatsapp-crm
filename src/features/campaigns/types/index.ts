@@ -69,16 +69,31 @@ export interface MessageSentStats {
 }
 
 export interface ChannelStatus {
+  id?: string | null;
   sent: boolean;
   sentAt?: string | null;
+  delivered?: boolean;
   deliveredAt?: string | null;
-  bouncedAt?: string | null;
   bounced?: boolean;
-  error?: {
-    code?: string[];
-    message?: string;
-    timestamp?: string;
-  } | null;
+  bouncedAt?: string | null;
+  read?: boolean;
+  readAt?: string | null;
+  error?:
+    | string
+    | {
+        code?: string[];
+        message?: string;
+        timestamp?: string;
+      }
+    | null;
+}
+
+export interface CallingStatus {
+  sent: boolean;
+  sentAt?: string | null;
+  sessionId?: string | null;
+  callUuid?: string | null;
+  error?: string | null;
 }
 
 export interface ChannelMessageStats {
@@ -96,7 +111,7 @@ export interface ContactMessageSent {
 export interface CampaignFile {
   id: string;
   name: string;
-  bankName: string;
+  source: string;
   status: string;
 }
 
@@ -146,6 +161,13 @@ export interface ExecutionSummary {
   };
 }
 
+export interface ChannelOrderStep {
+  channel: 'email' | 'sms' | 'whatsapp';
+  templateId: string;
+  delayMs: number;
+  enabled: boolean;
+}
+
 export interface CampaignDetails {
   id: string;
   name: string;
@@ -153,11 +175,15 @@ export interface CampaignDetails {
   file: CampaignFile;
   status: CampaignStatus;
   totalContacts: number;
+  uniqueEmail?: number;
+  uniqueMobile?: number;
   fileContentStats: FileContentStats;
   interested: number;
   responseRate: number;
   messageSent: MessageSentStats;
   contactMessageSent: ContactMessageSent;
+  channelOrder?: ChannelOrderStep[];
+  lastRunAt?: string | null;
   executionSummary?: ExecutionSummary | null;
   createdAt: string;
   updatedAt: string;
@@ -169,13 +195,10 @@ export type CampaignDetailsResponse = CampaignDetails;
 // Campaign Contacts Types
 export interface CampaignContactData {
   id: string;
-  campaign: {
-    id: string | Record<string, unknown>;
-  };
+  campaign: { id: string };
   contact: {
     id: string;
     customerName: string;
-    settlementAmount: number;
     mobileNumber: string;
     emailId: string;
   };
@@ -184,12 +207,7 @@ export interface CampaignContactData {
   email: ChannelStatus;
   sms: ChannelStatus;
   whatsapp: ChannelStatus;
-  lead?: {
-    id: string;
-    interestedAt: string;
-    consentGivenAt: string | null;
-    status: string;
-  };
+  calling: CallingStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -207,8 +225,15 @@ export interface CampaignContactsStats {
   completed: string | number;
   failed: string | number;
   emailSent: string | number;
+  emailDelivered: string | number;
+  emailBounced: string | number;
   smsSent: string | number;
+  smsDelivered: string | number;
+  smsBounced: string | number;
   whatsappSent: string | number;
+  whatsappDelivered: string | number;
+  whatsappBounced: string | number;
+  callingSent: string | number;
   interested: string | number;
   notInterested: string | number;
 }
