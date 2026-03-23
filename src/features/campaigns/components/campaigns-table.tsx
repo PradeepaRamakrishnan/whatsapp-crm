@@ -78,6 +78,13 @@ const statusConfig: Record<
   CampaignStatus,
   { label: string; icon: React.ElementType; className: string; dotClass: string }
 > = {
+  pending: {
+    label: 'Setting Up',
+    icon: Clock,
+    className:
+      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-400',
+    dotClass: 'bg-amber-400 animate-pulse',
+  },
   active: {
     label: 'Ready to Run',
     icon: PlayCircle,
@@ -90,21 +97,14 @@ const statusConfig: Record<
     icon: Zap,
     className:
       'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400',
-    dotClass: 'bg-blue-500',
+    dotClass: 'bg-blue-500 animate-pulse',
   },
   paused: {
     label: 'Paused',
     icon: PauseCircle,
     className:
-      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-400',
-    dotClass: 'bg-amber-500',
-  },
-  failed: {
-    label: 'Failed',
-    icon: AlertCircle,
-    className:
-      'text-red-700 bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 dark:text-red-400',
-    dotClass: 'bg-red-500',
+      'text-orange-700 bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800 dark:text-orange-400',
+    dotClass: 'bg-orange-400',
   },
   completed: {
     label: 'Completed',
@@ -113,12 +113,12 @@ const statusConfig: Record<
       'text-slate-700 bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
     dotClass: 'bg-slate-400',
   },
-  pending: {
-    label: 'Pending',
-    icon: Clock,
+  failed: {
+    label: 'Failed',
+    icon: AlertCircle,
     className:
-      'text-orange-700 bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800 dark:text-orange-400',
-    dotClass: 'bg-orange-400',
+      'text-red-700 bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 dark:text-red-400',
+    dotClass: 'bg-red-500',
   },
   draft: {
     label: 'Draft',

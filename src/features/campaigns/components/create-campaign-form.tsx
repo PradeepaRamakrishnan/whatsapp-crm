@@ -313,7 +313,7 @@ export function CreateCampaignForm() {
   const tplLoading = el || wl || sl;
   const getTpls = (ch: string) => (ch === 'whatsapp' ? waTpls : ch === 'sms' ? smsTpls : emailTpls);
   const getTplName = (s: CampaignSequenceStep) =>
-    getTpls(s.channel).find((t) => t.id === s.templateId)?.name ?? s.templateId ?? '—';
+    getTpls(s.channel).find((t) => t.id === s.templateId)?.name ?? '—';
 
   const filesList = filesData?.data ?? [];
   const selectedFileData = filesList.find((f) => f.id === selectedFile);
@@ -912,6 +912,11 @@ export function CreateCampaignForm() {
                                       <span className="flex items-center gap-1.5 text-muted-foreground">
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                         Loading…
+                                      </span>
+                                    ) : s.templateId ? (
+                                      <span className="truncate">
+                                        {getTpls(s.channel).find((t) => t.id === s.templateId)
+                                          ?.name ?? 'Select template…'}
                                       </span>
                                     ) : (
                                       <SelectValue placeholder="Select template…" />
