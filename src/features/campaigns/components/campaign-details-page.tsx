@@ -39,35 +39,23 @@ import type { CampaignStatus, ChannelOrderStep } from '../types';
 import { CampaignContactsTable } from './campaign-contacts-table';
 
 const statusConfig: Record<string, { label: string; dotClass: string; className: string }> = {
+  pending: {
+    label: 'Setting Up',
+    dotClass: 'bg-amber-400 animate-pulse',
+    className:
+      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-400',
+  },
   active: {
-    label: 'Ready to start',
+    label: 'Ready to Run',
     dotClass: 'bg-emerald-500',
     className:
       'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-400',
   },
   running: {
-    label: 'Sending messages',
+    label: 'Running',
     dotClass: 'bg-blue-500 animate-pulse',
     className:
       'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400',
-  },
-  pending: {
-    label: 'Retrieving recipients…',
-    dotClass: 'bg-amber-400 animate-pulse',
-    className:
-      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-400',
-  },
-  scheduled: {
-    label: 'Scheduled',
-    dotClass: 'bg-violet-500',
-    className:
-      'text-violet-700 bg-violet-50 border-violet-200 dark:bg-violet-950/40 dark:border-violet-800 dark:text-violet-400',
-  },
-  completed: {
-    label: 'Completed',
-    dotClass: 'bg-slate-400',
-    className:
-      'text-slate-700 bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
   },
   paused: {
     label: 'Paused',
@@ -75,17 +63,29 @@ const statusConfig: Record<string, { label: string; dotClass: string; className:
     className:
       'text-orange-700 bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800 dark:text-orange-400',
   },
-  draft: {
-    label: 'Draft',
-    dotClass: 'bg-slate-300',
+  completed: {
+    label: 'Completed',
+    dotClass: 'bg-slate-400',
     className:
-      'text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
+      'text-slate-700 bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
   },
   failed: {
     label: 'Failed',
     dotClass: 'bg-red-500',
     className:
       'text-red-700 bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 dark:text-red-400',
+  },
+  scheduled: {
+    label: 'Scheduled',
+    dotClass: 'bg-violet-500',
+    className:
+      'text-violet-700 bg-violet-50 border-violet-200 dark:bg-violet-950/40 dark:border-violet-800 dark:text-violet-400',
+  },
+  draft: {
+    label: 'Draft',
+    dotClass: 'bg-slate-300',
+    className:
+      'text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
   },
 };
 

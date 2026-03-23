@@ -2,7 +2,13 @@ import axios, { AxiosError } from 'axios';
 import type { Configuration, ConfigurationResponse } from '@/features/campaigns/types';
 import { API_URLS } from '@/lib/api-urls';
 import { getAuthHeaders } from '@/lib/auth-headers';
-import type { Template, TemplatesResponse, WhatsAppTemplatesResponse } from '../types';
+import type {
+  ResendConfig,
+  SaveResendConfigPayload,
+  Template,
+  TemplatesResponse,
+  WhatsAppTemplatesResponse,
+} from '../types';
 
 const SETTINGS_API_URL = API_URLS.settings;
 
@@ -255,6 +261,70 @@ export async function createWhatsAppTemplate(
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data?.message || 'Failed to create WhatsApp template');
+    }
+    throw error;
+  }
+}
+
+export async function getResendConfig(): Promise<ResendConfig | null> {
+  try {
+    const response = await axiosClient({
+      method: 'GET',
+      url: '/resend/config',
+      headers: { ...getAuthHeaders() },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch Resend config');
+    }
+    throw error;
+  }
+}
+
+export async function saveResendConfig(data: SaveResendConfigPayload): Promise<ResendConfig> {
+  try {
+    const response = await axiosClient({
+      method: 'POST',
+      url: '/resend/config',
+      data,
+      headers: { ...getAuthHeaders() },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to save Resend config');
+    }
+    throw error;
+  }
+}
+
+export async function verifyResendDomain(): Promise<ResendConfig> {
+  try {
+    const response = await axiosClient({
+      method: 'POST',
+      url: '/resend/config/verify',
+      headers: { ...getAuthHeaders() },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to verify domain');
+    }
+    throw error;
+  }
+}
+
+export async function deleteResendConfig(): Promise<void> {
+  try {
+    await axiosClient({
+      method: 'DELETE',
+      url: '/resend/config',
+      headers: { ...getAuthHeaders() },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to delete Resend config');
     }
     throw error;
   }

@@ -53,6 +53,7 @@ export const dashboardData = {
           items: [
             { title: 'All Campaigns', url: '/campaigns/list' },
             { title: 'Recipients', url: '/recipients/list' },
+            { title: 'Configuration', url: '/campaigns/channel-config/email' },
           ],
         },
         {

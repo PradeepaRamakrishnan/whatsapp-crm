@@ -67,3 +67,35 @@ export interface WhatsAppTemplate {
 export interface WhatsAppTemplatesResponse {
   data: WhatsAppTemplate[];
 }
+
+export type ResendDomainStatus = 'not_configured' | 'pending' | 'verified' | 'failed';
+
+export interface ResendDnsRecord {
+  record: string;
+  name: string;
+  type: string;
+  ttl: string;
+  value: string;
+  priority: number | null;
+  status: string;
+}
+
+export interface ResendConfig {
+  id: string;
+  fromName: string;
+  fromEmail: string;
+  domain: string;
+  resendDomainId: string | null;
+  domainStatus: ResendDomainStatus;
+  dnsRecords: ResendDnsRecord[] | null;
+  apiKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveResendConfigPayload {
+  apiKey: string;
+  fromName: string;
+  fromEmail: string;
+  domain: string;
+}
