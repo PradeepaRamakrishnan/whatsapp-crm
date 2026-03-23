@@ -38,6 +38,7 @@ export const dashboardData = {
           items: [
             { title: 'Search & Add', url: '/business-leads/search' },
             { title: 'All Leads', url: '/business-leads/list' },
+            { title: 'All Schedulers', url: '/leads/schedulers' },
           ],
         },
       ],
@@ -101,7 +102,12 @@ export const dashboardData = {
           title: 'Settings',
           url: '/settings/financial-institutions',
           icon: Settings,
-          items: [{ title: 'Campaign Templates', url: '/settings/campaign-templates' }],
+          items: [
+            {
+              title: 'Campaign Templates',
+              url: '/settings/campaign-templates',
+            },
+          ],
         },
       ],
     },
