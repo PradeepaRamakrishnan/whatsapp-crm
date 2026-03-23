@@ -10,7 +10,8 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Search } from 'lucide-react';
+import dayjs from 'dayjs';
+import { Mail, MessageCircle, MessageSquare, Phone, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import * as React from 'react';
@@ -33,29 +34,159 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getCampaignContacts } from '../services';
-import type { CampaignContactData, CampaignContactsResponse } from '../types';
+import type {
+  CallingStatus,
+  CampaignContactData,
+  CampaignContactsResponse,
+  ChannelStatus,
+} from '../types';
+
+const RESPONSE_STYLES: Record<string, string> = {
+  interested: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  not_interested: 'text-rose-700 bg-rose-50 border-rose-200',
+  no_response: 'text-slate-600 bg-slate-50 border-slate-200',
+};
+
+function ResponseBadge({ status }: { status: string | null }) {
+  const key = status ?? 'no_response';
+  const cls = RESPONSE_STYLES[key] ?? RESPONSE_STYLES.no_response;
+  const label =
+    key === 'interested'
+      ? 'Interested'
+      : key === 'not_interested'
+        ? 'Not Interested'
+        : 'No Response';
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${cls}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function ChannelIcon({
+  icon: Icon,
+  label,
+  data,
+  sentColor,
+  pendingColor,
+}: {
+  icon: React.ElementType;
+  label: string;
+  data: ChannelStatus | CallingStatus;
+  sentColor: string;
+  pendingColor: string;
+}) {
+  const sent = data.sent;
+  const sentAt = data.sentAt ? dayjs(data.sentAt).format('MMM DD, hh:mm A') : null;
+  const deliveredAt =
+    'deliveredAt' in data && data.deliveredAt
+      ? dayjs(data.deliveredAt).format('MMM DD, hh:mm A')
+      : null;
+  const readAt =
+    'readAt' in data && data.readAt ? dayjs(data.readAt).format('MMM DD, hh:mm A') : null;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <span className={`cursor-default ${sent ? sentColor : pendingColor}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs space-y-0.5">
+        <p className="font-semibold">{label}</p>
+        {sentAt ? (
+          <p className="text-muted-foreground">Sent: {sentAt}</p>
+        ) : (
+          <p className="text-muted-foreground">Not sent yet</p>
+        )}
+        {deliveredAt && <p className="text-emerald-400">Delivered: {deliveredAt}</p>}
+        {readAt && <p className="text-blue-400">Read: {readAt}</p>}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export const columns: ColumnDef<CampaignContactData>[] = [
   {
     accessorKey: 'contact.customerName',
-    header: 'Name',
-    cell: ({ row }) => <div className="font-medium">{row.original.contact.customerName}</div>,
+    header: 'Customer Name',
+    cell: ({ row }) => (
+      <span className="font-medium text-sm">{row.original.contact.customerName}</span>
+    ),
+  },
+  {
+    accessorKey: 'contact.mobileNumber',
+    header: 'Mobile Number',
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.contact.mobileNumber || '—'}
+      </span>
+    ),
   },
   {
     accessorKey: 'contact.emailId',
     header: 'Email',
     cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">{row.original.contact.emailId || '—'}</div>
+      <span className="text-sm text-muted-foreground">{row.original.contact.emailId || '—'}</span>
     ),
   },
   {
-    accessorKey: 'contact.mobileNumber',
-    header: 'Phone Number',
+    accessorKey: 'responseStatus',
+    header: 'Response Status',
+    cell: ({ row }) => <ResponseBadge status={row.original.responseStatus} />,
+  },
+  {
+    id: 'channels',
+    header: 'Channels',
+    cell: ({ row }) => {
+      const c = row.original;
+      return (
+        <TooltipProvider delay={100}>
+          <div className="flex items-center gap-2.5">
+            <ChannelIcon
+              icon={Mail}
+              label="Email"
+              data={c.email}
+              sentColor="text-blue-500"
+              pendingColor="text-muted-foreground/40"
+            />
+            <ChannelIcon
+              icon={MessageSquare}
+              label="SMS"
+              data={c.sms}
+              sentColor="text-rose-500"
+              pendingColor="text-muted-foreground/40"
+            />
+            <ChannelIcon
+              icon={MessageCircle}
+              label="WhatsApp"
+              data={c.whatsapp}
+              sentColor="text-emerald-500"
+              pendingColor="text-muted-foreground/40"
+            />
+            <ChannelIcon
+              icon={Phone}
+              label="Call"
+              data={c.calling}
+              sentColor="text-violet-500"
+              pendingColor="text-muted-foreground/40"
+            />
+          </div>
+        </TooltipProvider>
+      );
+    },
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created At',
     cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">
-        {row.original.contact.mobileNumber || '—'}
-      </div>
+      <span className="text-sm text-muted-foreground">
+        {dayjs(row.original.createdAt).format('DD MMM YYYY')}
+      </span>
     ),
   },
 ];

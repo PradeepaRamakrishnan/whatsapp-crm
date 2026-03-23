@@ -25,11 +25,9 @@ export async function createCampaign(data: {
   description: string;
   source: string;
   fileId: string;
-  configurationId: string;
-  emailTemplateId?: string;
-  smsTemplateId?: string;
-  whatsappTemplateId?: string;
-  channelOrder?: { channel: string; templateId: string; delayMs: number }[];
+  schedulerEnabled: boolean;
+  cronPattern?: string | null;
+  steps: { channel: string; templateId: string; delayMs: number; enabled: boolean }[];
 }): Promise<CampaignDetailsResponse> {
   try {
     const response = await axiosClient({

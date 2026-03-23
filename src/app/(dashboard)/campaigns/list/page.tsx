@@ -18,15 +18,16 @@ type PageProps = {
 const CampaignListPage = async ({ searchParams }: PageProps) => {
   const queryClient = new QueryClient();
 
-  const { page, pageSize } = await searchParams;
+  const { page, pageSize, search } = await searchParams;
 
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(pageSize) || 10;
+  const searchTerm = (search as string) || '';
 
   try {
     await queryClient.prefetchQuery({
-      queryKey: ['campaigns', { page: pageNumber, limit: limitNumber }],
-      queryFn: () => getAllCampaigns(pageNumber, limitNumber),
+      queryKey: ['campaigns', { page: pageNumber, limit: limitNumber, search: searchTerm }],
+      queryFn: () => getAllCampaigns(pageNumber, limitNumber, searchTerm || undefined),
     });
   } catch {
     // API unavailable — client will refetch on mount
