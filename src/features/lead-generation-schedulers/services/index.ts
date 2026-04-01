@@ -5,6 +5,7 @@ import type {
   CreateSchedulerPayload,
   GetSchedulersQuery,
   LeadGenerationScheduler,
+  ScheduleAllUSStatesPayload,
   SchedulersResponse,
   UpdateSchedulerPayload,
 } from '../types';
@@ -76,5 +77,47 @@ export async function deleteScheduler(id: string): Promise<void> {
     await client.delete(`/${id}`, { headers: getAuthHeaders() });
   } catch (e) {
     handleError(e, 'Failed to delete scheduler');
+  }
+}
+
+export async function scheduleAllUSStates(
+  payload: ScheduleAllUSStatesPayload,
+): Promise<{ schedulerId: string; jobId: string; runAt: string | null }> {
+  try {
+    const res = await client.post('/bulk-us-states', payload, { headers: getAuthHeaders() });
+    return res.data;
+  } catch (e) {
+    handleError(e, 'Failed to schedule all-US-states job');
+  }
+}
+
+export async function runCrossSearch(): Promise<{
+  leadTypes: number;
+  states: number;
+  jobsQueued: number;
+}> {
+  try {
+    const res = await client.post('/run-cross', {}, { headers: getAuthHeaders() });
+    return res.data;
+  } catch (e) {
+    handleError(e, 'Failed to run cross search');
+  }
+}
+
+export async function runAllSchedulers(): Promise<{ triggered: number; jobIds: string[] }> {
+  try {
+    const res = await client.post('/run-all', {}, { headers: getAuthHeaders() });
+    return res.data;
+  } catch (e) {
+    handleError(e, 'Failed to trigger all schedulers');
+  }
+}
+
+export async function runOneScheduler(id: string): Promise<{ jobId: string }> {
+  try {
+    const res = await client.post(`/${id}/run`, {}, { headers: getAuthHeaders() });
+    return res.data;
+  } catch (e) {
+    handleError(e, 'Failed to trigger scheduler');
   }
 }

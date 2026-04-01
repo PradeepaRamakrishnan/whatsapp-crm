@@ -63,6 +63,7 @@ function NavGroupSection({
                   tooltip={item.title}
                   isActive={isActive}
                   onClick={() => router.push(item.url)}
+                  className="cursor-pointer"
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
@@ -79,7 +80,13 @@ function NavGroupSection({
                 className="group/collapsible w-full"
               >
                 <CollapsibleTrigger
-                  render={<SidebarMenuButton tooltip={item.title} isActive={isActive} />}
+                  render={
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={isActive}
+                      className="cursor-pointer"
+                    />
+                  }
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
@@ -92,6 +99,7 @@ function NavGroupSection({
                         <SidebarMenuSubButton
                           isActive={subItem.url === pathname}
                           onClick={() => router.push(subItem.url)}
+                          className="cursor-pointer"
                         >
                           <span>{subItem.title}</span>
                         </SidebarMenuSubButton>

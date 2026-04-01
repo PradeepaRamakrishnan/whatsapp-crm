@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import type { User } from './features/auth/types/auth.types';
+import { API_URLS } from './lib/api-urls';
 
 const publicRoutes = ['/login', '/interested', '/not-interested', '/users/upload'];
 
@@ -11,17 +12,21 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    const url = process.env.NEXT_PUBLIC_USERS_API_URL;
-
-    const response = await fetch(`${url}/me`, {
+    const response = await fetch(`${API_URLS.users}/me`, {
       method: 'GET',
       headers: {
         Cookie: request.headers.get('cookie') || '',
       },
     });
 
+    if (response.status === 401) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     if (!response.ok) {
-      throw new Error(`${response.status}`);
+      // Non-401 errors (5xx, etc.) — don't kick the user out, let the page handle it
+      console.error('Auth check non-OK response:', response.status);
+      return NextResponse.next();
     }
 
     const user: User = await response.json();
@@ -34,15 +39,13 @@ export async function proxy(request: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    if (error instanceof Error && error.message !== '401') {
-      console.error('Authentication error:', error.message);
-    }
-
-    if (pathname === '/' || pathname.startsWith('/login')) {
-      return NextResponse.next();
-    }
-
-    return NextResponse.redirect(new URL('/login', request.url));
+    // Network errors (fetch failed, DNS, etc.) — backend unreachable, don't redirect to login
+    // as this would kick out authenticated users during transient backend issues
+    console.error(
+      'Authentication check failed (network error):',
+      error instanceof Error ? error.message : error,
+    );
+    return NextResponse.next();
   }
 }
 
