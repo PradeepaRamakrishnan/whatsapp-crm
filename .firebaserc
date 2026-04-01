@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "campaign-management-crm",
+    "production": "campaign-management-crm",
+    "staging": "campaign-management-crm"
+  }
+}

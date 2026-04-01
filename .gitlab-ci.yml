@@ -1,87 +1,34 @@
 stages:
-  - build
   - deploy
 
-variables:
-  PROD_APP_DIR: /home/gitlab-runner/frontend/samatva-crm
-  STAGE_APP_DIR: /home/gitlab-runner/frontend/samatva-crm-staging
-
 # -----------------------
-# BUILD (MAIN / PROD)
-# -----------------------
-build:prod:
-  stage: build
-  script:
-    - cp $PROD_APP_DIR/.env .env
-    - pnpm install --frozen-lockfile
-    - pnpm run build
-  artifacts:
-    paths:
-      - .next/
-      - node_modules/
-      - package.json
-      - pnpm-lock.yaml
-      - public/
-    expire_in: 30 min
-  only:
-    - main
-  tags:
-    - prod-runner
-
-# -----------------------
-# BUILD (STAGING)
-# -----------------------
-build:staging:
-  stage: build
-  script:
-    - cp $STAGE_APP_DIR/.env .env
-    - pnpm install --frozen-lockfile
-    - pnpm run build
-  artifacts:
-    paths:
-      - .next/
-      - node_modules/
-      - package.json
-      - pnpm-lock.yaml
-      - public/
-    expire_in: 30 min
-  only:
-    - staging
-  tags:
-    - stage-runner
-
-# -----------------------
-# DEPLOY PROD
+# FIREBASE DEPLOY (PROD)
+# Auto-deploys on push to main
+# Requires: FIREBASE_TOKEN CI variable
 # -----------------------
 deploy:production:
   stage: deploy
+  image: node:20-alpine
   script:
-    - mkdir -p $PROD_APP_DIR
-    - cp -r .next node_modules package.json pnpm-lock.yaml public $PROD_APP_DIR/
-    - cd $PROD_APP_DIR
-    - pm2 reload samatva-crm || pm2 start pnpm --name samatva-crm -- start
-    - pm2 save
+    - npm install -g firebase-tools pnpm
+    - pnpm install --frozen-lockfile
+    - pnpm run build
+    - firebase deploy --only hosting --token "$FIREBASE_TOKEN" --project campaign-management-crm --non-interactive
   only:
     - main
-  tags:
-    - prod-runner
-  needs:
-    - build:prod
 
 # -----------------------
-# DEPLOY STAGING
+# FIREBASE DEPLOY (STAGING)
+# Auto-deploys on push to staging branch
+# Requires: FIREBASE_TOKEN CI variable
 # -----------------------
 deploy:staging:
   stage: deploy
+  image: node:20-alpine
   script:
-    - mkdir -p $STAGE_APP_DIR
-    - cp -r .next node_modules package.json pnpm-lock.yaml public $STAGE_APP_DIR/
-    - cd $STAGE_APP_DIR
-    - pm2 reload samatva-crm-staging || pm2 start pnpm --name samatva-crm-staging -- start
-    - pm2 save
+    - npm install -g firebase-tools pnpm
+    - pnpm install --frozen-lockfile
+    - pnpm run build
+    - firebase deploy --only hosting --token "$FIREBASE_TOKEN" --project campaign-management-crm --non-interactive
   only:
     - staging
-  tags:
-    - stage-runner
-  needs:
-    - build:staging
