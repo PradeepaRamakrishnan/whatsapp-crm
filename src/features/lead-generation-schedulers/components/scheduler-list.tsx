@@ -75,10 +75,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { createScheduler, deleteScheduler, getSchedulers, updateScheduler } from '../services';
+import {
+  createScheduler,
+  deleteScheduler,
+  getSchedulers,
+  runAllSchedulers,
+  runCrossSearch,
+  runOneScheduler,
+  scheduleAllUSStates,
+  updateScheduler,
+} from '../services';
 import type {
   CreateSchedulerPayload,
   LeadGenerationScheduler,
+  ScheduleAllUSStatesPayload,
   ScheduleType,
   UpdateSchedulerPayload,
 } from '../types';
@@ -228,7 +238,16 @@ function SchedulerActions({ scheduler }: { scheduler: LeadGenerationScheduler })
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useMutation({
+  const { mutate: runNow, isPending: isRunning } = useMutation({
+    mutationFn: () => runOneScheduler(scheduler.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-generation-schedulers'] });
+      toast.success(`"${scheduler.name}" triggered — running now`);
+    },
+    onError: () => toast.error('Failed to trigger scheduler'),
+  });
+
+  const { mutate: deleteMutate, isPending: isDeleting } = useMutation({
     mutationFn: () => deleteScheduler(scheduler.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lead-generation-schedulers'] });
@@ -250,7 +269,22 @@ function SchedulerActions({ scheduler }: { scheduler: LeadGenerationScheduler })
             <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-36">
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              setDropdownOpen(false);
+              runNow();
+            }}
+            disabled={isRunning}
+          >
+            {isRunning ? (
+              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Zap className="mr-2 h-3.5 w-3.5" />
+            )}
+            Run now
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive focus:bg-destructive/10"
             onClick={(e) => {
@@ -276,17 +310,17 @@ function SchedulerActions({ scheduler }: { scheduler: LeadGenerationScheduler })
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={isPending}
+              disabled={isDeleting}
               onClick={(e) => {
                 e.preventDefault();
-                mutate();
+                deleteMutate();
               }}
             >
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isPending ? 'Deleting…' : 'Delete'}
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isDeleting ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -801,16 +835,279 @@ function CreateSchedulerSheet({ open, onClose }: { open: boolean; onClose: () =>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t bg-muted/30 px-6 py-4">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={isPending}>
+          <Button variant="ghost" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button size="sm" disabled={!isValid || isPending} onClick={() => mutate()}>
+          <Button disabled={!isValid || isPending} onClick={() => mutate()}>
             {isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Zap className="mr-2 h-4 w-4" />
             )}
             {isPending ? 'Creating…' : 'Create scheduler'}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// ─── All-US-states one-time job sheet ────────────────────────────────────────
+
+const US_LEAD_TYPE_PRESETS: { category: string; types: string[] }[] = [
+  {
+    category: 'Manufacturing',
+    types: [
+      'Industrial Automation Companies',
+      'Metal Fabrication Companies',
+      'Plastics Manufacturing',
+      'Electronics Manufacturing',
+      'Food Processing Companies',
+      'Packaging Companies',
+    ],
+  },
+  {
+    category: 'Professional Services',
+    types: [
+      'Law Firms',
+      'Accounting Firms',
+      'Financial Advisors',
+      'Insurance Agencies',
+      'Marketing Agencies',
+      'HR Consulting Firms',
+      'IT Services Companies',
+    ],
+  },
+  {
+    category: 'Healthcare',
+    types: [
+      'Medical Clinics',
+      'Dental Clinics',
+      'Physical Therapy Centers',
+      'Chiropractic Offices',
+      'Urgent Care Centers',
+      'Home Health Agencies',
+      'Mental Health Counselors',
+    ],
+  },
+  {
+    category: 'Real Estate & Construction',
+    types: [
+      'Real Estate Agencies',
+      'General Contractors',
+      'Roofing Companies',
+      'Commercial Real Estate Brokers',
+      'Property Management Companies',
+      'Interior Design Firms',
+    ],
+  },
+  {
+    category: 'Technology',
+    types: [
+      'Software Development Companies',
+      'IT Staffing Companies',
+      'Cybersecurity Companies',
+      'Cloud Services Companies',
+      'Data Analytics Companies',
+      'Managed Service Providers',
+    ],
+  },
+  {
+    category: 'Energy & Utilities',
+    types: [
+      'Solar Energy Companies',
+      'HVAC Companies',
+      'Electrical Contractors',
+      'Plumbing Companies',
+      'Energy Consulting Firms',
+    ],
+  },
+  {
+    category: 'Logistics & Transport',
+    types: [
+      'Trucking Companies',
+      'Freight Brokerage Firms',
+      'Warehousing Companies',
+      'Last Mile Delivery Companies',
+      'Supply Chain Consultants',
+    ],
+  },
+  {
+    category: 'Finance',
+    types: [
+      'Mortgage Brokers',
+      'Credit Unions',
+      'Investment Firms',
+      'Payroll Service Providers',
+      'Business Loan Brokers',
+    ],
+  },
+];
+
+function localDatetimeDefault(): string {
+  const d = new Date();
+  d.setHours(10, 30, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function AllUSStatesSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<ScheduleAllUSStatesPayload>({
+    name: '',
+    leadType: '',
+    runAt: localDatetimeDefault(),
+  });
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  function pickPreset(type: string) {
+    setForm((f) => ({
+      ...f,
+      leadType: type,
+      name: f.name.trim() ? f.name : `${type} – All US States`,
+    }));
+  }
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => {
+      const payload: ScheduleAllUSStatesPayload = {
+        name: form.name,
+        leadType: form.leadType,
+        runAt: form.runAt ? new Date(form.runAt).toISOString() : undefined,
+      };
+      return scheduleAllUSStates(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-generation-schedulers'] });
+      toast.success('All-US-states job scheduled');
+      setForm({ name: '', leadType: '', runAt: localDatetimeDefault() });
+      setExpandedCategory(null);
+      onClose();
+    },
+    onError: (err: Error) => toast.error(err.message || 'Failed to schedule job'),
+  });
+
+  const isValid = form.name.trim() && form.leadType.trim();
+
+  return (
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-lg overflow-hidden">
+        {/* Header */}
+        <div className="border-b bg-gradient-to-br from-emerald-50 to-transparent px-6 pt-6 pb-5">
+          <div className="flex items-center gap-3 pr-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+              <Globe className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <SheetTitle className="text-base">Search All US States</SheetTitle>
+              <SheetDescription className="text-xs">
+                One-time job — searches all 50 states and bulk-saves leads
+              </SheetDescription>
+            </div>
+          </div>
+        </div>
+
+        {/* Form body */}
+        <div className="flex flex-col gap-5 overflow-y-auto px-6 py-5 flex-1">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-xs text-emerald-800">
+            <strong>How it works:</strong> A single job loops through all 50 US states, searches
+            Google Places for your lead type in each state, and auto-saves every new lead found.
+          </div>
+
+          {/* Lead type presets */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Pick a lead type (or type your own below)
+            </p>
+            <div className="flex flex-col gap-1 rounded-xl border overflow-hidden">
+              {US_LEAD_TYPE_PRESETS.map((cat) => {
+                const isOpen = expandedCategory === cat.category;
+                return (
+                  <div key={cat.category} className="border-b last:border-b-0">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCategory(isOpen ? null : cat.category)}
+                      className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium hover:bg-muted/40 transition-colors"
+                    >
+                      <span>{cat.category}</span>
+                      <ChevronRight
+                        className={cn(
+                          'h-3.5 w-3.5 text-muted-foreground transition-transform',
+                          isOpen && 'rotate-90',
+                        )}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="flex flex-wrap gap-1.5 bg-muted/20 px-4 pb-3 pt-1">
+                        {cat.types.map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => pickPreset(type)}
+                            className={cn(
+                              'rounded-full border px-3 py-1 text-xs font-medium transition-all',
+                              form.leadType === type
+                                ? 'border-emerald-400 bg-emerald-100 text-emerald-800'
+                                : 'border-border bg-background text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700',
+                            )}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t" />
+
+          <Field label="Lead type" required>
+            <Input
+              placeholder="e.g. Industrial Automation Companies"
+              value={form.leadType}
+              onChange={(e) => setForm((f) => ({ ...f, leadType: e.target.value }))}
+            />
+          </Field>
+
+          <Field label="Job name" required>
+            <Input
+              placeholder="e.g. Industrial Automation – All States"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+          </Field>
+
+          <Field label="Run at (local time)">
+            <Input
+              type="datetime-local"
+              value={form.runAt ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, runAt: e.target.value || undefined }))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Leave blank to run immediately. Default is today at 10:30 AM.
+            </p>
+          </Field>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t bg-muted/30 px-6 py-4">
+          <Button variant="ghost" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+            disabled={!isValid || isPending}
+            onClick={() => mutate()}
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Globe className="h-4 w-4" />
+            )}
+            {isPending ? 'Scheduling…' : 'Schedule Job'}
           </Button>
         </div>
       </SheetContent>
@@ -835,6 +1132,28 @@ export function SchedulerList() {
   const [search, setSearch] = useState(urlSearch);
   const [selected, setSelected] = useState<LeadGenerationScheduler | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [allUSOpen, setAllUSOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { mutate: runAll, isPending: isRunningAll } = useMutation({
+    mutationFn: runAllSchedulers,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['lead-generation-schedulers'] });
+      toast.success(`${res.triggered} scheduler${res.triggered === 1 ? '' : 's'} triggered`);
+    },
+    onError: () => toast.error('Failed to run all schedulers'),
+  });
+
+  const { mutate: runCross, isPending: isRunningCross } = useMutation({
+    mutationFn: runCrossSearch,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['lead-generation-schedulers'] });
+      toast.success(
+        `Cross search started — ${res.leadTypes} lead types × ${res.states} states = ${res.jobsQueued} jobs`,
+      );
+    },
+    onError: () => toast.error('Failed to start cross search'),
+  });
 
   const updateParams = useCallback(
     (updates: { page?: number; pageSize?: number; search?: string }) => {
@@ -1032,6 +1351,43 @@ export function SchedulerList() {
             <span>rows</span>
           </div>
 
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-50"
+            disabled={isRunningCross}
+            onClick={() => runCross()}
+          >
+            {isRunningCross ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Layers className="h-3.5 w-3.5" />
+            )}
+            Cross Search
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            disabled={isRunningAll}
+            onClick={() => runAll()}
+          >
+            {isRunningAll ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Zap className="h-3.5 w-3.5" />
+            )}
+            Run All Now
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            onClick={() => setAllUSOpen(true)}
+          >
+            <Globe className="h-3.5 w-3.5" />
+            All US States
+          </Button>
           <Button size="sm" className="h-9 gap-1.5" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5" />
             New Scheduler
@@ -1161,6 +1517,7 @@ export function SchedulerList() {
         onUpdate={(updated) => setSelected(updated)}
       />
       <CreateSchedulerSheet open={createOpen} onClose={() => setCreateOpen(false)} />
+      <AllUSStatesSheet open={allUSOpen} onClose={() => setAllUSOpen(false)} />
     </div>
   );
 }

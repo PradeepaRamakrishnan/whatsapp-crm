@@ -30,7 +30,11 @@ export function NavSecondary({
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton size="sm" onClick={() => router.push(item.url)}>
+                <SidebarMenuButton
+                  size="sm"
+                  onClick={() => router.push(item.url)}
+                  className="cursor-pointer"
+                >
                   <Icon />
                   <span>{item.title}</span>
                 </SidebarMenuButton>

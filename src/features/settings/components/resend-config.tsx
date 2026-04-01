@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  Send,
   ShieldCheck,
   Trash2,
   XCircle,
@@ -21,6 +22,7 @@ import {
   deleteResendConfig,
   getResendConfig,
   saveResendConfig,
+  sendResendTestEmail,
   verifyResendDomain,
 } from '@/features/settings/services';
 import type { ResendConfig as ResendConfigType, ResendDnsRecord } from '@/features/settings/types';
@@ -262,6 +264,21 @@ export function ResendConfig() {
     queryFn: getResendConfig,
   });
 
+  const [testEmail, setTestEmail] = useState('');
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const testMutation = useMutation({
+    mutationFn: () => sendResendTestEmail(testEmail.trim()),
+    onSuccess: (res) => {
+      setTestResult({ ok: true, msg: `Delivered! Message ID: ${res.messageId}` });
+      toast.success('Test email sent — check your inbox');
+    },
+    onError: (err: Error) => {
+      setTestResult({ ok: false, msg: err.message });
+      toast.error(err.message);
+    },
+  });
+
   const verifyMutation = useMutation({
     mutationFn: verifyResendDomain,
     onSuccess: (updated) => {
@@ -380,6 +397,63 @@ export function ResendConfig() {
             take up to 48 hours to propagate.
           </p>
           <DnsRecordsTable records={config.dnsRecords} />
+        </div>
+      )}
+
+      {/* Test email — shown once config is saved */}
+      {config && (
+        <div className="rounded-lg border border-border p-5 space-y-3">
+          <div>
+            <p className="text-sm font-medium">Send a test email</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sends a real email from{' '}
+              <span className="font-mono text-foreground">{config.fromEmail}</span> using your
+              Resend API key. Domain must be verified for delivery to succeed.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={testEmail}
+              onChange={(e) => {
+                setTestEmail(e.target.value);
+                setTestResult(null);
+              }}
+              className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="button"
+              disabled={!testEmail.trim() || testMutation.isPending}
+              onClick={() => testMutation.mutate()}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+            >
+              {testMutation.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Send className="size-3.5" />
+              )}
+              {testMutation.isPending ? 'Sending…' : 'Send Test'}
+            </button>
+          </div>
+
+          {testResult && (
+            <div
+              className={`flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
+                testResult.ok
+                  ? 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                  : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+              }`}
+            >
+              {testResult.ok ? (
+                <CheckCircle2 className="size-3.5 mt-0.5 shrink-0" />
+              ) : (
+                <AlertCircle className="size-3.5 mt-0.5 shrink-0" />
+              )}
+              <span>{testResult.msg}</span>
+            </div>
+          )}
         </div>
       )}
 

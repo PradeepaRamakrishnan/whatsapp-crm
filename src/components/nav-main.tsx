@@ -41,7 +41,9 @@ export function NavMain({
             className="group/collapsible"
             render={<SidebarMenuItem />}
           >
-            <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+            <CollapsibleTrigger
+              render={<SidebarMenuButton tooltip={item.title} className="cursor-pointer" />}
+            >
               {item.icon}
               <span>{item.title}</span>
               <HugeiconsIcon
@@ -54,7 +56,10 @@ export function NavMain({
               <SidebarMenuSub>
                 {item.items?.map((subItem) => (
                   <SidebarMenuSubItem key={subItem.title}>
-                    <SidebarMenuSubButton onClick={() => router.push(subItem.url)}>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push(subItem.url)}
+                      className="cursor-pointer"
+                    >
                       <span>{subItem.title}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

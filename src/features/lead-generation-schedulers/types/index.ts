@@ -43,6 +43,14 @@ export interface CreateSchedulerPayload {
   scheduledDay?: number;
 }
 
+/** One-time job that searches all 50 US states */
+export interface ScheduleAllUSStatesPayload {
+  name: string;
+  leadType: string;
+  /** ISO-8601 datetime. Omit to run immediately. */
+  runAt?: string;
+}
+
 export interface UpdateSchedulerPayload {
   name?: string;
   leadType?: string;

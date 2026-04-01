@@ -330,6 +330,25 @@ export async function deleteResendConfig(): Promise<void> {
   }
 }
 
+export async function sendResendTestEmail(
+  email: string,
+): Promise<{ success: boolean; messageId: string; from: string; to: string }> {
+  try {
+    const response = await axiosClient({
+      method: 'POST',
+      url: '/resend/config/test',
+      data: { email },
+      headers: { ...getAuthHeaders() },
+    });
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || 'Failed to send test email');
+    }
+    throw error;
+  }
+}
+
 export async function toggleWhatsAppTemplateDefault(
   id: string,
 ): Promise<{ success: boolean; message: string }> {

@@ -42,7 +42,7 @@ export function NavProjects({
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton onClick={() => router.push(item.url)}>
+            <SidebarMenuButton onClick={() => router.push(item.url)} className="cursor-pointer">
               {item.icon}
               <span>{item.name}</span>
             </SidebarMenuButton>
