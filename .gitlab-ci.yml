@@ -1,34 +1,23 @@
 stages:
   - deploy
 
+variables:
+  PROD_APP_DIR: /home/gitlab-runner/frontend/Whatsapp-CRM
+
 # -----------------------
 # FIREBASE DEPLOY (PROD)
 # Auto-deploys on push to main
-# Requires: FIREBASE_TOKEN CI variable
+# Requires: FIREBASE_TOKEN CI variable (Settings > CI/CD > Variables)
 # -----------------------
 deploy:production:
   stage: deploy
-  image: node:20-alpine
   script:
-    - npm install -g firebase-tools pnpm
+    - cp $PROD_APP_DIR/.env .env
+    - npm install -g firebase-tools
     - pnpm install --frozen-lockfile
     - pnpm run build
     - firebase deploy --only hosting --token "$FIREBASE_TOKEN" --project campaign-management-crm --non-interactive
   only:
     - main
-
-# -----------------------
-# FIREBASE DEPLOY (STAGING)
-# Auto-deploys on push to staging branch
-# Requires: FIREBASE_TOKEN CI variable
-# -----------------------
-deploy:staging:
-  stage: deploy
-  image: node:20-alpine
-  script:
-    - npm install -g firebase-tools pnpm
-    - pnpm install --frozen-lockfile
-    - pnpm run build
-    - firebase deploy --only hosting --token "$FIREBASE_TOKEN" --project campaign-management-crm --non-interactive
-  only:
-    - staging
+  tags:
+    - prod-runner
